@@ -171,7 +171,10 @@ export function evaluate(child, events, signals, pack, opts = {}) {
 
     let kind = 'NONE';
     if (tier !== 'GREEN') {
-      if (TIER_RANK[tier] < TIER_RANK[lastTier]) kind = lastTier === 'GREEN' ? 'NEW' : 'WORSENING';
+      // Episode logic: re-entering AMBER within 60 days of a previous AMBER+ result is the same
+      // episode (monthly follow-up), not a new home-visit task — keeps the visit cap honest.
+      const recent = results.some((r) => TIER_RANK[r.tier] <= TIER_RANK[tier] && v.t - r.t <= (pack.trend.episodeDays ?? 60) * DAY);
+      if (TIER_RANK[tier] < TIER_RANK[lastTier]) kind = recent && tier === 'AMBER' ? 'RECURRENT' : lastTier === 'GREEN' ? 'NEW' : 'WORSENING';
       else if (tier === lastTier) kind = 'STABLE';
       else kind = 'IMPROVING';
     } else if (lastTier !== 'GREEN') kind = 'RESOLVED';

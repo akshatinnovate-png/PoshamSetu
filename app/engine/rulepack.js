@@ -31,6 +31,7 @@ export const DEFAULT_PACK = Object.freeze({
     confirmWindowDays: 14,
     watchRepeatsToAmber: 2,
     signalTrendDropSd: 0.25,
+    episodeDays: 60,
   },
   infantVelocity: {
     maxAgeMonths: 12,
@@ -62,9 +63,9 @@ export const DEFAULT_PACK = Object.freeze({
   escalation: [
     { level: 0, role: 'AWW_ASHA', label: 'AWW + ASHA', cadence: 'Daily, offline' },
     { level: 1, role: 'MUKHYA_SEVIKA', label: 'Mukhya Sevika', cadence: 'Weekly; RED-A at once',
-      when: { RED_A: { hours: 24 }, RED_B: { hours: 72 }, AMBER: { days: 7 } } },
+      when: { RED_A: { hours: 24 }, RED_B: { hours: 72 }, AMBER: { days: 7 }, WATCH: { days: 14 } } },
     { level: 2, role: 'CDPO_BMO', label: 'CDPO + Block MO', cadence: 'Weekly',
-      when: { RED_A: { hours: 48 }, RED_B: { days: 5 }, AMBER: { days: 10 } } },
+      when: { RED_A: { hours: 48 }, RED_B: { days: 5 }, AMBER: { days: 10 }, WATCH: { days: 28 } } },
     { level: 3, role: 'DPO_CMO', label: 'DPO (ICDS) + CMO', cadence: 'Monthly convergence',
       when: { RED_A: { days: 7 }, RED_B: { days: 7 }, AMBER: { days: 14 } } },
   ],
