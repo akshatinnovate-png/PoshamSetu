@@ -121,6 +121,10 @@ function shell() {
       { head: 'Pilot phase' },
       { label: 'Live alerts (since 1 Oct 2026)', on: !store.silentMode, fn: () => { store.silentMode = false; store.emit('mode'); } },
       { label: 'Silent trial (alerts logged, not shown)', on: store.silentMode, fn: () => { store.silentMode = true; store.emit('mode'); } },
+      '-',
+      { head: `Synthetic district · seed ${store.seed}` },
+      { label: 'Regenerate district (new random seed)', fn: () => { closeAll(); store.regenerate(1000 + Math.floor(Math.random() * 90000)); open('trial'); } },
+      { label: 'Back to the reference district (seed 71100)', fn: () => { closeAll(); store.regenerate(71100); open('trial'); } },
     ]),
     menu('Layout', () => [
       { label: 'Jury tour — presenter mode', k: 'J', fn: () => juryLayout() },
@@ -205,7 +209,7 @@ function shell() {
       generatedAt: new Date().toISOString(), simClock: new Date(store.now).toISOString(),
       note: 'All child data synthetic. Verify signatures with the public keys in app/engine/demo-keys.js (Ed25519 over canonical JSON).',
       rulePack: store.signed,
-      backtest: { children: m.children, samKids: m.samKids, flaggedEarlier: m.flaggedEarlier, shareEarlier: m.shareEarlier, leadMedianDays: m.leadMedian, leadIQR: [m.leadP25, m.leadP75], precision: m.precision, strict: { ...m.strict, leads: undefined }, firstRule: m.firstRule, amberPerAwcMonth: m.amberPerAwcMonth, seed: 71100 },
+      backtest: { children: m.children, samKids: m.samKids, flaggedEarlier: m.flaggedEarlier, shareEarlier: m.shareEarlier, leadMedianDays: m.leadMedian, leadIQR: [m.leadP25, m.leadP75], precision: m.precision, strict: { ...m.strict, leads: undefined }, firstRule: m.firstRule, amberPerAwcMonth: m.amberPerAwcMonth, seed: store.seed },
       reliability: Object.fromEntries(Object.entries(store.sim.feeds).map(([k, f]) => [store.awcById[k].code, { R: f.R, legacyR: f.legacyR, B: f.B, F: f.F, D: f.D, chronic: f.chronic }])),
       bridge: Object.fromEntries(Object.entries(store.sim.bridge).filter(([k]) => k !== 'liveEvents').map(([k, v]) => [k, v.stats])),
       audit: { verify: store.audit.verify(), entries: store.audit.entries },
@@ -221,7 +225,7 @@ function shell() {
   }
   async function showAbout() {
     const info = native ? await native.info() : null;
-    panel('About PS.OS1', [['Build', 'PoshanSetu Round 2 prototype · Team 7, Gulmohur High School, Jamshedpur'], ['Rule pack', `${store.pack.id}@${store.pack.version} · ${store.packVerified?.ok ? 'dual signature verified' : 'unverified'}`], ['Data', `${store.sim.district.children.length.toLocaleString('en-IN')} synthetic children · ${store.sim.district.history.events.length.toLocaleString('en-IN')} events · seed 71100`], ['Growth standard', 'WHO Child Growth Standards 2006 (LMS)'], ['Audit head', store.audit.head.slice(0, 32) + '…'], ['Runtime', info ? `Electron ${info.electron} · Chromium ${info.chrome} · ${info.platform}` : 'web build'], ['Offline', 'Everything runs locally; no network calls']]);
+    panel('About PS.OS1', [['Build', 'PoshanSetu Round 2 prototype · Team 7, Gulmohur High School, Jamshedpur'], ['Rule pack', `${store.pack.id}@${store.pack.version} · ${store.packVerified?.ok ? 'dual signature verified' : 'unverified'}`], ['Data', `${store.sim.district.children.length.toLocaleString('en-IN')} synthetic children · ${store.sim.district.history.events.length.toLocaleString('en-IN')} events · seed ${store.seed}`], ['Growth standard', 'WHO Child Growth Standards 2006 (LMS)'], ['Audit head', store.audit.head.slice(0, 32) + '…'], ['Runtime', info ? `Electron ${info.electron} · Chromium ${info.chrome} · ${info.platform}` : 'web build'], ['Offline', 'Everything runs locally; no network calls']]);
   }
   window.psLayout = { juryLayout, fieldLayout, tileLayout };
 

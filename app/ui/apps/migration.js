@@ -17,6 +17,7 @@ export function qrSvg(text, size = 220) {
 }
 
 let registry = null;
+store.on('regenerated', () => { registry = null; });
 async function ensureRegistry() {
   if (registry) return registry;
   registry = new MigrationRegistry();

@@ -41,6 +41,7 @@ const res = await p.evaluate(async () => {
   wm.open('rulepack'); await sleep(50);
   wm.open('audit'); await sleep(50);
   const ver = store.audit.verify(); if (!ver.ok) log.push('audit chain broken');
+  store.regenerate(4242); await sleep(50); for (const id of ['trial', 'worklist', 'migration', 'district']) { wm.open(id); await sleep(80); } wm.closeAll(); store.regenerate(71100); await sleep(50);
   wm.open('tour'); await sleep(100);
   for (let i = 0; i < 12; i++) { window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight' })); await sleep(120); }
   return { log, tasks: store.tasks.length, audit: store.audit.entries.length };

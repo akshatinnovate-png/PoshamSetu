@@ -22,6 +22,7 @@ export const store = {
   liveSeq: 0,
   silentMode: false,     // when true, alerts are logged but not shown (silent trial)
   rnd: rng(9001),
+  seed: 71100,
   consts: { NOW, LIVE_FROM, SILENT_FROM },
 
   on(evt, fn) { if (!listeners.has(evt)) listeners.set(evt, new Set()); listeners.get(evt).add(fn); return () => listeners.get(evt).delete(fn); },
@@ -33,7 +34,7 @@ export const store = {
     this.packVerified = await verifyPack(this.signed);
     progress?.('generating synthetic district — 3 blocks, 36 AWCs, 1,440 children');
     await tick();
-    this.sim = generate({ pack: this.pack });
+    this.sim = generate({ pack: this.pack, seed: this.seed });
     this.childById = Object.fromEntries(this.sim.district.children.map((c) => [c.id, c]));
     this.awcById = this.sim.awcById;
     this.sectorById = Object.fromEntries(this.sim.district.sectors.map((s) => [s.id, s]));
@@ -55,6 +56,19 @@ export const store = {
     }
     this.audit.append({ at: this.now, actor: 'MoWCD + MoHFW', role: 'MINISTRY', action: 'PACK_ACTIVATED', subject: `${this.pack.id}@${this.pack.version}`, detail: `supersedes ${prev}` });
     this.emit('pack'); this.emit('role');
+  },
+  /** Regenerate the whole synthetic district with a new seed (shows nothing is hard-coded). */
+  regenerate(seed) {
+    this.seed = seed;
+    this.sim = generate({ pack: this.pack, seed });
+    this.childById = Object.fromEntries(this.sim.district.children.map((c) => [c.id, c]));
+    this.awcById = this.sim.awcById;
+    this.sectorById = Object.fromEntries(this.sim.district.sectors.map((s) => [s.id, s]));
+    this.blockById = Object.fromEntries(this.sim.district.blocks.map((b) => [b.id, b]));
+    this.tasks = this.sim.tasks; this.inflight = []; this.now = this.startNow; this.breakGlass = new Set();
+    this.scope = this.defaultScope(this.role);
+    this.audit.append({ at: this.now, actor: 'system', role: 'SYSTEM', action: 'REGENERATE', subject: `seed ${seed}` });
+    this.emit('regenerated'); this.emit('role'); this.emit('tick', this.now);
   },
   setRole(role, scope) {
     this.role = role;

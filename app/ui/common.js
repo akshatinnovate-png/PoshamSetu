@@ -54,6 +54,7 @@ export const pct = (x, d = 0) => (x == null ? '—' : `${(x * 100).toFixed(d)}%`
 
 import { trackerSingleReading } from '../engine/triage.js';
 let showcase;
+store.on('regenerated', () => { showcase = undefined; });
 /** The child used across Home, the tour and the trial: caught by a trend rule before any Tracker listing. */
 export function showcaseChild() {
   if (showcase !== undefined) return showcase;
