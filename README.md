@@ -73,6 +73,7 @@ Open **Layout → Jury tour** (or press `j`). It has 12 steps with timings and t
 | **Rule pack** | Dual-signed (MoWCD + MoHFW) versioned pack, calibration sliders, re-run the whole backtest, sign the draft as each ministry | design choice 5 |
 | **Trial** | Silent-trial backtest: share of SAM flagged earlier, lead-time distribution, precision, a worked example | design choice 2, Table 5 |
 | **Report** | Monthly district convergence report (L3), k-anonymous, print / save PDF | 4.6 |
+| **Import** | Phase 1 tool: load an anonymised CSV export; the same signed rules run locally (tiers, reliability per AWC, lead vs single-reading lists); template download | Table 4 Phase 1 |
 | **Audit** | Hash-chained log of every view, capture, break-glass, consent and signing; tamper detection | 4.7 |
 | **Architecture** | L1 → L4 diagram, where each block lives in the code, the three Theme 1 questions mapped to modules | 4.1 |
 | **Shell** | `triage`, `tasks late`, `advance 2d`, `verify pack`, `verify audit`, `fhir`, `role` … | — |

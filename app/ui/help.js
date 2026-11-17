@@ -15,6 +15,7 @@ export const HELP = {
   consent: 'Share flags, not records. Pick a child and look at the consent artefact or the FHIR R4 bundle. "Capture consent (guided)" walks through the DPDP notice in Hindi and ABHA / OTP / assisted modes; revoking re-runs the rules without the flags.',
   rulepack: 'All thresholds live in a pack signed by both ministries. Move a slider to draft a change, re-run the whole silent-trial backtest on it, then sign as MoWCD and MoHFW — one signature is not enough.',
   trial: 'The evidence: the same events, the Tracker\'s single-reading list vs PoshanSetu\'s rules, with alerts kept silent. Read both baselines: "flagged earlier than SAM" and the stricter "before ANY Tracker listing". "Robustness" re-runs on five more districts.',
+  importer: 'Phase 1 in practice: load an anonymised CSV export and the same signed rules run locally. Use "Try with a synthetic sample" to see the output, or download the template to see the format.',
   audit: 'Every view, capture, export, consent change and signature, hash-chained. "Tamper with an entry" shows the chain breaking at exactly that record.',
   report: 'What the DPO and CMO take into the monthly convergence meeting: block-level only, small counts suppressed, with decisions drafted from the breaches.',
   arch: 'The four layers and three cross-cutting services. Click a block to see what it does, which audit fix it answers and which engine file implements it.',
