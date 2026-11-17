@@ -34,6 +34,10 @@ export default {
   id: 'tour', persistent: true, title: 'Jury tour — presenter', icon: ICONS.tour, dock: 'Jury tour', desk: 'Jury tour', size: [560, 200], key: 'j',
   mount(ctx) {
     let i = 0, auto = null;
+    const started = Date.now();
+    const clk = h('span', { style: { fontSize: '16px' } });
+    const tickClock = setInterval(() => { const el = Math.floor((Date.now() - started) / 1000); const behind = S[i + 1] && el > secs(S[i + 1].min); clk.textContent = `${Math.floor(el / 60)}:${String(el % 60).padStart(2, '0')}`; clk.style.color = behind ? '#fff' : ''; clk.style.background = behind ? 'var(--red-a)' : ''; }, 500);
+    ctx.onCleanup(() => clearInterval(tickClock));
     const secs = (m) => { const [a, b] = m.split(':').map(Number); return a * 60 + b; };
     const S = steps();
     const bar = h('div.tourbar', { style: { position: 'absolute', left: '24px', right: '24px', top: '10px', zIndex: 8800, background: 'var(--ink)', color: 'var(--white)', border: '2px solid var(--ink)', boxShadow: '4px 4px 0 var(--hot)', display: 'flex', alignItems: 'stretch' } });
@@ -48,7 +52,7 @@ export default {
     function render() {
       const st = S[i];
       mount(bar,
-        h('div', { style: { background: 'var(--hot)', color: 'var(--ink)', padding: '6px 12px', fontFamily: 'var(--font-pixel)', fontSize: '22px', display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap' } }, `${i + 1}/${S.length}`, h('span', { style: { fontSize: '16px' } }, st.min)),
+        h('div', { style: { background: 'var(--hot)', color: 'var(--ink)', padding: '6px 12px', fontFamily: 'var(--font-pixel)', fontSize: '22px', display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap' } }, `${i + 1}/${S.length}`, h('span', { style: { fontSize: '16px' } }, st.min), clk),
         h('div', { style: { padding: '6px 12px', flex: 1 } }, h('div', { style: { fontWeight: 800, fontSize: '15px', letterSpacing: '-0.01em' } }, st.t), h('div', { style: { fontSize: '12.5px', lineHeight: 1.4, color: '#f2dce4' } }, st.say)),
         h('div.row', { style: { padding: '6px', gap: '6px' } },
           h('button.btn.ghost.sm', { onclick: toggleAuto, title: 'Rehearsal: advance on the slot timings' }, auto ? '❚❚ auto' : '▶ auto'),
