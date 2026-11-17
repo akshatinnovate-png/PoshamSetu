@@ -20,7 +20,7 @@ Other pieces built:
 - **Synthetic district:** Paschimi Singhbhum, 3 blocks, 36 AWCs, 1,440 children.
 - **Windows:** silent-trial backtest with a strict baseline and a robustness check across 5 more districts; a Phase 1 CSV import tool; a DPO convergence report (PDF); the Brief (problem, ecosystem, stakeholders, roadmap, impact, references); a 15-step Jury tour presenter mode; the Shell.
 - **Companion HTTP service:** HMAC webhook, SMS, IVR, tasks, FHIR and tokens.
-- **Tests and packaging:** 47 tests, a Chromium smoke test across every window × role × tab, and packaging scripts for Windows, Linux and Mac (the Linux build was launched and verified).
+- **Tests and packaging:** 46 tests, a Chromium smoke test across every window × role × tab, and packaging scripts for Windows, Linux and Mac (the Linux build was launched and verified).
 
 Added later in the night:
 
