@@ -27,7 +27,7 @@ Each answer is short enough to say in the 5-minute interaction, and each points 
 - New formula: `R = 100 × (1 − min(1, 4·B + 1·F + 0.3·D·chronic))`.
 - Each implausible reading (B) is also **quarantined individually**. It never drives triage and it triggers a re-measure.
 - Digit preference (D) raises a supportive-supervision audit flag only. It enters R after 3 consecutive months above threshold. It is also corrected for sample size: with 120 readings, an unbiased AWC still shows about 0.11 dissimilarity.
-- In the synthetic district, the "sloppy" AWCs (decimal slips) score 94–98 under the Round 1 formula but 75–87 under the new one, which is the scatter plot in the R-score window. RED alerts always act whatever R is.
+- In the synthetic district, the "sloppy" AWCs (decimal slips) score 97–98 under the Round 1 formula but 79–92 under the new one, which is the scatter plot in the R-score window. RED alerts always act whatever R is.
 - The weights are starting values. Phase 1 calibrates them, and the sliders show the effect live.
 
 ### 5. "Rs 12 lakh can't build enterprise DPI." → open **Budget**
