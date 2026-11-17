@@ -24,7 +24,15 @@ npm run serve        # same app in a browser: http://localhost:5173
 ```
 
 ```bash
-npm test             # 22 engine tests (WHO z-scores, rules, closure, escalation, tokens, R-score, consent, audit)
+npm test             # engine tests (WHO z-scores, rules, closure, escalation, tokens, R-score, consent, audit)
+```
+
+```bash
+npm run smoke        # with `npm run serve` running: every window × every role + live interactions in Chromium
+```
+
+```bash
+npm run dist:win     # Windows x64 folder build in dist/ (also dist:linux, dist:mac)
 ```
 
 On Linux as root, Electron needs `--no-sandbox`: `npx electron . --no-sandbox`.
@@ -40,6 +48,7 @@ Open **Layout → Jury tour** (or press `j`). It has 12 steps with timings and t
 | Window | What it shows | Proposal / audit item |
 |---|---|---|
 | **Home** | Landing page, live silent-trial numbers, the five fixes | — |
+| **Brief** | Round 2 storyline: problem (cited figures), ecosystem table, stakeholder personas, roadmap Gantt + feasibility, Table 5 impact | sections 1–6 |
 | **Worklist** | Role-scoped tasks: tier, reason, event-time clock, escalation level, two-role closure, queue, late-arrival and re-measure flags | 4.4, 4.6 |
 | **Child record** | WHO weight-for-age curves, WHZ trajectory, MUAC, "why this tier", visits with ingest lag, consented vs withheld signals, break-glass | 4.2–4.4 |
 | **Capture** | AWW entry with live preview of the rule outcome and entry-time validation (decimal-slip demo) | 4.2, 4.7 |
@@ -53,6 +62,7 @@ Open **Layout → Jury tour** (or press `j`). It has 12 steps with timings and t
 | **Consent** | ABDM consent artefacts, NDGFP flag dictionary, DPDP timeline, revoke/renew with live re-triage, FHIR R4 bundle | 4.3, 4.7 |
 | **Rule pack** | Dual-signed (MoWCD + MoHFW) versioned pack, calibration sliders, re-run the whole backtest, sign the draft as each ministry | design choice 5 |
 | **Trial** | Silent-trial backtest: share of SAM flagged earlier, lead-time distribution, precision, a worked example | design choice 2, Table 5 |
+| **Report** | Monthly district convergence report (L3), k-anonymous, print / save PDF | 4.6 |
 | **Audit** | Hash-chained log of every view, capture, break-glass, consent and signing; tamper detection | 4.7 |
 | **Architecture** | L1 → L4 diagram, where each block lives in the code, the three Theme 1 questions mapped to modules | 4.1 |
 | **Shell** | `triage`, `tasks late`, `advance 2d`, `verify pack`, `verify audit`, `fhir`, `role` … | — |

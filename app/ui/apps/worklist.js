@@ -39,6 +39,7 @@ export default {
         seg([['ALL', 'All tiers'], ['RED_A', 'RED-A'], ['RED_B', 'RED-B'], ['AMBER', 'AMBER'], ['WATCH', 'WATCH']], () => tierF, (v) => (tierF = v)),
         seg([['OPEN', 'Open'], ['PARTIAL', 'Half-closed'], ['BREACHED', 'Overdue'], ['QUEUED', 'Queued'], ['DONE', 'Closed'], ['EVERY', 'Every']], () => stateF, (v) => (stateF = v)),
         h('div.seg', null, [['cards', 'Cards'], ['table', 'Table']].map(([k, l]) => h('button', { class: (view ?? (ROLES[store.role].scope === 'awc' ? 'cards' : 'table')) === k ? 'on' : '', onclick: () => { view = k; render(); } }, l))),
+        h('button.btn.sm.ghost', { onclick: exportCsv, title: 'Pseudonymous IDs only' }, 'Export CSV'),
         h('input.input', { placeholder: 'search child / AWC / ID', value: q, style: { width: '200px' }, oninput: (e) => { q = e.target.value.toLowerCase(); renderList(); } }));
       renderList();
 
@@ -94,6 +95,16 @@ export default {
         foot.textContent = '';
         foot.append(h('span', null, `${rows.length} tasks`), h('span', null, `scope: ${store.scopeLabel()}`), h('span', null, `clock: event time (measurement), not ingestion time`));
       }
+    }
+    function exportCsv() {
+      const rows = store.scopedTasks().map((t) => ({ t, e: store.esc(t), c: store.childById[t.childId] }));
+      const head = ['task_id', 'beneficiary_ref', 'awc_code', 'tier', 'kind', 'measured_at', 'ingested_at', 'due_at', 'state', 'escalation_level', 'late_arrival', 'queued', 'pack_version', 'reason'];
+      const esc = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+      const csv = [head.join(','), ...rows.map(({ t, e, c }) => [t.id, c.pseudoId, c.awcCode, t.tier, t.kind, new Date(t.measuredAt).toISOString(), new Date(t.ingestedAt).toISOString(), new Date(t.dueAt).toISOString(), e.state, e.level, e.lateArrival, !!t.queued, t.packVersion, t.reasons[0]].map(esc).join(','))].join('\n');
+      const name = `poshansetu-tasks-${store.scope}-${new Date(store.now).toISOString().slice(0, 10)}.csv`;
+      store.audit.append({ at: store.now, actor: store.actorName(), role: store.role, action: 'EXPORT', subject: store.scope, detail: `${rows.length} tasks, pseudonymous` });
+      if (window.psNative?.saveFile) window.psNative.saveFile(name, csv);
+      else { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = name; a.click(); }
     }
     render();
     ctx.onCleanup(store.on('tick', render));
