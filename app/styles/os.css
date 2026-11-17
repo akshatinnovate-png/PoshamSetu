@@ -93,3 +93,10 @@
 .widget .wb { padding: 6px 8px; font-size: 18px; line-height: 1.1; }
 .widget .wbtn { border: 1.5px solid var(--ink); background: var(--white); font-family: var(--font-pixel); font-size: 16px; padding: 0 6px; }
 .widget .wbtn:hover { background: var(--hot); }
+
+@media (max-width: 1560px) {
+  .dock { gap: 2px; padding: 0 8px; }
+  .dock .app { min-width: 46px; }
+  .dock .app span { display: none; }
+  .dock .rolecard { min-width: 0; }
+}

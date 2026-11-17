@@ -7,7 +7,7 @@ import { open, closeAll, place, isOpen } from '../wm.js';
 import { DAY, HOUR } from '../common.js';
 
 const desk = () => document.querySelector('.desktop');
-const full = (id, opts) => { open(id, opts); const d = desk(); place(id, 24, 66, d.clientWidth - 48, d.clientHeight - 84); };
+const full = (id, opts) => { open(id, opts); const d = desk(); const top = (document.querySelector('.tourbar')?.offsetHeight || 60) + 22; place(id, 24, top, d.clientWidth - 48, d.clientHeight - top - 14); };
 
 function steps() {
   const m = store.sim.metrics;
@@ -33,7 +33,7 @@ export default {
   mount(ctx) {
     let i = 0;
     const S = steps();
-    const bar = h('div', { style: { position: 'absolute', left: '24px', right: '24px', top: '10px', zIndex: 8800, background: 'var(--ink)', color: 'var(--white)', border: '2px solid var(--ink)', boxShadow: '4px 4px 0 var(--hot)', display: 'flex', alignItems: 'stretch' } });
+    const bar = h('div.tourbar', { style: { position: 'absolute', left: '24px', right: '24px', top: '10px', zIndex: 8800, background: 'var(--ink)', color: 'var(--white)', border: '2px solid var(--ink)', boxShadow: '4px 4px 0 var(--hot)', display: 'flex', alignItems: 'stretch' } });
     desk().appendChild(bar);
     ctx.onCleanup(() => bar.remove());
     ctx.win.el.classList.add('min');
