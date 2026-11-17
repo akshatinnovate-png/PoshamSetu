@@ -21,6 +21,16 @@ const res = await p.evaluate(async () => {
     for (const id of apps) { wm.open(id); await sleep(30); const w = document.querySelector(`[data-app="${id}"] .body`); if (!w || /Error:/.test(w.textContent.slice(0, 200))) log.push(`${role}/${id} error`); }
     wm.closeAll(); await sleep(10);
   }
+  // click every tab / segmented button in every window, for a frontline and a supervisory role
+  for (const role of ['AWW', 'CDPO', 'DPO']) {
+    store.setRole(role, store.defaultScope(role));
+    for (const id of apps.filter((x) => x !== 'landing')) {
+      wm.open(id); await sleep(30);
+      const n = document.querySelectorAll(`[data-app="${id}"] .seg button`).length;
+      for (let i = 0; i < n; i++) { const b = document.querySelectorAll(`[data-app="${id}"] .seg button`)[i]; if (b && !b.disabled) { b.click(); await sleep(15); } }
+      wm.close(id);
+    }
+  }
   // interactions
   store.setRole('CDPO', 'KHU');
   wm.open('bridge'); await sleep(50); document.querySelector('[data-app="bridge"] .btn.hot').click(); await sleep(50);
