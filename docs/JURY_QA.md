@@ -59,7 +59,7 @@ Each answer is short enough to say in the 5-minute interaction, and each points 
 
 **Why not wait for SSBSK?** SSBSK stops at 36 months and has no public rule for when poor growth makes a child at-risk. PoshanSetu is designed to be its nutrition layer, and its AMBER list feeds the SSBSK at-risk visit schedule for children under 36 months.
 
-**Scalability?** Rule packs and FHIR mappings are state-agnostic. The engine has no dependencies and runs the whole 1,440-child district plus the backtest in under a second on a laptop. Scale is a hosting question, not an algorithm question.
+**Scalability?** Rule packs and FHIR mappings are state-agnostic, so a new district is a new signed pack, not new code. Measured with `npm run bench`, a full re-triage of 14,400 children (167,000 visits) takes 0.4 s on one laptop core, about 28 µs per child. For all 7.3 crore Tracker children that is roughly 35 minutes on a single core for a nightly full recompute, and in live use each new measurement is re-triaged incrementally in microseconds. Scale is a hosting question, not an algorithm question.
 
 **What if MoWCD does not expose a Tracker API in time?** The bridge is a ladder, not a bet:
 1. The Tracker Open API via API Setu (the target).
