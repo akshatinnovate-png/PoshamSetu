@@ -84,8 +84,8 @@ export default {
           ['Detection lead time', 'Days from first AMBER to SAM', 'Median ≥ 30 days', `${Math.round(m.leadMedian)} d (strict: ${Math.round(m.strict.leadMedian || 0)} d before any listing)`],
           ['Sensitivity, precision', 'SAM cases flagged earlier; alerts confirmed on re-weighing', '≥ half flagged earlier', `${pct(m.shareEarlier)} earlier · precision ${pct(m.precision)}`],
           ['MAM → SAM', 'MAM children entering SAM in 90 days', 'Lower than comparison blocks', 'Needs live pilot + comparison blocks'],
-          ['Frontline action', 'At-risk children visited in 7 days', '≥ 80% of new AMBER tasks', closedIn == null ? '—' : `Measured live per task (Worklist). Simulated workers: ${pct(closedIn)}`],
-          ['Migrant continuity', 'Migrants measured within 60 days', '≥ 85% traced or transferred', `Tracked via tokens + LTFU rule. Simulated: ${pct(migr.length ? traced / migr.length : 0)}`],
+          ['Frontline action', 'At-risk children visited in 7 days', '≥ 80% of new AMBER tasks', 'Measured live per task (Worklist → closed in window); not estimable from synthetic behaviour'],
+          ['Migrant continuity', 'Migrants measured within 60 days', '≥ 85% traced or transferred', 'Tracked via tokens + 45-day LTFU rule; depends on destination AWC coverage — measured in the pilot'],
         ];
         const base = impactScenario(store.sim.district.children, store.pack, { effect: 0, compliance: SC.compliance });
         const sc = impactScenario(store.sim.district.children, store.pack, SC);
