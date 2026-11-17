@@ -22,6 +22,9 @@ Start the app with `npm start` (or run the packaged build). Wait for the boot lo
 
 ## If something goes wrong
 
+- **Projector text too small:** Layout → Presenter zoom → 115% or 130%. The setting is remembered.
+- **Rehearsing alone:** press **▶ auto** on the tour bar. It advances on the slot timings, and the timer turns red when you are behind.
+
 - **Tour stuck:** press `×` on the caption bar, then `j` again.
 - **Lost a window:** Layout → Close all windows, then reopen it from the dock.
 - **Clock moved too far:** Time → Reset to 17 Nov 2026 09:00.
