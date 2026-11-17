@@ -17,5 +17,6 @@ import arch from './architecture.js';
 import terminal from './terminal.js';
 import tour from './tour.js';
 import brief from './brief.js';
+import report from './report.js';
 
-export const APPS = [landing, brief, worklist, child, capture, district, escalation, bridge, joint, migration, reliability, budget, consent, rulepack, trial, audit, arch, terminal, tour];
+export const APPS = [landing, brief, worklist, child, capture, district, escalation, bridge, joint, migration, reliability, budget, consent, rulepack, trial, audit, report, arch, terminal, tour];

@@ -9,4 +9,5 @@ contextBridge.exposeInMainWorld('psNative', {
   onState: (fn) => ipcRenderer.on('win:state', (_e, s) => fn(s)),
   saveFile: (name, data) => ipcRenderer.invoke('file:save', { name, data }),
   info: () => ipcRenderer.invoke('app:info'),
+  printPDF: (name) => ipcRenderer.invoke('print:pdf', { name }),
 });

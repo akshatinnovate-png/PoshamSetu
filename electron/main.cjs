@@ -55,6 +55,13 @@ app.whenReady().then(() => {
     fs.writeFileSync(r.filePath, data);
     return { ok: true, path: r.filePath };
   });
+  ipcMain.handle('print:pdf', async (_e, { name }) => {
+    const r = await dialog.showSaveDialog(win, { defaultPath: name, filters: [{ name: 'PDF', extensions: ['pdf'] }] });
+    if (r.canceled || !r.filePath) return { ok: false };
+    const data = await win.webContents.printToPDF({ printBackground: true, pageSize: 'A4', landscape: true });
+    fs.writeFileSync(r.filePath, data);
+    return { ok: true, path: r.filePath };
+  });
   ipcMain.handle('app:info', () => ({ electron: process.versions.electron, chrome: process.versions.chrome, node: process.versions.node, platform: process.platform }));
   createWindow();
   app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });

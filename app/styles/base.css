@@ -143,3 +143,10 @@ table.grid tr.sel td { background: var(--sky); }
 .callout { border-left: 6px solid var(--hot); background: #fff4fa; padding: 8px 10px; font-size: 12px; line-height: 1.45; }
 .callout b { font-weight: 700; }
 .fix { display: inline-flex; gap: 6px; align-items: center; font-family: var(--font-mono); font-size: 10px; background: var(--hot); color: var(--ink); border: 1.5px solid var(--ink); padding: 1px 6px; font-weight: 700; letter-spacing: .03em; }
+
+@media print {
+  html, body { overflow: visible !important; height: auto !important; background: #fff !important; }
+  body * { visibility: hidden !important; }
+  .print-area, .print-area * { visibility: visible !important; }
+  .print-area { position: absolute !important; left: 0; top: 0; border: 0 !important; max-width: none !important; width: 100%; }
+}
