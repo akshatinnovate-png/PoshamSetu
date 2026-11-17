@@ -31,7 +31,7 @@ export default {
         news(fmtDate(store.consts.LIVE_FROM), `Silent trial (synthetic): ${share}% of SAM cases`, `flagged a median ${lead} days earlier`, null),
         h('div', { style: { marginTop: '30px', fontSize: '22px', fontWeight: 600, letterSpacing: '-0.01em' } }, 'Introducing PoshanSetu ', h('span', { style: { letterSpacing: '0.2em' } }, '......................'), ' early warning beyond the line')));
     let raf, t = 0, last = 0;
-    const loop = (ts) => { if (ts - last > 120) { drawClouds(canvas, t += 1); last = ts; } raf = requestAnimationFrame(loop); };
+    const loop = (ts) => { const visible = !document.hidden && ctx.body.scrollTop < 640 && !ctx.win.el.classList.contains('min'); if (visible && ts - last > 120) { drawClouds(canvas, t += 1); last = ts; } raf = requestAnimationFrame(loop); };
     raf = requestAnimationFrame(loop);
     ctx.onCleanup(() => cancelAnimationFrame(raf));
 
