@@ -58,9 +58,10 @@ export default {
           cur.toPHC ? h('div.callout', { style: { marginTop: '8px' } }, h('b', null, 'Under 6 months. '), 'MUAC not used; weight-for-length + feeding check; flags route to the PHC.') : null)
           : h('p.p', null, 'No measurements yet.'));
 
-      const tabs = h('div.seg', null, [['growth', 'Growth'], ['visits', `Visits (${ev.visits.length})`], ['signals', 'Health signals'], ['tasks', `Tasks (${tasks.length})`]].map(([k, l]) => h('button', { class: tab === k ? 'on' : '', onclick: () => { tab = k; render(); } }, l)));
+      const tabs = h('div.seg', null, [['growth', 'Growth'], ['timeline', 'Timeline'], ['visits', `Visits (${ev.visits.length})`], ['signals', 'Health signals'], ['tasks', `Tasks (${tasks.length})`]].map(([k, l]) => h('button', { class: tab === k ? 'on' : '', onclick: () => { tab = k; render(); } }, l)));
       let pane;
       if (tab === 'growth') pane = growthPane(c, ev);
+      else if (tab === 'timeline') pane = timelinePane(c, ev, tasks);
       else if (tab === 'visits') pane = visitsPane(c, ev);
       else if (tab === 'signals') pane = signalsPane(c);
       else pane = tasksPane(c, tasks);
@@ -111,6 +112,28 @@ export default {
         h('div.card.flat', null, h('div.kicker', null, 'Weight-for-age · WHO Child Growth Standards (dots coloured by tier at that visit)'), wfa),
         h('div.card.flat', null, h('div.kicker', null, 'Weight-for-height z-score trajectory — direction, not just the line'), whz),
         h('div.card.flat', null, h('div.kicker', null, 'MUAC (6–59 months)'), muac));
+    }
+
+    function timelinePane(c, ev, tasks) {
+      const items = [];
+      ev.results.forEach((r, i) => {
+        const prev = ev.results[i - 1];
+        const changed = !prev || prev.tier !== r.tier;
+        items.push({ t: r.t, kind: 'visit', node: h('div', null, h('b', null, `Measured: ${r.visit.weightKg} kg${r.visit.muacMm ? ` · MUAC ${r.visit.muacMm}` : ''} · WHZ ${r.visit.ix.whz ?? '—'}`), r.visit.remeasure ? h('span.tag.sky', { style: { marginLeft: '6px' } }, 're-weigh') : null, r.quarantined ? h('span.tag.bad', { style: { marginLeft: '6px' } }, 'quarantined') : null,
+          c.events.some((e) => e.atDestination && r.visit.eventIds.includes(e.id)) ? h('span.tag.warn', { style: { marginLeft: '6px' } }, 'at destination AWC via token') : null,
+          changed ? h('div', { style: { marginTop: '3px' } }, tierChip(r.tier), ' ', h('span.small', null, r.reasons.find((x) => x.tier === r.tier)?.text || 'on track')) : null) });
+      });
+      for (const s of c.signals) items.push({ t: s.t, kind: 'signal', node: h('div', null, h('span.tag.ok', null, 'signal'), ` ${FLAG_DICTIONARY[s.type]?.label}${s.antigen ? ' · ' + s.antigen : ''} — under consent ${s.consentId}`) });
+      for (const s of c.signalsWithheld) items.push({ t: s.t, kind: 'withheld', node: h('div.muted', null, h('span.tag.bad', null, 'withheld'), ` ${FLAG_DICTIONARY[s.type]?.label} — ${s.why}`) });
+      if (c.consent) items.push({ t: c.consent.grantedAt, kind: 'consent', node: h('div', null, h('span.tag.dark', null, 'consent'), ` ${c.consent.mode} artefact ${c.consent.id} granted by ${canSeeNames(c) ? c.consent.guardian : 'guardian'}`) });
+      for (const t of tasks) {
+        items.push({ t: t.ingestedAt, kind: 'task', node: h('div', null, h('span.tag.pink', null, 'task'), ` ${t.id} opened (${t.tier}) · due ${fmtDateTime(t.dueAt)}${t.ingestedAt - t.measuredAt > 6 * 3600000 ? ` · data arrived ${fmtDuration(t.ingestedAt - t.measuredAt)} after measurement` : ''}`) });
+        for (const cl of t.closures) items.push({ t: cl.t, kind: 'close', node: h('div', null, h('span.tag.ok', null, cl.by), ` ${cl.outcome.toLowerCase()} via ${cl.channel}${cl.dtmf ? ` (key ${cl.dtmf})` : ''} · ${t.id}`) });
+        for (const m of t.milestones) items.push({ t: m.t, kind: 'ms', node: h('div', null, h('span.tag.sky', null, m.kind === 'APPETITE_TEST' ? 'appetite test' : 'MO screen'), ` ${m.result}`) });
+      }
+      if (c.migration) { items.push({ t: c.migration.depAt, kind: 'mig', node: h('div', null, h('span.tag.warn', null, 'migration'), ` left for ${c.migration.destination.label}${c.migration.announced ? ' (announced — token issued)' : ' (unannounced — LTFU rule)'}`) }); if (c.migration.retAt) items.push({ t: c.migration.retAt, kind: 'mig', node: h('div', null, h('span.tag.warn', null, 'return'), ' back at home AWC — profile reactivated on the same curve') }); }
+      items.sort((a, b) => b.t - a.t);
+      return h('div.card.flat', { style: { maxHeight: '560px', overflow: 'auto' } }, items.filter((x) => x.t <= store.now).map((x) => h('div', { style: { display: 'grid', gridTemplateColumns: '120px 1fr', gap: '10px', padding: '6px 0', borderBottom: '1px dashed #c5bdc0', fontSize: '12px' } }, h('span.mono.small', null, fmtDateTime(x.t)), x.node)));
     }
 
     function visitsPane(c, ev) {
