@@ -75,3 +75,5 @@ The Bridge window's clock-safety matrix is how we decide which path may drive wh
 **Is the data secure?** The prototype includes Ed25519-signed rule packs and tokens, names masked above the sector, logged break-glass, k-anonymity above block level, a hash-chained audit log, pseudonymous exports, a strict Content-Security-Policy, and no network calls at all. Production adds an HSM or eSign for keys, CERT-In audit, and MeitY-empanelled hosting.
 
 **How do you know the WHO z-scores are right?** The engine uses the published WHO 2006 LMS tables directly, with WHO's restricted method beyond ±3 SD and the 0.7 cm length/height adjustment. Tests check medians, the SD lines and continuity at the 24-month switch (`npm test`).
+
+**Can you run this on real data?** Yes, today. The Import window (`i`) takes an anonymised CSV export with one row per measurement: ref, sex, dob, AWC code, date, weight, height, MUAC, oedema. It runs the same signed rules locally, with no upload, and reports tiers, reliability per AWC, and how often AMBER fires before a single-reading list would. That is the Phase 1 calibration step, ready for a State or NGO dataset.
