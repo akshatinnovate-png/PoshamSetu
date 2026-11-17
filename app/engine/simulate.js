@@ -319,6 +319,8 @@ export function analyse(district, r, pack) {
     if (t.tier === 'RED_B' && rr.chance(diligence)) {
       const at = t.measuredAt + rr() * 96 * HOUR;
       if (at < NOW) addMilestone(t, { kind: 'APPETITE_TEST', t: at, result: rr.chance(0.85) ? 'PASS' : 'FAIL' });
+      const mo = t.measuredAt + (2 + rr() * 5) * DAY;
+      if (mo < NOW && rr.chance(diligence)) addMilestone(t, { kind: 'MO_SCREEN', t: mo, result: 'SCREENED' });
     }
   }
   const escal = tasks.map((t) => ({ task: t, esc: escalation(t, NOW, pack) }));

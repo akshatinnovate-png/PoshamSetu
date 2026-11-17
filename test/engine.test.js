@@ -168,3 +168,15 @@ test('Rule 2 (sustained): two monthly falls adding to 0.5 SD become AMBER withou
   assert.equal(r.tier, 'AMBER', JSON.stringify(r.reasons));
   assert.ok(r.reasons.some((x) => x.code === 'R2_SUSTAINED'));
 });
+
+test('RED-B closes only with appetite test and MO screening on record', () => {
+  const c = child(14);
+  const res = evaluate(c, [ev(T0, 8.0, 74, 112)], [], P).current;
+  const t = makeTask({ child: c, result: res, pack: P });
+  addClosure(t, { by: 'AWW', t: T0 + HOUR, outcome: 'VISITED' }, P);
+  addClosure(t, { by: 'ASHA', t: T0 + 2 * HOUR, dtmf: 1 }, P);
+  assert.equal(closureState(t).state, 'PARTIAL');
+  assert.deepEqual(closureState(t).missing, ['APPETITE_TEST', 'MO_SCREEN']);
+  t.milestones.push({ kind: 'APPETITE_TEST', t: T0 + 3 * HOUR, result: 'PASS' }, { kind: 'MO_SCREEN', t: T0 + 3 * DAY, result: 'SCREENED' });
+  assert.equal(closureState(t).state, 'CLOSED');
+});

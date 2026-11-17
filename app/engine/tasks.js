@@ -69,9 +69,13 @@ export function closureState(task) {
   if (outcomes.has('MIGRATED')) return { state: 'MIGRATED', got, closedAt: task.closures.find((c) => c.outcome === 'MIGRATED').t };
   if (outcomes.has('REFUSED')) return { state: 'REFUSED', got, closedAt: task.closures.find((c) => c.outcome === 'REFUSED').t };
   const done = got.filter((g) => g.closure);
-  if (done.length === got.length) return { state: 'CLOSED', got, closedAt: Math.max(...done.map((g) => g.closure.t)) };
-  if (done.length) return { state: 'PARTIAL', got };
-  return { state: 'OPEN', got };
+  // RED-B (CMAM 2023): visits are not enough — the appetite test and the MO screening must be on record.
+  const needMs = task.tier === 'RED_B' ? ['APPETITE_TEST', 'MO_SCREEN'] : [];
+  const ms = needMs.map((k) => task.milestones.find((m) => m.kind === k) || null);
+  const missing = needMs.filter((_, i) => !ms[i]);
+  if (done.length === got.length && !missing.length) return { state: 'CLOSED', got, missing, closedAt: Math.max(...done.map((g) => g.closure.t), ...ms.map((m) => m.t)) };
+  if (done.length || ms.some(Boolean)) return { state: 'PARTIAL', got, missing };
+  return { state: 'OPEN', got, missing };
 }
 
 /**

@@ -86,7 +86,13 @@ export default {
           h('div.card', null, h('div.kicker', null, 'AWW — Tracker companion card'),
             h('div.row', { style: { gap: '6px', marginTop: '6px' } },
               ['VISITED', 'REFERRED', 'REFUSED', 'MIGRATED'].map((o) => h('button.btn.sm' + (o === 'VISITED' ? '' : '.ghost'), { disabled: !!t.closures.find((x) => x.by === 'AWW'), onclick: () => { store.close(t, { by: 'AWW', t: store.now, outcome: o, channel: 'APP' }); } }, o.toLowerCase()))),
-            h('div.small.muted', { style: { marginTop: '6px' } }, 'The re-weigh itself is entered in the Tracker as today; this flag only records the visit.'))),
+            h('div.small.muted', { style: { marginTop: '6px' } }, 'The re-weigh itself is entered in the Tracker as today; this flag only records the visit.')),
+          t.tier === 'RED_B' ? h('div.card', null, h('div.kicker', null, 'CMAM 2023 milestones — RED-B closes only when both are on record'),
+            h('div.row', { style: { gap: '6px', marginTop: '6px', flexWrap: 'wrap' } },
+              h('button.btn.sm', { disabled: !!t.milestones.find((m) => m.kind === 'APPETITE_TEST'), onclick: () => milestone(t, 'APPETITE_TEST', 'PASS') }, 'Appetite test: pass'),
+              h('button.btn.sm.ghost', { disabled: !!t.milestones.find((m) => m.kind === 'APPETITE_TEST'), onclick: () => milestone(t, 'APPETITE_TEST', 'FAIL') }, 'Appetite test: fail → RED-A'),
+              h('button.btn.sm', { disabled: !!t.milestones.find((m) => m.kind === 'MO_SCREEN'), onclick: () => milestone(t, 'MO_SCREEN', 'SCREENED') }, 'MO screened at PHC')),
+            h('div.small', { style: { marginTop: '6px' } }, e.missing?.length ? `Still missing: ${e.missing.map((m) => m === 'APPETITE_TEST' ? 'appetite test (72 h)' : 'MO screening (day 5)').join(', ')}.` : 'Both milestones recorded.')) : null),
         phone);
     }
 
@@ -118,6 +124,15 @@ export default {
         h('div.small.muted', { style: { marginTop: '6px' } }, 'Works on any feature phone. No app, no data pack, no new payment. Missed call-back if the line drops.'));
     }
 
+    function milestone(t, kind, result) {
+      t.milestones.push({ kind, t: store.now, result });
+      store.audit.append({ at: store.now, actor: store.awcById[t.awcId].aww, role: 'AWW', action: kind, subject: t.id, detail: result });
+      if (kind === 'APPETITE_TEST' && result === 'FAIL') {
+        // Failed appetite test = complicated SAM: same-day referral under a new RED-A task.
+        store.capture(t.childId, { ...(() => { const v = store.childById[t.childId].eval.lastValid; return { weightKg: v.weightKg, heightCm: v.heightCm, lying: v.lying, muacMm: v.muacMm }; })(), appetite: 'FAIL', danger: [], oedema: false });
+      }
+      store.emit('task', t);
+    }
     render();
     ctx.setRefresh((o) => { if (o?.taskId) { sel = o.taskId; filter = 'ALL'; } render(); });
     ctx.onCleanup(store.on('task', render));

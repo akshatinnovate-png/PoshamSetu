@@ -34,7 +34,8 @@ export function levelChip(level) {
 }
 export function closureDots(task, esc) {
   const roles = ['AWW', 'ASHA'];
-  return h('span.row', { style: { gap: '4px' } }, esc?.state === 'CONFLICT' ? h('span.tag.bad', { title: 'Outcomes disagree — Mukhya Sevika reconciles' }, 'conflict') : null, roles.map((r) => {
+  const ms = task.tier === 'RED_B' ? [['APPETITE_TEST', 'RUTF'], ['MO_SCREEN', 'MO']].map(([k, l]) => { const m = task.milestones.find((x) => x.kind === k); return h('span.tag' + (m ? (m.result === 'FAIL' ? '.bad' : '.ok') : ''), { title: m ? `${k} ${m.result || ''} · ${fmtDateTime(m.t)}` : `${k} pending` }, m ? `${l} ${m.result === 'FAIL' ? '✗' : '✓'}` : l); }) : [];
+  return h('span.row', { style: { gap: '4px', flexWrap: 'wrap' } }, ms, esc?.state === 'CONFLICT' ? h('span.tag.bad', { title: 'Outcomes disagree — Mukhya Sevika reconciles' }, 'conflict') : null, roles.map((r) => {
     const req = task.required.some((x) => x.split('|').includes(r));
     const c = task.closures.find((x) => x.by === r);
     const good = c && (c.outcome === 'VISITED' || c.outcome === 'REFERRED');
