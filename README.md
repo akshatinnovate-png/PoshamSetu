@@ -7,6 +7,15 @@ Techfest 2026-27 · The India @ 71/100 Challenge · Theme 1 (Maternal & Early Ch
 
 This repository is a working prototype of the Round 1 proposal. It also answers, in code, the five stress-tests raised after Round 1 (score 87/100). It runs as a desktop app (Electron) and as a static web build. **All child records are synthetic.**
 
+![Home](docs/screens/home.png)
+
+| | |
+|---|---|
+| ![Fix 01 Bridge](docs/screens/bridge.png) **Fix 01** event bridge | ![Fix 02 Joint visit](docs/screens/joint.png) **Fix 02** async joint visit + IVR |
+| ![Fix 03 Migration](docs/screens/migration.png) **Fix 03** kiln-proof token | ![Fix 04 R-score](docs/screens/reliability.png) **Fix 04** weighted R-score |
+| ![Fix 05 Budget](docs/screens/budget.png) **Fix 05** honest cost model | ![Silent trial](docs/screens/trial.png) Silent-trial backtest |
+| ![Child record](docs/screens/child.png) Child record | ![Jury tour](docs/screens/tour.png) Jury tour presenter mode |
+
 ---
 
 ## Run it
