@@ -80,6 +80,8 @@ Open **Layout → Jury tour** (or press `j`). It has 12 steps with timings and t
 
 Every window has a **?** button in its title bar that explains what to look at.
 
+**Help → Export evidence pack** saves the signed rule pack, backtest metrics, reliability scores, bridge statistics and the full audit chain as JSON. Anyone can check it independently with `node scripts/verify-evidence.mjs <file>`.
+
 Use the **Role** menu to switch between AWW, ASHA, Mukhya Sevika, CDPO and DPO. Views, name masking and counts change with the role. Use the **Time** menu (or `H` / `D` / `W`) to move the simulation clock and watch tasks escalate.
 
 ## Companion service (`server/index.mjs`)
