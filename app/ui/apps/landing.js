@@ -3,7 +3,8 @@ import { store } from '../store.js';
 import { open, close } from '../wm.js';
 import { ICONS } from '../icons.js';
 import { drawClouds } from '../bg.js';
-import { fmtDate } from '../common.js';
+import { fmtDate, tierChip } from '../common.js';
+import { trackerSingleReading } from '../../engine/triage.js';
 
 const FIXES = [
   { n: '01', app: 'bridge', t: 'Real-time data bridge', was: 'Round 1 read weekly dashboard exports — a 24-hour RED-A clock could not run on that.', now: 'Events arrive through the Poshan Tracker Open API (API Setu) plus an SMS flash path for RED signs. The clock starts at measurement time; a late event is a pipeline breach, escalated on arrival.' },
@@ -64,7 +65,51 @@ export default {
       h('div.row', null, h('button.btn.hot', { onclick: () => enter('worklist') }, 'Open the console ▸')));
 
     ctx.body.style.background = 'var(--white)';
-    ctx.body.append(hero, manifesto, numbers, fixes, footer);
+    ctx.body.append(hero, manifesto, numbers, versus(), fixes, footer);
+
+    // "Same child, two systems": readings appear month by month in both panels.
+    function versus() {
+      const TREND = ['R2_CONFIRMED', 'R2_SUSTAINED', 'INFANT_FALTERING', 'TREND_PLUS_SIGNAL'];
+      let pick = null;
+      for (const c of store.sim.district.children) {
+        const ev = c.eval;
+        const samI = ev.visits.findIndex((v) => trackerSingleReading(c, v, store.pack) === 'SAM' && !v.biv.length);
+        if (samI < 3) continue;
+        const firstAnyI = ev.visits.findIndex((v) => trackerSingleReading(c, v, store.pack) && !v.biv.length);
+        const aI = ev.results.findIndex((r) => r.tier === 'AMBER');
+        if (aI < 0 || aI >= firstAnyI) continue;
+        const trend = ev.results[aI].reasons.some((r) => TREND.includes(r.code));
+        const score = (trend ? 0 : 100) + Math.abs(samI - 6);
+        if (!pick || score < pick.score) pick = { c, samI, aI, score };
+      }
+      if (!pick) return h('div');
+      const { c, samI } = pick;
+      const vs = c.eval.visits.slice(0, samI + 1), rs = c.eval.results.slice(0, samI + 1);
+      const left = h('div.col', { style: { gap: 0 } }), right = h('div.col', { style: { gap: 0 } });
+      const row = (v, a, b) => h('div.row', { style: { padding: '7px 10px', borderBottom: '1px dashed #9c8f94', gap: '10px', fontFamily: 'var(--font-mono)', fontSize: '12px', animation: 'toastIn .2s steps(3)' } }, h('span', { style: { width: '78px' } }, new Date(v.t).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })), h('span', { style: { width: '74px' } }, `WHZ ${v.ix.whz ?? '—'}`), a, b ? h('span.small', { style: { flex: 1 } }, b) : null);
+      const pane = (title, dark, body) => h('div.win.focused', { style: { position: 'relative', minHeight: '0', flex: '1 1 420px' } }, h('div.tb', { style: dark ? null : { background: '#6d6266' } }, h('span.t', null, title)), h('div', { style: { background: dark ? 'var(--white)' : '#c9c6c7', minHeight: '330px', flex: 1 } }, body));
+      let i = 0, timer = null;
+      const step = () => {
+        if (i > samI) { clearInterval(timer); timer = null; return; }
+        const v = vs[i], r = rs[i];
+        const tr = trackerSingleReading(c, v, store.pack);
+        left.append(row(v, tr ? h('span.tag' + (tr === 'SAM' ? '.bad' : '.warn'), null, `${tr} list`) : h('span.muted', null, '— not listed'), tr ? (tr === 'SAM' ? 'listed; action starts now' : 'on a list; no owner, no deadline') : ''));
+        const task = r.tier !== 'GREEN' && (r.kind === 'NEW' || r.kind === 'WORSENING');
+        right.append(row(v, tierChip(r.tier), task ? `${r.reasons.find((x) => x.tier === r.tier)?.text || ''} → ${r.tier === 'AMBER' ? 'AWW + ASHA task, 7 d' : r.tier === 'WATCH' ? 're-weigh' : r.tier === 'RED_B' ? 'CMAM at AWC, appetite test in 72 h' : 'same-day referral, 24 h clock'}` : r.tier === 'GREEN' ? 'on track' : r.kind.toLowerCase()));
+        i++;
+      };
+      const replay = () => { left.replaceChildren(); right.replaceChildren(); i = 0; if (timer) clearInterval(timer); timer = setInterval(step, 650); };
+      const io = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting) && i === 0 && !timer) replay(); });
+      setTimeout(() => io.observe(wrap), 50);
+      ctx.onCleanup(() => { io.disconnect(); if (timer) clearInterval(timer); });
+      const lead = Math.round((vs[samI].t - rs[pick.aI].t) / 86400000);
+      const wrap = h('div', { style: { background: 'var(--sky)', padding: '50px 26px', borderTop: '2px solid var(--ink)' } },
+        h('div.row.between', { style: { alignItems: 'flex-end', marginBottom: '18px', flexWrap: 'wrap', gap: '12px' } },
+          h('div', { style: { fontWeight: 800, fontSize: '56px', letterSpacing: '-0.045em', lineHeight: 0.9 } }, 'Same child.', h('br'), 'Two systems.'),
+          h('div.col', { style: { alignItems: 'flex-end', gap: '6px' } }, h('div.mono', null, `${c.sex === 'F' ? 'girl' : 'boy'} · AWC ${store.awcById[c.awcId].name} · synthetic`), h('div', { style: { fontWeight: 800, fontSize: '28px', letterSpacing: '-0.03em' } }, `${lead} days of warning`), h('button.btn.sm', { onclick: replay }, 'Replay ▸'))),
+        h('div.row', { style: { gap: '18px', alignItems: 'stretch', flexWrap: 'wrap' } }, pane('Poshan Tracker today — one reading at a time', false, left), pane('PoshanSetu — direction, task, deadline', true, right)));
+      return wrap;
+    }
 
     function enter(target) {
       if (target === 'jury') return window.psLayout.juryLayout();
