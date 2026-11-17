@@ -34,11 +34,12 @@ export function levelChip(level) {
 }
 export function closureDots(task, esc) {
   const roles = ['AWW', 'ASHA'];
-  return h('span.row', { style: { gap: '4px' } }, roles.map((r) => {
+  return h('span.row', { style: { gap: '4px' } }, esc?.state === 'CONFLICT' ? h('span.tag.bad', { title: 'Outcomes disagree — Mukhya Sevika reconciles' }, 'conflict') : null, roles.map((r) => {
     const req = task.required.some((x) => x.split('|').includes(r));
     const c = task.closures.find((x) => x.by === r);
-    const txt = c ? (c.dtmf ? `${r} ${c.dtmf}` : `${r} ✓`) : r;
-    return h('span.tag' + (c ? '.ok' : req ? '' : '.sky'), { title: c ? `${c.outcome} via ${c.channel} · ${fmtDateTime(c.t)}` : req ? 'Awaiting confirmation' : 'Not required' }, req || c ? txt : `${r} –`);
+    const good = c && (c.outcome === 'VISITED' || c.outcome === 'REFERRED');
+    const txt = c ? (good ? (c.dtmf ? `${r} ${c.dtmf}` : `${r} ✓`) : `${r} ${c.outcome.toLowerCase().slice(0, 7)}`) : r;
+    return h('span.tag' + (c ? (good ? '.ok' : '.warn') : req ? '' : '.sky'), { title: c ? `${c.outcome} via ${c.channel} · ${fmtDateTime(c.t)}` : req ? 'Awaiting confirmation' : 'Not required' }, req || c ? txt : `${r} –`);
   }));
 }
 

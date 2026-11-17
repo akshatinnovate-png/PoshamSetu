@@ -4,11 +4,20 @@ import { open } from '../wm.js';
 import { ICONS } from '../icons.js';
 import { tierChip, nameOf, ageLabel, dueChip, levelChip, closureDots, statCard, fmtDateTime, fmtDuration } from '../common.js';
 import { TIER_RANK } from '../../engine/rulepack.js';
+import { ROLES } from '../../engine/access.js';
+
+const DO = {
+  RED_A: ['आज ही PHC / NRC भेजें', 'Refer to PHC / NRC today — supervisor already told'],
+  RED_B: ['72 घंटे में भूख-जाँच (RUTF), दिन 5 तक MO जाँच', 'Appetite test within 72 h; Medical Officer screening by day 5'],
+  AMBER: ['7 दिन में सहिया के साथ (या बारी-बारी) घर-भेंट', 'Home visit with the Sahiya — together or one after the other — within 7 days'],
+  WATCH: ['14 दिन में दोबारा वज़न और सलाह', 'Re-weigh and counsel within 14 days'],
+};
+const TCOL = { RED_A: '#c8102e', RED_B: '#f0542d', AMBER: '#f2a20c', WATCH: '#3f7fe0' };
 
 export default {
   id: 'worklist', title: 'Worklist — tasks & deadlines', icon: ICONS.worklist, dock: 'Worklist', size: [940, 600],
   mount(ctx) {
-    let tierF = 'ALL', stateF = 'OPEN', q = '';
+    let tierF = 'ALL', stateF = 'OPEN', q = '', view = null;
     const top = h('div.row.wrap', { style: { padding: '10px', gap: '8px' } });
     const tb = h('div.toolbar');
     const list = h('div', { style: { padding: '0 0 10px' } });
@@ -29,6 +38,7 @@ export default {
       mount(tb,
         seg([['ALL', 'All tiers'], ['RED_A', 'RED-A'], ['RED_B', 'RED-B'], ['AMBER', 'AMBER'], ['WATCH', 'WATCH']], () => tierF, (v) => (tierF = v)),
         seg([['OPEN', 'Open'], ['PARTIAL', 'Half-closed'], ['BREACHED', 'Overdue'], ['QUEUED', 'Queued'], ['DONE', 'Closed'], ['EVERY', 'Every']], () => stateF, (v) => (stateF = v)),
+        h('div.seg', null, [['cards', 'Cards'], ['table', 'Table']].map(([k, l]) => h('button', { class: (view ?? (ROLES[store.role].scope === 'awc' ? 'cards' : 'table')) === k ? 'on' : '', onclick: () => { view = k; render(); } }, l))),
         h('input.input', { placeholder: 'search child / AWC / ID', value: q, style: { width: '200px' }, oninput: (e) => { q = e.target.value.toLowerCase(); renderList(); } }));
       renderList();
 
@@ -42,7 +52,27 @@ export default {
         if (stateF === 'DONE') rows = rows.filter((x) => !x.e.open);
         if (q) rows = rows.filter((x) => (nameOf(x.c) + x.c.pseudoId + store.awcById[x.c.awcId].name + x.t.id).toLowerCase().includes(q));
         rows.sort((a, b) => (b.e.open - a.e.open) || TIER_RANK[a.t.tier] - TIER_RANK[b.t.tier] || a.t.dueAt - b.t.dueAt);
-        if (store.silentMode) {
+        const cards = (view ?? (ROLES[store.role].scope === 'awc' ? 'cards' : 'table')) === 'cards';
+        if (!store.silentMode && cards && rows.length) {
+          mount(list, h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '12px', padding: '12px' } },
+            rows.slice(0, 60).map(({ t, e, c }) => {
+              const [hi, en] = DO[t.tier] || ['', ''];
+              const mine = store.role === 'ASHA' ? 'ASHA' : 'AWW';
+              const done = t.closures.some((x) => x.by === mine);
+              return h('div', { style: { background: 'var(--white)', border: '2px solid var(--ink)', boxShadow: 'var(--shadow)', display: 'flex', flexDirection: 'column' } },
+                h('div', { style: { background: TCOL[t.tier], color: t.tier === 'AMBER' ? 'var(--ink)' : '#fff', padding: '6px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid var(--ink)' } },
+                  h('b', { style: { fontSize: '16px', letterSpacing: '-0.01em' } }, nameOf(c)), h('span.mono.small', null, ageLabel(t.ageMonths))),
+                h('div', { style: { padding: '10px', display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 } },
+                  h('div', { style: { fontFamily: 'Noto Sans Devanagari, var(--font-display)', fontSize: '15px', fontWeight: 700, lineHeight: 1.3 } }, hi),
+                  h('div.small', null, en),
+                  h('div.small.muted', null, 'क्यों / why: ', t.reasons[0] || ''),
+                  h('div.row', { style: { gap: '6px', flexWrap: 'wrap', marginTop: 'auto' } }, dueChip(t, e), closureDots(t, e))),
+                h('div.row', { style: { borderTop: '2px solid var(--ink)', gap: 0 } },
+                  h('button', { disabled: done || !e.open, onclick: () => store.close(t, mine === 'ASHA' ? { by: 'ASHA', t: store.now, dtmf: t.tier === 'RED_A' ? 2 : 1, channel: 'IVR' } : { by: 'AWW', t: store.now, outcome: t.tier === 'RED_A' ? 'REFERRED' : 'VISITED', channel: 'APP' }), style: { flex: 1, border: 0, borderRight: '2px solid var(--ink)', padding: '8px', background: done ? 'var(--paper-2)' : 'var(--hot)', fontFamily: 'var(--font-mono)', fontSize: '12px', fontWeight: 700 } }, done ? '✓ हो गया · done' : t.tier === 'RED_A' ? 'भेजा · referred' : 'मिल आए · visited'),
+                  h('button', { onclick: () => open('capture', { childId: c.id }), style: { flex: 1, border: 0, padding: '8px', background: 'var(--white)', fontFamily: 'var(--font-mono)', fontSize: '12px' } }, 'वज़न · weigh'),
+                  h('button', { onclick: () => { store.selectChild(c.id); open('child', { childId: c.id }); }, style: { border: 0, borderLeft: '2px solid var(--ink)', padding: '8px 10px', background: 'var(--white)', fontFamily: 'var(--font-mono)', fontSize: '12px' } }, '›')));
+            })));
+        } else if (store.silentMode) {
           mount(list, h('div.empty', null, h('div.h2', null, 'Silent trial in progress'), h('p.p', null, `${rows.length} alerts logged for lead-time and false-alert measurement — not shown to staff.`)));
         } else if (!rows.length) mount(list, h('div.empty', null, 'Nothing here. ', h('span.kbd', null, 'All clear')));
         else mount(list, h('table.grid', null,

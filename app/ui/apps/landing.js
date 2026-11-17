@@ -42,7 +42,7 @@ export default {
 
     const numbers = h('div', { style: { background: 'var(--pink)', padding: '60px 26px', position: 'relative' } },
       h('div', { style: { fontWeight: 800, fontSize: 'clamp(48px, 8.5vw, 140px)', letterSpacing: '-0.05em', lineHeight: 0.88, color: '#3a2a30' } }, `${lead} Days Earlier,`),
-      h('div', { style: { fontWeight: 800, fontSize: 'clamp(48px, 8.5vw, 140px)', letterSpacing: '-0.05em', lineHeight: 0.88, color: '#3a2a30' } }, `${share}% Caught Before SAM.`),
+      h('div', { style: { fontWeight: 800, fontSize: 'clamp(48px, 8.5vw, 140px)', letterSpacing: '-0.05em', lineHeight: 0.88, color: '#3a2a30' } }, `${share}% Flagged Before The SAM List.`),
       h('div.mono', { style: { marginTop: '14px', fontSize: '12px' } }, `*Silent-trial backtest on ${m.children.toLocaleString('en-IN')} synthetic children, 36 AWCs, 12 months. Median lead time vs. the Tracker's single-reading SAM list. Precision ${Math.round(m.precision * 100)}%. `, h('a', { href: '#', onclick: (e) => { e.preventDefault(); open('trial'); }, style: { color: 'inherit' } }, '(Proof)')),
       h('div.row.wrap', { style: { marginTop: '34px', gap: '14px' } },
         [['1,440', 'children simulated'], ['36', 'Anganwadi centres'], [String(store.tasks.length), 'tasks since go-live'], ['0', 'batch exports on the clock'], ['2', 'ministry signatures per rule']].map(([v, l]) => h('div.card', { style: { minWidth: '170px', boxShadow: 'var(--shadow)' } }, h('div.stat', null, h('div.v', null, v), h('div.l', null, l))))));
@@ -51,7 +51,7 @@ export default {
       h('div.row.between', { style: { alignItems: 'flex-end', marginBottom: '20px' } },
         h('div', { style: { fontWeight: 800, fontSize: '56px', letterSpacing: '-0.045em', lineHeight: 0.9 } }, 'Five stress tests.', h('br'), 'Five answers in code.'),
         h('div.row', null, h('button.btn.ghost', { onclick: () => enter('tile') }, 'Tile all five'), h('button.btn.hot', { onclick: () => enter('jury') }, 'Jury tour ▸'))),
-      h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px' } },
+      h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px' } },
         FIXES.map((f) => h('div.win.focused', { style: { position: 'relative', minHeight: '0' } },
           h('div.tb', null, h('span.t', null, `FIX ${f.n} · ${f.t}`)),
           h('div', { style: { padding: '14px', display: 'flex', flexDirection: 'column', gap: '10px', background: 'var(--white)', flex: 1 } },
