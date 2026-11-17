@@ -1,5 +1,6 @@
 // Window manager for PS.OS1: drag, resize, focus/z-order, minimise to dock, maximise.
 import { h } from './dom.js';
+import { HELP } from './help.js';
 
 const apps = new Map();     // id -> app definition
 const wins = new Map();     // id -> { el, body, app, cleanup }
@@ -31,6 +32,7 @@ export function open(id, opts = {}) {
     h('div.tb', null,
       title,
       app.version ? h('span.ver', null, app.version) : null,
+      HELP[id] ? h('button', { title: 'What am I looking at?', onclick: (e) => { e.stopPropagation(); const ex = el.querySelector('.helpov'); if (ex) ex.remove(); else body.prepend(h('div.helpov', null, h('b', null, 'What to look at: '), HELP[id])); } }, '?') : null,
       h('button', { title: 'Minimise', onclick: (e) => { e.stopPropagation(); minimise(id); } }, '_'),
       h('button', { title: 'Maximise', onclick: (e) => { e.stopPropagation(); el.classList.toggle('max'); w.onResize?.(); } }, '□'),
       h('button', { title: 'Close', onclick: (e) => { e.stopPropagation(); close(id); } }, '×')),

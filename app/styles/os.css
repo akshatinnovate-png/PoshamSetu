@@ -101,3 +101,5 @@
   .dock .app span { display: none; }
   .dock .rolecard { min-width: 0; }
 }
+
+.helpov { position: sticky; top: 0; z-index: 50; background: var(--sky); border-bottom: 2px solid var(--ink); padding: 8px 12px; font-size: 12.5px; line-height: 1.45; }
