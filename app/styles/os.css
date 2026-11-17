@@ -22,7 +22,7 @@
 .dropdown .di.on::after { content: '●'; font-size: 10px; }
 
 .desktop { position: absolute; top: var(--menu-h); left: 0; right: 0; bottom: var(--dock-h); overflow: hidden; }
-.desktop canvas.bg { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; }
+.desktop canvas.bg { position: absolute; inset: 0; width: 100%; height: 100%; }
 .desk-frame { position: absolute; inset: 14px; border: 1.5px solid var(--ink); pointer-events: none; }
 .desk-frame::before { content: ''; position: absolute; inset: 0; background-image: radial-gradient(rgba(31,27,29,.55) .7px, transparent .8px); background-size: 7px 7px; opacity: .55; }
 .desk-label { position: absolute; top: 14px; left: 14px; background: var(--ink); color: var(--white); font-family: var(--font-pixel); font-size: 20px; padding: 0 8px; z-index: 2; }
@@ -86,3 +86,10 @@
 .boot .hd { font-family: var(--font-pixel); font-size: 44px; color: var(--pink); margin-bottom: 18px; }
 .boot .bar { margin-top: 18px; width: 420px; height: 16px; border: 2px solid var(--pink); padding: 2px; }
 .boot .bar i { display: block; height: 100%; background: repeating-linear-gradient(90deg, var(--pink) 0 10px, transparent 10px 13px); width: 0; transition: width .2s steps(6); }
+
+/* desktop widgets */
+.widget { position: absolute; z-index: 3; border: 2px solid var(--ink); background: rgba(243,135,159,.92); font-family: var(--font-pixel); color: var(--ink); }
+.widget .wt { background: var(--ink); color: var(--white); padding: 1px 8px; font-size: 18px; }
+.widget .wb { padding: 6px 8px; font-size: 18px; line-height: 1.1; }
+.widget .wbtn { border: 1.5px solid var(--ink); background: var(--white); font-family: var(--font-pixel); font-size: 16px; padding: 0 6px; }
+.widget .wbtn:hover { background: var(--hot); }

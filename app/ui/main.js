@@ -49,6 +49,27 @@ function shell() {
   const icons = h('div.desk-icons', null, getApps().filter((a) => a.desk).map((a) => h('div.desk-icon', { ondblclick: () => open(a.id), onclick: (e) => { if (e.detail === 1) setTimeout(() => {}, 0); } }, h('div.ic', null, svgFrom(a.icon)), h('span', null, a.desk))));
   desktop.append(icons);
 
+  // desktop widgets (behind windows): Clock Tool + Pulse
+  const clockW = h('div.widget', { style: { right: '210px', top: '46px', width: '250px' } });
+  const pulseW = h('div.widget', { style: { left: '60px', bottom: '40px', width: '300px' } });
+  desktop.append(clockW, pulseW);
+  function renderWidgets() {
+    const d = new Date(store.now + 5.5 * 3600000);
+    mount(clockW, h('div.wt', null, 'Clock Tool 1.1'), h('div.wb', null,
+      h('div', null, d.toLocaleDateString('en-IN', { weekday: 'long', day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' })),
+      h('div', { style: { fontSize: '30px' } }, d.toISOString().slice(11, 19), h('span', { style: { fontSize: '16px' } }, ' IST')),
+      h('div.row', { style: { gap: '4px', marginTop: '4px' } }, ['+1h', '+1d', '+7d'].map((l, i) => h('button.wbtn', { onclick: () => store.advance([3600000, 86400000, 7 * 86400000][i]) }, l)))));
+    const ts = store.scopedTasks().map((t) => ({ t, e: store.esc(t) })).filter((x) => x.e.open);
+    const next = ts.filter((x) => x.e.nextEscalationAt).sort((a, b) => a.e.nextEscalationAt - b.e.nextEscalationAt)[0];
+    const cnt = (tier) => ts.filter((x) => x.t.tier === tier).length;
+    mount(pulseW, h('div.wt', null, `Pulse · ${store.scopeLabel()}`), h('div.wb', null,
+      h('div.row', { style: { gap: '10px' } }, [['RED_A', 'RA'], ['RED_B', 'RB'], ['AMBER', 'AM'], ['WATCH', 'WA']].map(([t, l]) => h('div', null, h('div', { style: { fontSize: '28px', lineHeight: 1 } }, cnt(t)), h('div', { style: { fontSize: '14px' } }, l)))),
+      h('div', { style: { marginTop: '4px' } }, next ? `next escalation in ${Math.max(0, Math.round((next.e.nextEscalationAt - store.now) / 3600000))} h` : 'no escalation pending'),
+      h('div', null, `in flight on the bridge: ${store.inflight.length}`)));
+  }
+  renderWidgets();
+  store.on('tick', renderWidgets); store.on('role', renderWidgets); store.on('task', renderWidgets); store.on('inflight', renderWidgets); store.on('ingested', renderWidgets);
+
   const redraw = () => drawDesktop(canvas);
   redraw();
   let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(redraw, 120); });

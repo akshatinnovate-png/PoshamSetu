@@ -13,7 +13,8 @@
     "dist:win": "electron-packager . PoshanSetu --platform=win32 --arch=x64 --out=dist --overwrite --ignore=^/test --ignore=^/docs --ignore=^/scripts --ignore=^/dist --ignore=node_modules/@fontsource --ignore=node_modules/esbuild --ignore=node_modules/@esbuild --ignore=node_modules/qrcode",
     "dist:linux": "electron-packager . PoshanSetu --platform=linux --arch=x64 --out=dist --overwrite --ignore=^/test --ignore=^/docs --ignore=^/scripts --ignore=^/dist --ignore=node_modules/@fontsource --ignore=node_modules/esbuild --ignore=node_modules/@esbuild --ignore=node_modules/qrcode",
     "dist:mac": "electron-packager . PoshanSetu --platform=darwin --arch=arm64,x64 --out=dist --overwrite --ignore=^/test --ignore=^/docs --ignore=^/scripts --ignore=^/dist --ignore=node_modules/@fontsource --ignore=node_modules/esbuild --ignore=node_modules/@esbuild --ignore=node_modules/qrcode",
-    "check": "node --test && node scripts/sim-check.mjs"
+    "check": "node --test && node scripts/sim-check.mjs",
+    "smoke": "node scripts/smoke.mjs"
   },
   "license": "MIT",
   "devDependencies": {

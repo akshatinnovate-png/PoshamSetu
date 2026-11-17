@@ -5,43 +5,38 @@ const BAYER = [0, 32, 8, 40, 2, 34, 10, 42, 48, 16, 56, 24, 50, 18, 58, 26, 12, 
 
 function hexRgb(hex) { const n = parseInt(hex.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
 
-/** Desktop: pink field with dithered dark blobs (like halftone planets). */
+/** Desktop: pink field with halftone "planets" (dot radius follows a soft falloff), like the reference. */
 export function drawDesktop(canvas, seed = 7) {
-  const scale = 3;
-  const W = Math.ceil(canvas.clientWidth / scale), H = Math.ceil(canvas.clientHeight / scale);
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  const W = canvas.clientWidth, H = canvas.clientHeight;
   if (!W || !H) return;
-  canvas.width = W; canvas.height = H;
+  canvas.width = W * dpr; canvas.height = H * dpr;
   const ctx = canvas.getContext('2d');
-  const img = ctx.createImageData(W, H);
-  const bg = hexRgb('#f3879f'), ink = hexRgb('#2a2024');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.fillStyle = '#f3879f'; ctx.fillRect(0, 0, W, H);
   let s = seed;
   const rnd = () => ((s = (s * 16807) % 2147483647) / 2147483647);
   const blobs = [
-    { x: 0.86, y: 0.78, r: 0.42, k: 0.95 },
-    { x: 0.1, y: 1.05, r: 0.38, k: 0.85 },
-    { x: 0.55, y: -0.1, r: 0.18, k: 0.35 },
+    { x: W * 0.9, y: H * 0.95, r: Math.max(W, H) * 0.42 },
+    { x: W * 0.06, y: H * 1.1, r: Math.max(W, H) * 0.3 },
+    { x: W * 0.5, y: -H * 0.25, r: Math.max(W, H) * 0.22 },
   ];
-  const stars = Array.from({ length: 90 }, () => [rnd() * W, rnd() * H * 0.7, rnd()]);
-  for (let y = 0; y < H; y++) {
-    for (let x = 0; x < W; x++) {
+  const cell = 7;
+  ctx.fillStyle = '#2a2024';
+  for (let y = cell / 2; y < H; y += cell) {
+    for (let x = cell / 2; x < W; x += cell) {
       let v = 0;
       for (const b of blobs) {
-        const dx = x / W - b.x, dy = (y / H - b.y) * (H / W);
-        const d = Math.sqrt(dx * dx + dy * dy) / (b.r);
-        if (d < 1) v = Math.max(v, b.k * Math.pow(1 - d, 0.55) * (0.7 + 0.3 * Math.sin(x * 0.05 + y * 0.03)));
+        const d = Math.hypot(x - b.x, y - b.y) / b.r;
+        if (d < 1) v = Math.max(v, Math.pow(1 - d, 0.9));
       }
-      const th = BAYER[(y & 7) * 8 + (x & 7)];
-      const on = v * 0.9 > th;
-      const i = (y * W + x) * 4;
-      const c = on ? ink : bg;
-      img.data[i] = c[0]; img.data[i + 1] = c[1]; img.data[i + 2] = c[2]; img.data[i + 3] = 255;
+      const r = v > 0.02 ? Math.min(cell * 0.62, 0.6 + v * cell * 0.75) : 0.55;
+      ctx.globalAlpha = v > 0.02 ? 1 : 0.28;
+      ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
     }
   }
-  for (const [sx, sy, k] of stars) {
-    const i = ((Math.floor(sy) * W) + Math.floor(sx)) * 4;
-    if (k > 0.5) { img.data[i] = ink[0]; img.data[i + 1] = ink[1]; img.data[i + 2] = ink[2]; }
-  }
-  ctx.putImageData(img, 0, 0);
+  ctx.globalAlpha = 1;
+  for (let i = 0; i < 70; i++) { const x = rnd() * W, y = rnd() * H * 0.75, r = rnd() < 0.2 ? 2 : 1.2; ctx.fillRect(x, y, r * 1.5, r * 1.5); }
 }
 
 // value noise for clouds
