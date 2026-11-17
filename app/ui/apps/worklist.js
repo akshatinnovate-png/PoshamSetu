@@ -100,6 +100,7 @@ export default {
               e.lateArrival ? h('span.tag.bad', { title: 'Event reached PoshanSetu after a deadline had passed — pipeline breach, not worker breach' }, 'late arrival') : null,
               t.remeasureFirst ? h('span.tag.warn', { title: 'Feed reliability below cutoff — re-measure before acting' }, 're-measure first') : null,
               t.toPHC ? h('span.tag', null, '→ PHC') : null,
+              t.route === 'SSBSK' ? h('span.tag.pink', { title: 'Under 36 months: joins the SSBSK at-risk home-visit list (ASHA / ANM / CHO / AWW team)' }, 'SSBSK list') : t.route === 'JOINT' ? h('span.tag.pink', { title: '36–59 months: AWW + ASHA visit, together or in sequence' }, 'joint visit') : null,
               h('span.tag', { title: 'Rule pack version' }, 'v' + t.packVersion))))))));
         foot.textContent = '';
         foot.append(h('span', null, `${rows.length} tasks`), h('span', null, `scope: ${store.scopeLabel()}`), h('span', null, `clock: event time (measurement), not ingestion time`));

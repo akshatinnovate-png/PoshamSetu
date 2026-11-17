@@ -41,6 +41,8 @@ export function makeTask({ child, result, pack, ingestedAt, id }) {
     ageMonths: result.visit.ageMonths,
     remeasureFirst: !!result.remeasureFirst,
     toPHC: result.toPHC,
+    // Table 2: new/worsening AMBER under 36 months joins the SSBSK at-risk visit list; 36-59 months gets a joint AWW + ASHA visit.
+    route: result.tier === 'AMBER' ? (result.visit.ageMonths < 36 ? 'SSBSK' : 'JOINT') : result.tier === 'RED_A' ? 'REFERRAL' : result.tier === 'RED_B' ? 'CMAM' : 'REMEASURE',
   };
 }
 
