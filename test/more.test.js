@@ -119,3 +119,11 @@ test('evidence pack verifier accepts a genuine pack and rejects a tampered one',
   fs.writeFileSync(f, JSON.stringify(ev));
   assert.throws(() => execFileSync(process.execPath, ['scripts/verify-evidence.mjs', f], { stdio: 'pipe' }));
 });
+
+test('impact scenario: no effect averts (almost) nothing; more effect averts more', async () => {
+  const { impactScenario } = await import('../app/engine/impact.js');
+  const S = generate({ pack: P, seed: 71100 });
+  const z = impactScenario(S.district.children, P, { effect: 0 }), a = impactScenario(S.district.children, P, { effect: 0.1 }), b = impactScenario(S.district.children, P, { effect: 0.25 });
+  assert.ok(z.averted <= 0.05 * z.samKids, String(z.averted));
+  assert.ok(a.averted > z.averted && b.averted > a.averted);
+});

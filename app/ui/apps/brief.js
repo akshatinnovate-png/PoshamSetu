@@ -5,6 +5,9 @@ import { store } from '../store.js';
 import { ICONS } from '../icons.js';
 import { open } from '../wm.js';
 import { pct } from '../common.js';
+import { impactScenario } from '../../engine/impact.js';
+
+const SC = { effect: 0.15, compliance: 0.8 };
 
 const GAPS = [
   ['G1 Detection', '29.2%', 'of children had a wasting episode by 24 months, but only 5.6% were wasted at one time — one reading misses most of them.', '[6] Mertens et al., Nature 2023'],
@@ -84,7 +87,19 @@ export default {
           ['Frontline action', 'At-risk children visited in 7 days', '≥ 80% of new AMBER tasks', closedIn == null ? '—' : `Measured live per task (Worklist). Simulated workers: ${pct(closedIn)}`],
           ['Migrant continuity', 'Migrants measured within 60 days', '≥ 85% traced or transferred', `Tracked via tokens + LTFU rule. Simulated: ${pct(migr.length ? traced / migr.length : 0)}`],
         ];
+        const base = impactScenario(store.sim.district.children, store.pack, { effect: 0, compliance: SC.compliance });
+        const sc = impactScenario(store.sim.district.children, store.pack, SC);
+        const attributable = Math.max(0, sc.averted - base.averted);
+        const sl = (label, k, min, max, step, fmt) => h('label.field', { style: { flex: '1 1 200px' } }, h('span', null, `${label}: `, h('b', null, fmt(SC[k]))), h('input', { type: 'range', min, max, step, value: SC[k], oninput: (e) => { SC[k] = +e.target.value; render(); } }));
+        const scenario = h('div.card', null, h('div.kicker', null, 'Impact SCENARIO — an assumption, not a result'),
+          h('div.row.wrap', { style: { gap: '14px', marginTop: '8px' } }, sl('If a visit + ration review lifts WHZ by', 'effect', 0, 0.3, 0.01, (v) => `${v.toFixed(2)} SD/month for 3 months`), sl('and this share of alerts is acted on', 'compliance', 0.3, 1, 0.05, (v) => pct(v))),
+          h('div.row.wrap', { style: { gap: '10px', marginTop: '10px' } },
+            h('div.card.flat', { style: { flex: '1 1 150px' } }, h('div.stat', null, h('div.v', null, sc.samKids), h('div.l', null, 'true SAM episodes (simulated truth)'))),
+            h('div.card.flat', { style: { flex: '1 1 150px' } }, h('div.stat', null, h('div.v', null, pct(sc.samKids ? sc.flagged / sc.samKids : 0)), h('div.l', null, 'had an AMBER alert first (≤ 180 d)'))),
+            h('div.card.flat.pinkc', { style: { flex: '1 1 150px' } }, h('div.stat', null, h('div.v', null, attributable), h('div.l', null, `episodes averted by acting (${pct(sc.samKids ? attributable / sc.samKids : 0)})`)))),
+          h('div.small.muted', { style: { marginTop: '6px' } }, 'Averted = with the assumed uplift applied from the first AMBER, true WHZ never crosses −3, minus the cases that would not have crossed anyway. The effect size must come from CMAM / SSBSK evidence and the pilot\'s comparison blocks — this card only shows why lead time matters.'));
         body = h('div.col', { style: { gap: '12px' } },
+          scenario,
           h('table.grid', null, h('thead', null, h('tr', null, ['Indicator (Table 5)', 'Baseline (Phase 1)', 'Pilot hypothesis', 'Prototype shows'].map((x) => h('th', null, x)))),
             h('tbody', null, rows.map((r) => h('tr', null, r.map((x, i) => h('td', null, i === 0 ? h('b', null, x) : i === 3 ? h('span', { style: { color: 'var(--hot)', fontWeight: 600 } }, x) : x)))))),
           h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '12px' } },
