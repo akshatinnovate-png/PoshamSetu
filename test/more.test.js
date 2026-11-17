@@ -105,3 +105,17 @@ test('queued AMBER escalates to the Mukhya Sevika at day 10, not day 7', async (
   const u = { ...t, queued: false, dueAt: T0 + 7 * DAY };
   assert.equal(escalation(u, T0 + 8 * DAY, P).level, 1);
 });
+
+test('evidence pack verifier accepts a genuine pack and rejects a tampered one', async () => {
+  const { signPack } = await import('../app/engine/rulepack.js');
+  const { AuditLog } = await import('../app/engine/audit.js');
+  const fs = await import('node:fs'); const os = await import('node:os'); const path = await import('node:path'); const { execFileSync } = await import('node:child_process');
+  const log = new AuditLog(); log.append({ actor: 'x', role: 'AWW', action: 'VIEW', subject: 'C1' });
+  const ev = { rulePack: await signPack(P), audit: { entries: log.entries }, backtest: { shareEarlier: 0.7, leadMedianDays: 80, precision: 0.6, seed: 1 } };
+  const f = path.join(os.tmpdir(), `ev-${process.pid}.json`);
+  fs.writeFileSync(f, JSON.stringify(ev));
+  execFileSync(process.execPath, ['scripts/verify-evidence.mjs', f]);
+  ev.rulePack.pack = { ...ev.rulePack.pack, version: '9.9.9' };
+  fs.writeFileSync(f, JSON.stringify(ev));
+  assert.throws(() => execFileSync(process.execPath, ['scripts/verify-evidence.mjs', f], { stdio: 'pipe' }));
+});
