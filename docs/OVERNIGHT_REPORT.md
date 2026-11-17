@@ -34,6 +34,9 @@ Added later in the night:
 - **RED-B closure follows CMAM:** appetite test and MO screening milestones.
 - **Child timeline tab,** and quarantined readings marked on the chart.
 - **DPO aggregate-only enforcement** across all windows, with break-glass for child records.
+- **Presenting:** presenter zoom (115% / 130%, remembered), tour autoplay with an elapsed timer for rehearsal, and SVG export of the architecture and bridge diagrams (`docs/diagrams/architecture.svg`).
+- **Mode → Regenerate district:** a new random seed, to show nothing is hard-coded.
+- **Scale benchmark** (`npm run bench`, and `bench` in the Shell): about 28 µs per child for a full re-triage.
 
 ## Honest findings worth knowing before the finals
 
