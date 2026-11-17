@@ -41,7 +41,12 @@ Each answer is short enough to say in the 5-minute interaction, and each points 
 
 **Won't this flood AWWs with alerts?** There are three guards. Confirmation by re-weigh is needed before AMBER. Episode logic means a recurring dip within 60 days is follow-up, not a new visit. And there is a cap of 2 new AMBER visits per AWC per month, with a ranked queue that escalates at day 10. The backtest is honest that the cap binds in many AWC-months at 30% wasting. That is exactly why we rank the queue, and it is a Phase 1 calibration point.
 
-**What is the evidence it works?** The silent-trial backtest (Trial window) uses synthetic data tuned to district levels: about 70% of children who reached the Tracker SAM list were flagged AMBER first, a median of about 80 days earlier, with precision of about 63%. The Table 5 hypotheses were at least 50% flagged earlier and a median of at least 30 days. Phase 1 repeats this on anonymised real data, and the first 8 live weeks run silent.
+**What is the evidence it works?** The silent-trial backtest (Trial window) runs on synthetic data tuned to district levels. Quote it honestly, in two parts:
+- *Against the Tracker's SAM list:* about 69% of children who reached it were flagged AMBER first, a median of about 87 days earlier, with precision of about 60%. The Table 5 hypotheses were at least 50% and a median of at least 30 days.
+- *Against the Tracker's first listing of any kind (MAM or SAM):* about 21% were flagged before the Tracker listed them at all, a median of about 55 days earlier. That is the pure value of the trend rules (Rule 2, sustained fall, infant velocity, trend plus signal). For the rest, the gain is not detection but **action**: a MAM listing in the Tracker today has no owner, deadline or escalation, and in PoshanSetu it becomes a confirmed task with a clock.
+- Phase 1 repeats both on anonymised real data, and the first 8 live weeks run silent.
+
+**Couldn't the Tracker just add a MAM alert and get most of this?** It would get the list, not the loop. The loop is confirmation by re-weigh (fewer false alerts), a named AWW and ASHA task, a deadline counted from measurement, escalation to people who can act, and closure that needs both workers. The trend rules add children who are not on any list yet.
 
 **Who owns the thresholds?** MoWCD and MoHFW jointly. The Rule pack window shows that a draft needs both signatures. One ministry alone cannot change a cut-off.
 
