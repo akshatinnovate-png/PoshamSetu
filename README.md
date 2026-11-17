@@ -118,4 +118,4 @@ npm run service      # http://localhost:8080/health
 - The Poshan Tracker Open API, ABDM gateway, UIDAI eKYC, Bhashini and telecom calls are **simulated** behind the same interfaces a pilot would use.
 - The signing keys are demo keys, published so anyone can verify signatures.
 
-See `docs/JURY_QA.md` for Round 2 Q&A preparation.
+See `docs/DEMO_SCRIPT.md` for the 10-minute run-through and `docs/JURY_QA.md` for Q&A preparation.
