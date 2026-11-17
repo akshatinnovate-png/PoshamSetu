@@ -17,6 +17,7 @@ const HELP = `commands:
   advance <n>h|d           move the sim clock
   verify pack|audit        check signatures / hash chain
   fhir <childId>           print the FHIR bundle summary
+  bench                    time a full re-triage of the district
   open <app>               open a window (${'apps'})
   clear`;
 
@@ -89,6 +90,14 @@ export default {
           if (!c) throw new Error('child not found');
           const b = wellnessBundle(c, c.eval.visits, c.current, c.consent);
           print(b.entry.map((e) => `${e.resource.resourceType}/${e.resource.id}`).join('  '));
+          break;
+        }
+        case 'bench': {
+          const { evaluate } = await import('../../engine/triage.js');
+          const kids = store.sim.district.children; const t0 = performance.now(); let v = 0;
+          for (const c of kids) v += evaluate(c, c.events, c.signals, store.pack).visits.length;
+          const ms = performance.now() - t0;
+          print(`re-triaged ${kids.length} children (${v} visits) in ${Math.round(ms)} ms — ${(ms / kids.length * 1000).toFixed(0)} µs/child → 7.3 crore children ≈ ${Math.round(ms / kids.length * 7.3e7 / 60000)} min on one core`, '#9fe0b8');
           break;
         }
         case 'open': { const id = a[0]; if (!getApps().some((x) => x.id === id)) throw new Error('apps: ' + getApps().map((x) => x.id).join(', ')); open(id); break; }
