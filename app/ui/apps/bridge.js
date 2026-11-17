@@ -3,6 +3,7 @@ import { store } from '../store.js';
 import { open } from '../wm.js';
 import { ICONS } from '../icons.js';
 import { bars } from '../charts.js';
+import { downloadSvg } from '../common.js';
 import { fmtDuration, HOUR, DAY, tierChip } from '../common.js';
 import { ADAPTERS, clockSafety } from '../../engine/bridge.js';
 import { TIER_LABEL } from '../../engine/rulepack.js';
@@ -86,7 +87,7 @@ export default {
         h('div.toolbar', null, h('span.fix', null, 'AUDIT FIX 01'), h('b', null, 'Batch exports cannot run a 24-hour clock.'),
           h('div.grow'), h('div.seg', null, [['ROUND1', 'Round 1: dashboard export'], ['FALLBACK', 'Fallback: nightly delta'], ['ROUND2', 'Round 2: event bridge']].map(([k, l]) => h('button', { class: mode === k ? 'on' : '', onclick: () => { mode = k; render(); } }, l)))),
         h('div.col', { style: { padding: '12px', gap: '12px' } },
-          h('div.card', null, pipeline()),
+          (() => { const pv = pipeline(); return h('div.card', { style: { position: 'relative' } }, pv, h('button.btn.sm.ghost', { style: { position: 'absolute', right: '8px', top: '8px' }, onclick: () => downloadSvg(pv, `poshansetu-bridge-${mode.toLowerCase()}.svg`) }, 'SVG')); })(),
           h('div.row.wrap', { style: { alignItems: 'stretch', gap: '12px' } },
             h('div.card.grow', { style: { minWidth: '420px' } }, h('div.kicker', null, 'Clock-safety: may this adapter drive the tier\'s clock? (p95 lag ≤ 10% of deadline)'),
               h('table.grid', { style: { marginTop: '6px' } },

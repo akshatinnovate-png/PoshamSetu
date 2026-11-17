@@ -74,3 +74,15 @@ export function showcaseChild() {
   showcase = pick;
   return pick;
 }
+
+/** Save an on-screen SVG as a standalone vector file (for slides). */
+export function downloadSvg(svg, name) {
+  const clone = svg.cloneNode(true);
+  clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+  clone.setAttribute('style', 'font-family: JetBrains Mono, Menlo, monospace; background: #fff');
+  const vb = (clone.getAttribute('viewBox') || '0 0 800 400').split(' ').map(Number);
+  clone.setAttribute('width', vb[2]); clone.setAttribute('height', vb[3]);
+  const data = '<?xml version="1.0" encoding="UTF-8"?>\n' + new XMLSerializer().serializeToString(clone);
+  if (window.psNative?.saveFile) window.psNative.saveFile(name, data);
+  else { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([data], { type: 'image/svg+xml' })); a.download = name; a.click(); }
+}

@@ -2,6 +2,7 @@ import { h, mount, s } from '../dom.js';
 import { store } from '../store.js';
 import { ICONS } from '../icons.js';
 import { open } from '../wm.js';
+import { downloadSvg } from '../common.js';
 
 const LAYERS = [
   { id: 'L1', t: 'L1 Capture', sub: 'Weight, height, MUAC, oedema as dated events', app: 'capture', files: ['engine/triage.js · buildVisits()', 'ui/apps/capture.js'], body: 'The AWW records in the Tracker as today. Each measurement is an immutable, dated event; two same-day readings that disagree trigger a re-weigh and both stay in the log. Validation happens at entry: implausible values (WHO limits) are caught before save.' },
@@ -57,7 +58,7 @@ export default {
       svg.append(s('text', { x: 10, y: 262, 'font-size': 10, fill: '#6d6266' }, `All of it runs in this app: ${store.sim.district.children.length.toLocaleString('en-IN')} children · ${store.sim.district.history.events.length.toLocaleString('en-IN')} events · ${store.tasks.length} tasks · pack ${store.pack.version}`));
       const item = sel.startsWith('C') ? CROSS[+sel.slice(1)] : LAYERS.find((l) => l.id === sel);
       mount(ctx.body,
-        h('div.toolbar', null, h('b', null, 'Left to right is the data flow.'), h('span.small', null, 'Click a block — then open the working module.')),
+        h('div.toolbar', null, h('b', null, 'Left to right is the data flow.'), h('span.small', null, 'Click a block — then open the working module.'), h('div.grow'), h('button.btn.sm.ghost', { onclick: () => downloadSvg(svg, 'poshansetu-architecture.svg') }, 'Download SVG (for slides)')),
         h('div', { style: { padding: '12px' } }, svg),
         h('div.row', { style: { padding: '0 12px 12px', gap: '12px', alignItems: 'stretch' } },
           h('div.card.grow', null, h('div.kicker', null, item.fix ? `Audit fix ${item.fix}` : 'Module'), h('div.h2', null, item.t), h('p.p', { style: { marginTop: '6px' } }, item.body || item.sub),
