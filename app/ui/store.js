@@ -43,6 +43,19 @@ export const store = {
     progress?.('engine ready');
   },
 
+  /** Activate a dual-signed pack: future evaluations use it; past alerts keep the version that produced them. */
+  async activatePack(signed) {
+    const v = await verifyPack(signed);
+    if (!v.ok) throw new Error('pack signatures invalid');
+    const prev = this.pack.version;
+    this.signed = signed; this.packVerified = v; this.pack = signed.pack;
+    for (const c of this.sim.district.children) {
+      const ev = evaluate(c, c.events, c.signals, this.pack, { feedR: this.sim.feeds[c.awcId].R });
+      c.eval = ev; c.current = ev.current;
+    }
+    this.audit.append({ at: this.now, actor: 'MoWCD + MoHFW', role: 'MINISTRY', action: 'PACK_ACTIVATED', subject: `${this.pack.id}@${this.pack.version}`, detail: `supersedes ${prev}` });
+    this.emit('pack'); this.emit('role');
+  },
   setRole(role, scope) {
     this.role = role;
     this.scope = scope ?? this.defaultScope(role);

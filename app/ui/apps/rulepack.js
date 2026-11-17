@@ -41,19 +41,20 @@ export default {
               h('div.col', { style: { gap: '8px', marginTop: '8px' } }, KNOBS.map(([p, label, min, max, step]) => {
                 const v = get(draft || base, p);
                 return h('label.field', null, h('span', null, `${label}: `, h('b', null, v), draft && v !== get(base, p) ? h('span', { style: { color: 'var(--hot)' } }, ` (was ${get(base, p)})`) : null),
-                  h('input', { type: 'range', min, max, step, value: v, oninput: (e) => { if (!draft) { draft = deepClone(base); draft.version = '2.1.0-draft'; draft.supersedes = base.version; draft.changelog = ['Calibration proposal from Phase 1 backtest.']; } setPath(draft, p, +e.target.value); draftSigs = []; bt = null; render(); } }));
+                  h('input', { type: 'range', min, max, step, value: v, oninput: (e) => { if (!draft) { draft = deepClone(base); draft.version = base.version.split('.').map((x, i) => (i === 1 ? +x + 1 : i === 2 ? 0 : x)).join('.'); draft.supersedes = base.version; draft.changelog = ['Calibration proposal from Phase 1 backtest.']; } setPath(draft, p, +e.target.value); draftSigs = []; bt = null; render(); } }));
               })),
               draft ? h('div.row.wrap', { style: { gap: '6px', marginTop: '10px' } },
                 h('button.btn.sm.hot', { disabled: running, onclick: runBacktest }, running ? 'Running…' : 'Re-run silent-trial backtest'),
                 h('button.btn.sm' + (signedBy.has('MoWCD') ? '.ghost' : ''), { disabled: signedBy.has('MoWCD'), onclick: () => sign('MoWCD') }, signedBy.has('MoWCD') ? 'MoWCD ✓' : 'Sign as MoWCD'),
                 h('button.btn.sm' + (signedBy.has('MoHFW') ? '.ghost' : ''), { disabled: signedBy.has('MoHFW'), onclick: () => sign('MoHFW') }, signedBy.has('MoHFW') ? 'MoHFW ✓' : 'Sign as MoHFW'),
                 h('button.btn.sm.ghost', { onclick: () => { draft = null; draftSigs = []; bt = null; render(); } }, 'Discard')) : null,
-              draft ? h('div.small', { style: { marginTop: '6px' } }, signedBy.size === 2 ? h('b', { style: { color: 'var(--green)' } }, 'Both ministries signed — the pack can be activated at the next cycle.') : `Needs ${2 - signedBy.size} more signature(s). One ministry alone cannot change a threshold.`) : null)),
+              draft ? h('div.small', { style: { marginTop: '6px' } }, signedBy.size === 2 ? h('b', { style: { color: 'var(--green)' } }, 'Both ministries signed — the pack can be activated.') : `Needs ${2 - signedBy.size} more signature(s). One ministry alone cannot change a threshold.`) : null,
+              draft && signedBy.size === 2 ? h('button.btn.hot', { style: { marginTop: '8px' }, onclick: async () => { await store.activatePack({ pack: draft, signatures: draftSigs }); draft = null; draftSigs = []; bt = null; verify = await verifyPack(store.signed); render(); } }, `Activate ${draft.version} ▸`) : null)),
           h('div.grow.col', { style: { padding: '12px', gap: '10px', minWidth: 0 } },
             h('div.seg', { style: { alignSelf: 'flex-start' } }, [['diff', 'Diff & impact'], ['json', 'Pack JSON']].map(([k, l]) => h('button', { class: view === k ? 'on' : '', onclick: () => { view = k; render(); } }, l))),
             view === 'json' ? h('div.grow', { style: { minHeight: 0, overflow: 'auto', border: '2px solid var(--ink)' } }, jsonView(draft || base)) :
               h('div.col', { style: { gap: '10px' } },
-                h('div.card', null, h('div.kicker', null, draft ? `Diff ${base.version} → ${draft.version}` : 'No draft — move a slider to propose a change'),
+                h('div.card', null, h('div.kicker', null, draft ? `Diff ${base.version} → ${draft.version} (draft)` : 'No draft — move a slider to propose a change'),
                   d.filter((x) => !['version', 'supersedes', 'changelog'].includes(x.path)).map((x) => h('div.row', { style: { gap: '10px', padding: '4px 0', borderBottom: '1px dashed #ccc', fontFamily: 'var(--font-mono)', fontSize: '12px' } }, h('b', { style: { width: '260px' } }, x.path), h('span', { style: { textDecoration: 'line-through', color: 'var(--muted)' } }, JSON.stringify(x.from)), '→', h('b', { style: { color: 'var(--hot)' } }, JSON.stringify(x.to))))),
                 h('div.card', null, h('div.kicker', null, 'Backtest impact (same synthetic district, 12 months, alerts silent)'),
                   h('table.grid', { style: { marginTop: '6px' } }, h('thead', null, h('tr', null, h('th', null, 'Metric'), h('th.num', null, `live ${base.version}`), h('th.num', null, 'draft'))),
@@ -80,5 +81,6 @@ export default {
       render();
     }
     render();
+    ctx.onCleanup(store.on('pack', render));
   },
 };
