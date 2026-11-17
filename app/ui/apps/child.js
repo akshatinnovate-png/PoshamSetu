@@ -95,7 +95,7 @@ export default {
         w: 620, h: 190, x: { min: t0 - 5 * DAY, max: t1 + 5 * DAY, ticks: months }, y: { min: -5, max: 2, ticks: [-5, -4, -3, -2, -1, 0, 1, 2] },
         xfmt: (t) => new Date(t).toLocaleDateString('en-IN', { month: 'short', year: '2-digit' }), yfmt: (v) => v,
         bands: [{ y0: -5, y1: -3, fill: '#ffd3da', label: 'SAM' }, { y0: -3, y1: -2, fill: '#ffeac2', label: 'MAM' }],
-        vlines: [{ x: store.now, label: 'now', color: '#e94fbf' }],
+        vlines: [{ x: store.now, label: 'now', color: '#e94fbf' }, ...vs.filter((v) => v.biv.length).map((v, i) => ({ x: v.t, label: `✕ quarantined (${v.weightKg} kg)`, color: '#c8102e', dy: 14 + i * 12 }))],
         ylabel: 'WHZ',
         series: [{ points: whzPts, color: '#1f1b1d', width: 2, dots: true, r: 4 }],
       });
