@@ -78,7 +78,7 @@ export default {
             h('div.p', { style: { marginTop: '6px' } }, t.reasons.join(' · '))),
           h('div.card', null, h('div.kicker', null, 'Closure state machine — both roles, any order'), SM,
             h('div.small', { style: { marginTop: '4px' } }, h('b', null, `State: ${st}. `),
-              st === 'PARTIAL' ? `${aw ? 'AWW confirmed; waiting for ASHA keypress.' : 'ASHA confirmed by IVR; waiting for AWW app flag.'} If the window closes half-done, the Mukhya Sevika sees exactly who is missing.`
+              st === 'PARTIAL' ? `${aw && as ? `Both visits confirmed; waiting for CMAM milestone(s): ${(e.missing || []).map((m) => m === 'APPETITE_TEST' ? 'appetite test' : 'MO screening').join(' + ')}.` : aw ? 'AWW confirmed; waiting for ASHA keypress.' : as ? 'ASHA confirmed by IVR; waiting for AWW app flag.' : 'A milestone is recorded; visits still pending.'} If the window closes half-done, the Mukhya Sevika sees exactly what is missing.`
                 : st === 'CONFLICT' ? 'AWW says visited but ASHA says migrated (or vice-versa) — routed to the Mukhya Sevika to reconcile; a migration trace task opens.'
                   : st === 'CLOSED' ? `Closed at ${fmtDateTime(e.closedAt)} — ${e.closedAt <= t.dueAt ? 'inside' : 'after'} the window.`
                     : st === 'OPEN' ? 'Nobody has confirmed yet.' : `Closed with outcome ${st.toLowerCase()}; follow-on work opened.`)),
