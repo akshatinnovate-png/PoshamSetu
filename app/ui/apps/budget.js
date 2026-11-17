@@ -45,7 +45,7 @@ export default {
         h('div.toolbar', null, h('span.fix', null, 'AUDIT FIX 05'), h('b', null, 'Rs 12 lakh is the pilot MVP — not national DPI.'), h('span.small', null, 'Reuse open building blocks; cost Phase 3 as its own MeitY/NIC capex line.')),
         h('div', { style: { padding: '12px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', gap: '12px' } },
           h('div.card', null, h('div.kicker', null, 'Phase 2 pilot · 250 AWCs · ~10,000 children · Rs 33 L'),
-            h('div.row', { style: { gap: 0, height: '30px', border: '2px solid var(--ink)', margin: '10px 0' } }, PILOT.map(([l, v, c]) => h('div', { title: `${l}: Rs ${v} L`, style: { width: (v / 33) * 100 + '%', background: c, borderRight: '1.5px solid var(--ink)' } }))),
+            h('div.row', { style: { gap: 0, height: '30px', border: '2px solid var(--ink)', margin: '10px 0' } }, PILOT.map(([l, v, c]) => h('div', { title: `${l}: Rs ${v} L`, style: { width: (v / 33) * 100 + '%', height: '100%', background: c, borderRight: '1.5px solid var(--ink)' } }))),
             PILOT.map(([l, v, c]) => h('div.row.between', { style: { padding: '3px 0', borderBottom: '1px dashed #bbb' } }, h('span.row', { style: { gap: '6px' } }, h('span', { style: { width: '10px', height: '10px', background: c, border: '1px solid #1f1b1d', display: 'inline-block' } }), l), h('b.mono', null, `Rs ${v} L`))),
             h('div.small.muted', { style: { marginTop: '6px' } }, `Recurring after build ≈ ${L(pilot.total)} / yr (≈ Rs ${Math.round((pilot.total * 1e5) / 10000)} per child) — telecom ${L(pilot.telecom)}, cloud ${L(pilot.cloud)}.`)),
           h('div.card', null, h('div.kicker', null, 'What the Rs 12 L development line actually buys'),
