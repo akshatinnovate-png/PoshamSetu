@@ -14,7 +14,8 @@
     "dist:linux": "electron-packager . PoshanSetu --platform=linux --arch=x64 --out=dist --overwrite --ignore=^/test --ignore=^/docs --ignore=^/scripts --ignore=^/dist --ignore=node_modules/@fontsource --ignore=node_modules/esbuild --ignore=node_modules/@esbuild --ignore=node_modules/qrcode",
     "dist:mac": "electron-packager . PoshanSetu --platform=darwin --arch=arm64,x64 --out=dist --overwrite --ignore=^/test --ignore=^/docs --ignore=^/scripts --ignore=^/dist --ignore=node_modules/@fontsource --ignore=node_modules/esbuild --ignore=node_modules/@esbuild --ignore=node_modules/qrcode",
     "check": "node --test && node scripts/sim-check.mjs",
-    "smoke": "node scripts/smoke.mjs"
+    "smoke": "node scripts/smoke.mjs",
+    "service": "node server/index.mjs"
   },
   "license": "MIT",
   "devDependencies": {
