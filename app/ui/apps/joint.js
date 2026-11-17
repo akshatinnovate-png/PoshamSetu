@@ -25,6 +25,7 @@ export default {
         .sort((a, b) => b.e.open - a.e.open || a.t.dueAt - b.t.dueAt);
     }
     function render() {
+      if (store.role === 'DPO') { mount(ctx.body, h('div.empty', null, 'Joint-visit tasks are child-level: visible to AWW/ASHA, Mukhya Sevika and CDPO. District officers see half-closed counts in the Report.')); return; }
       const list = tasks();
       if (!sel || !store.tasks.find((t) => t.id === sel)) sel = list[0]?.t.id || store.scopedTasks().find((t) => t.required.includes('ASHA'))?.id;
       const task = store.tasks.find((t) => t.id === sel);

@@ -47,7 +47,7 @@ export default {
         h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', padding: '0 12px 12px' } },
           lanes.map((lane, i) => h('div', { style: { background: i === 0 ? 'var(--white)' : i === 1 ? '#fff4d6' : i === 2 ? '#ffe1e6' : 'var(--ink)', border: '2px solid var(--ink)', minHeight: '200px' } },
             h('div', { style: { padding: '6px 8px', borderBottom: '2px solid var(--ink)', fontFamily: 'var(--font-pixel)', fontSize: '19px', background: i === 3 ? 'var(--hot)' : 'var(--paper-2)' } }, `L${i} · ${L[i].label}  (${lane.length})`),
-            h('div.col', { style: { gap: '6px', padding: '6px' } }, lane.slice(0, 40).map(card), lane.length > 40 ? h('div.small', { style: { color: i === 3 ? '#fff' : '' } }, `+${lane.length - 40} more`) : null)))));
+            h('div.col', { style: { gap: '6px', padding: '6px' } }, store.role === 'DPO' ? h('div', { style: { fontSize: '40px', fontWeight: 800, padding: '10px', color: i === 3 ? '#fff' : '' } }, lane.length, h('div.small', null, 'tasks (district view: counts only)')) : lane.slice(0, 40).map(card), lane.length > 40 ? h('div.small', { style: { color: i === 3 ? '#fff' : '' } }, `+${lane.length - 40} more`) : null)))));
     }
     render();
     ctx.onCleanup(store.on('tick', render));

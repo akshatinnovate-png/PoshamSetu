@@ -44,6 +44,7 @@ export default {
 
     async function render() {
       if (busy) { mount(ctx.body, h('div.empty', null, 'Signing transfer tokens for announced migrants…')); return; }
+      if (store.role === 'DPO' && tab === 'token') tab = 'routes';
       const { mig, lost } = people();
       if (!sel) sel = mig.find((x) => x.c.token)?.c.id;
       const c = store.childById[sel];

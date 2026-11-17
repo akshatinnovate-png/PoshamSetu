@@ -53,6 +53,15 @@ export default {
         if (stateF === 'DONE') rows = rows.filter((x) => !x.e.open);
         if (q) rows = rows.filter((x) => (nameOf(x.c) + x.c.pseudoId + store.awcById[x.c.awcId].name + x.t.id).toLowerCase().includes(q));
         rows.sort((a, b) => (b.e.open - a.e.open) || TIER_RANK[a.t.tier] - TIER_RANK[b.t.tier] || a.t.dueAt - b.t.dueAt);
+        if (store.role === 'DPO') {
+          const blocks = store.sim.district.blocks.map((b) => { const xs = all.filter((x) => store.awcById[x.t.awcId].blockId === b.id); return { b, open: xs.filter((x) => x.e.open).length, breach: xs.filter((x) => x.e.open && x.e.breached).length, late: xs.filter((x) => x.e.lateArrival).length, partial: xs.filter((x) => x.e.state === 'PARTIAL').length }; });
+          mount(list, h('div', { style: { padding: '12px' } }, h('div.callout', null, h('b', null, 'District view — aggregates only (Table 3). '), 'The DPO (ICDS) and CMO see block breach counts, not child-level tasks. Use the Report window for the monthly convergence meeting; child-level access needs logged break-glass.'),
+            h('table.grid', { style: { marginTop: '10px' } }, h('thead', null, h('tr', null, ['Block', 'CDPO', 'Open tasks', 'Past deadline', 'Half-closed', 'Late data'].map((x) => h('th', null, x)))),
+              h('tbody', null, blocks.map((r) => h('tr', null, h('td', null, h('b', null, r.b.name)), h('td', null, r.b.cdpo), h('td.num', null, r.open), h('td.num', null, h('b', null, r.breach)), h('td.num', null, r.partial), h('td.num', null, r.late))))),
+            h('button.btn.sm', { style: { marginTop: '10px' }, onclick: () => open('report') }, 'Open convergence report ▸')));
+          foot.textContent = ''; foot.append(h('span', null, 'aggregate view'), h('span', null, `scope: ${store.scopeLabel()}`));
+          return;
+        }
         const cards = (view ?? (ROLES[store.role].scope === 'awc' ? 'cards' : 'table')) === 'cards';
         if (!store.silentMode && cards && rows.length) {
           mount(list, h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '12px', padding: '12px' } },

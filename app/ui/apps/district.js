@@ -97,7 +97,7 @@ export default {
         h('div.row', { style: { gap: '8px' } }, h('div.card.flat.grow', null, h('div.stat', null, h('div.v', null, sm.R), h('div.l', null, 'reliability R'))), h('div.card.flat.grow', null, h('div.stat', null, h('div.v', null, sm.open), h('div.l', null, `open tasks · ${sm.breached} overdue`)))),
         store.sim.feeds[a.id].flags.map((f) => h('div.callout', null, f.text)),
         h('div.kicker', null, 'Children needing action'),
-        store.inScope({ awcId: a.id })
+        store.inScope({ awcId: a.id }) && store.role !== 'DPO'
           ? list.slice(0, 30).map((c) => h('div.row.between', { style: { padding: '4px 0', borderBottom: '1px dashed #bbb', cursor: 'pointer' }, onclick: () => { store.selectChild(c.id); open('child', { childId: c.id }); } }, h('span', null, nameOf(c), h('span.muted.small', null, ` · ${ageLabel(ageAt(c, store.now))}`)), tierChip(c.current.tier)))
           : h('div.small.muted', null, 'Outside your scope — counts only (Table 3).'),
         !canNames ? h('div.small.muted', null, 'Names masked for this role; break-glass is available in the child record.') : null);

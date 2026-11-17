@@ -21,6 +21,11 @@ export default {
       const c = store.childById[childId];
       if (!c) { mount(ctx.body, h('div.empty', null, 'Pick a child from the Worklist or District map.')); return; }
       if (!store.inScope(c)) { mount(ctx.body, h('div.empty', null, `Outside your scope (${store.scopeLabel()}). Decision rights: Table 3.`)); return; }
+      if (store.role === 'DPO' && !store.breakGlass.has(c.id)) {
+        mount(ctx.body, h('div.empty', null, h('div.h2', null, 'District officers see aggregates, not child records.'), h('p.p', { style: { margin: '8px auto', maxWidth: '460px' } }, 'Table 3: the DPO (ICDS) and CMO act on block breach counts. A child-level record opens only through break-glass, with a reason that is written to the audit chain and reviewed.'),
+          h('button.btn.hot', { onclick: async () => { const r = await ask({ title: 'Break-glass access', label: 'Reason for opening a child-level record at district level (logged):', value: 'RED-A escalated to L3 — verifying referral', ok: 'Open & log' }); if (r) store.grantBreakGlass(c.id, r); } }, 'Break-glass (logged)')));
+        return;
+      }
       ctx.setTitle(`Child record — ${nameOf(c)}`);
       const ev = c.eval, cur = c.current, awc = store.awcById[c.awcId];
       const cs = consentStatus(c.consent, store.now);
