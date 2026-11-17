@@ -102,7 +102,7 @@ export function evaluate(child, events, signals, pack, opts = {}) {
         if (inCare || confirmed) add('AMBER', 'MAM_CONFIRMED', mamMuac ? 'Rule 1' : 'Table 2 AMBER', `Confirmed MAM: ${what}`, { confirmedBy: lastMam ? lastMam.t : null });
         else add('WATCH', 'MAM_UNCONFIRMED', mamMuac ? 'Rule 1' : 'Table 2 WATCH', `MAM reading (${what}) — re-measure to confirm`, { remeasure: true });
         lastMam = { t: v.t };
-      } else if (!quarantined) lastMam = null;
+      } else lastMam = null;
 
       // Reference = last valid visit at least 21 days earlier (monthly comparison, not a re-weigh).
       const ref = lastMonthly && v.t - lastMonthly.t >= 21 * DAY ? lastMonthly : null;
@@ -172,7 +172,11 @@ export function evaluate(child, events, signals, pack, opts = {}) {
     for (const r of reasons) if (TIER_RANK[r.tier] < TIER_RANK[tier]) tier = r.tier;
     // Quarantined readings never downgrade a child: keep the last tier and ask for a re-measure.
     if (quarantined && TIER_RANK[lastTier] < TIER_RANK[tier]) tier = lastTier;
-    if (tier === 'WATCH') {
+    // "Two WATCH in a row" means two monthly results — a re-weigh inside the confirmation window is the same concern.
+    const sameConcern = lastMonthly && v.t - lastMonthly.t < 21 * DAY;
+    if (tier === 'WATCH' && sameConcern) {
+      // keep the streak as it is
+    } else if (tier === 'WATCH') {
       watchStreak++;
       if (watchStreak >= T.watchRepeatsToAmber && !quarantined) {
         tier = 'AMBER';
