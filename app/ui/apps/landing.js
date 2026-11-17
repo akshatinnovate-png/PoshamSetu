@@ -3,7 +3,7 @@ import { store } from '../store.js';
 import { open, close } from '../wm.js';
 import { ICONS } from '../icons.js';
 import { drawClouds } from '../bg.js';
-import { fmtDate, tierChip } from '../common.js';
+import { fmtDate, tierChip, showcaseChild } from '../common.js';
 import { trackerSingleReading } from '../../engine/triage.js';
 
 const FIXES = [
@@ -69,19 +69,7 @@ export default {
 
     // "Same child, two systems": readings appear month by month in both panels.
     function versus() {
-      const TREND = ['R2_CONFIRMED', 'R2_SUSTAINED', 'INFANT_FALTERING', 'TREND_PLUS_SIGNAL'];
-      let pick = null;
-      for (const c of store.sim.district.children) {
-        const ev = c.eval;
-        const samI = ev.visits.findIndex((v) => trackerSingleReading(c, v, store.pack) === 'SAM' && !v.biv.length);
-        if (samI < 3) continue;
-        const firstAnyI = ev.visits.findIndex((v) => trackerSingleReading(c, v, store.pack) && !v.biv.length);
-        const aI = ev.results.findIndex((r) => r.tier === 'AMBER');
-        if (aI < 0 || aI >= firstAnyI) continue;
-        const trend = ev.results[aI].reasons.some((r) => TREND.includes(r.code));
-        const score = (trend ? 0 : 100) + Math.abs(samI - 6);
-        if (!pick || score < pick.score) pick = { c, samI, aI, score };
-      }
+      const pick = showcaseChild();
       if (!pick) return h('div');
       const { c, samI } = pick;
       const vs = c.eval.visits.slice(0, samI + 1), rs = c.eval.results.slice(0, samI + 1);
