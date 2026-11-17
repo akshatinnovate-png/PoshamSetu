@@ -44,7 +44,7 @@ npm run smoke        # with `npm run serve` running: every window × every role 
 npm run dist:win     # Windows x64 folder build in dist/ (also dist:linux, dist:mac)
 ```
 
-On Linux as root, Electron needs `--no-sandbox`: `npx electron . --no-sandbox`.
+On Windows, after `npm run dist:win`, double-click `dist\PoshanSetu-win32-x64\PoshanSetu.exe`. Copy that whole folder to the presentation laptop; it runs fully offline. The app adds `--no-sandbox` by itself when started as root on Linux.
 
 Deep links: `#worklist`, `#bridge`, `#joint`, `#migration`, `#reliability`, `#budget`, `#trial`, `#arch`, or `#jury` for presenter mode.
 
