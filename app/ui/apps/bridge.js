@@ -115,7 +115,7 @@ export default {
                 h('span', null, x.event.childId), h('span.tag', null, x.adapter.replace('_', ' ')), h('span', null, `ETA ${fmtDuration(x.receivedAt - store.now)}`)))
                 : h('div.small.muted.mono', null, 'nothing in flight'),
               h('div.callout', { style: { marginTop: '8px' } }, h('b', null, 'Fair to workers: '), 'when an event lands after a deadline, the breach is booked to the pipeline, not to the AWW, and the task escalates on arrival.'))),
-          h('div.card.dark', null, h('div.kicker', null, 'Integration contract (Phase 2 MoU with MoWCD / NeGD)'),
+          h('div.card.dark', null, h('div.kicker', null, 'Integration contract (Phase 2 MoU with MoWCD / NeGD) — running in server/index.mjs (npm run service), tested in test/server.test.js'),
             h('div.mono.small', { style: { lineHeight: 1.6, marginTop: '4px' } },
               'GET  /poshantracker/v1/growth-events?awc={code}&since={watermark}   (OAuth2 client-credentials via API Setu, read-only scope)', h('br'),
               'POST /poshansetu/v1/hooks/growth-event   ← webhook, HMAC-signed, retried with back-off; idempotency key = sha256(child, t, values)', h('br'),
