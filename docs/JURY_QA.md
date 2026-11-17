@@ -60,3 +60,18 @@ Each answer is short enough to say in the 5-minute interaction, and each points 
 **Why not wait for SSBSK?** SSBSK stops at 36 months and has no public rule for when poor growth makes a child at-risk. PoshanSetu is designed to be its nutrition layer, and its AMBER list feeds the SSBSK at-risk visit schedule for children under 36 months.
 
 **Scalability?** Rule packs and FHIR mappings are state-agnostic. The engine has no dependencies and runs the whole 1,440-child district plus the backtest in under a second on a laptop. Scale is a hosting question, not an algorithm question.
+
+**What if MoWCD does not expose a Tracker API in time?** The bridge is a ladder, not a bet:
+1. The Tracker Open API via API Setu (the target).
+2. A State data-sharing MoU for a nightly delta from the State ICDS mirror. That is safe for AMBER and WATCH clocks (p95 well under 16.8 h and 33.6 h).
+3. The SMS flash for RED signs, which does not depend on either. So RED clocks stay safe in every case.
+
+The Bridge window's clock-safety matrix is how we decide which path may drive which clock. A path that fails the test can still feed data, but it never starts or stops a deadline.
+
+**Why would an AWW use this — isn't it one more app?** It isn't an app for her. She keeps recording in the Tracker. PoshanSetu gives her at most two new AMBER visits a month (ranked), a bilingual card that says what to do and why, and a breach record that is never booked to her when the data pipeline was late. Reliability flags lead to supportive supervision, never penalties.
+
+**Who runs it after the pilot?** The State ICDS directorate owns operations, with NIC hosting under the Phase 3 capex line. Rule packs are owned jointly by MoWCD and MoHFW. Recurring cost is about Rs 30 per child per year at pilot scale, and it falls with scale (Budget window).
+
+**Is the data secure?** The prototype includes Ed25519-signed rule packs and tokens, names masked above the sector, logged break-glass, k-anonymity above block level, a hash-chained audit log, pseudonymous exports, a strict Content-Security-Policy, and no network calls at all. Production adds an HSM or eSign for keys, CERT-In audit, and MeitY-empanelled hosting.
+
+**How do you know the WHO z-scores are right?** The engine uses the published WHO 2006 LMS tables directly, with WHO's restricted method beyond ±3 SD and the 0.7 cm length/height adjustment. Tests check medians, the SD lines and continuity at the 24-month switch (`npm test`).
