@@ -2,17 +2,22 @@
   "name": "poshansetu",
   "productName": "PoshanSetu",
   "version": "0.1.0",
-  "description": "PoshanSetu — early-warning, consent and continuity layer for the Poshan Tracker (Round 2 prototype)",
+  "description": "PoshanSetu \u2014 early-warning, consent and continuity layer for the Poshan Tracker (Round 2 prototype)",
   "main": "electron/main.cjs",
   "type": "module",
   "scripts": {
     "start": "electron .",
     "serve": "node scripts/serve.mjs",
     "test": "node --test",
-    "build:who": "node scripts/build-who.mjs"
+    "build:who": "node scripts/build-who.mjs",
+    "dist:win": "electron-packager . PoshanSetu --platform=win32 --arch=x64 --out=dist --overwrite --ignore=^/test --ignore=^/docs --ignore=^/scripts --ignore=^/dist --ignore=node_modules/@fontsource --ignore=node_modules/esbuild --ignore=node_modules/@esbuild --ignore=node_modules/qrcode",
+    "dist:linux": "electron-packager . PoshanSetu --platform=linux --arch=x64 --out=dist --overwrite --ignore=^/test --ignore=^/docs --ignore=^/scripts --ignore=^/dist --ignore=node_modules/@fontsource --ignore=node_modules/esbuild --ignore=node_modules/@esbuild --ignore=node_modules/qrcode",
+    "dist:mac": "electron-packager . PoshanSetu --platform=darwin --arch=arm64,x64 --out=dist --overwrite --ignore=^/test --ignore=^/docs --ignore=^/scripts --ignore=^/dist --ignore=node_modules/@fontsource --ignore=node_modules/esbuild --ignore=node_modules/@esbuild --ignore=node_modules/qrcode",
+    "check": "node --test && node scripts/sim-check.mjs"
   },
   "license": "MIT",
   "devDependencies": {
+    "@electron/packager": "^20.3.0",
     "electron": "^45.3.3",
     "esbuild": "^0.28.2"
   },
@@ -24,5 +29,6 @@
     "@fontsource/noto-sans-warang-citi": "^5.3.0",
     "@fontsource/vt323": "^5.3.0",
     "qrcode": "^1.5.4"
-  }
+  },
+  "author": "Team 7, Gulmohur High School, Jamshedpur"
 }
