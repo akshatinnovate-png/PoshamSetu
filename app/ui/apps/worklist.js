@@ -1,0 +1,76 @@
+import { h, mount } from '../dom.js';
+import { store } from '../store.js';
+import { open } from '../wm.js';
+import { ICONS } from '../icons.js';
+import { tierChip, nameOf, ageLabel, dueChip, levelChip, closureDots, statCard, fmtDateTime, fmtDuration } from '../common.js';
+import { TIER_RANK } from '../../engine/rulepack.js';
+
+export default {
+  id: 'worklist', title: 'Worklist — tasks & deadlines', icon: ICONS.worklist, dock: 'Worklist', size: [940, 600],
+  mount(ctx) {
+    let tierF = 'ALL', stateF = 'OPEN', q = '';
+    const top = h('div.row.wrap', { style: { padding: '10px', gap: '8px' } });
+    const tb = h('div.toolbar');
+    const list = h('div', { style: { padding: '0 0 10px' } });
+    const foot = h('div.statusbar');
+    ctx.body.append(h('div.col', { style: { gap: 0, minHeight: '100%' } }, top, tb, list, foot));
+    const seg = (opts, get, set) => h('div.seg', null, opts.map(([k, l]) => h('button', { class: get() === k ? 'on' : '', onclick: () => { set(k); render(); } }, l)));
+
+    function render() {
+      const all = store.scopedTasks().map((t) => ({ t, e: store.esc(t), c: store.childById[t.childId] }));
+      const open_ = all.filter((x) => x.e.open);
+      mount(top,
+        statCard(open_.filter((x) => x.t.tier === 'RED_A').length, 'Open RED-A · 24 h', { color: 'var(--red-a)' }),
+        statCard(open_.filter((x) => x.t.tier === 'RED_B').length, 'Open RED-B · 72 h', { color: 'var(--red-b)' }),
+        statCard(open_.filter((x) => x.t.tier === 'AMBER' && !x.t.queued).length, 'Open AMBER · 7 d'),
+        statCard(open_.filter((x) => x.t.queued).length, 'Queued (cap 2/AWC/mo)'),
+        statCard(open_.filter((x) => x.e.state === 'PARTIAL').length, 'Half-closed (1 of 2)'),
+        statCard(open_.filter((x) => x.e.breached).length, 'Past deadline', { cls: 'dark' }));
+      mount(tb,
+        seg([['ALL', 'All tiers'], ['RED_A', 'RED-A'], ['RED_B', 'RED-B'], ['AMBER', 'AMBER'], ['WATCH', 'WATCH']], () => tierF, (v) => (tierF = v)),
+        seg([['OPEN', 'Open'], ['PARTIAL', 'Half-closed'], ['BREACHED', 'Overdue'], ['QUEUED', 'Queued'], ['DONE', 'Closed'], ['EVERY', 'Every']], () => stateF, (v) => (stateF = v)),
+        h('input.input', { placeholder: 'search child / AWC / ID', value: q, style: { width: '200px' }, oninput: (e) => { q = e.target.value.toLowerCase(); renderList(); } }));
+      renderList();
+
+      function renderList() {
+        let rows = all;
+        if (tierF !== 'ALL') rows = rows.filter((x) => x.t.tier === tierF);
+        if (stateF === 'OPEN') rows = rows.filter((x) => x.e.open);
+        if (stateF === 'PARTIAL') rows = rows.filter((x) => x.e.state === 'PARTIAL');
+        if (stateF === 'BREACHED') rows = rows.filter((x) => x.e.open && x.e.breached);
+        if (stateF === 'QUEUED') rows = rows.filter((x) => x.t.queued && x.e.open);
+        if (stateF === 'DONE') rows = rows.filter((x) => !x.e.open);
+        if (q) rows = rows.filter((x) => (nameOf(x.c) + x.c.pseudoId + store.awcById[x.c.awcId].name + x.t.id).toLowerCase().includes(q));
+        rows.sort((a, b) => (b.e.open - a.e.open) || TIER_RANK[a.t.tier] - TIER_RANK[b.t.tier] || a.t.dueAt - b.t.dueAt);
+        if (store.silentMode) {
+          mount(list, h('div.empty', null, h('div.h2', null, 'Silent trial in progress'), h('p.p', null, `${rows.length} alerts logged for lead-time and false-alert measurement — not shown to staff.`)));
+        } else if (!rows.length) mount(list, h('div.empty', null, 'Nothing here. ', h('span.kbd', null, 'All clear')));
+        else mount(list, h('table.grid', null,
+          h('thead', null, h('tr', null, ['Tier', 'Child', 'AWC', 'Why', 'Clock', 'Escalation', 'Closure', 'Flags'].map((x) => h('th', null, x)))),
+          h('tbody', null, rows.slice(0, 400).map(({ t, e, c }) => h('tr.click', { onclick: () => { store.selectChild(c.id); open('child', { childId: c.id, taskId: t.id }); } },
+            h('td', null, tierChip(t.tier), h('div.small.muted', { style: { marginTop: '3px' } }, t.kind.toLowerCase())),
+            h('td', null, h('b', null, nameOf(c)), h('div.small.muted', null, `${c.sex} · ${ageLabel(t.ageMonths)}`)),
+            h('td', null, store.awcById[c.awcId].name, h('div.small.muted', null, store.awcById[c.awcId].code)),
+            h('td', { style: { maxWidth: '260px' } }, t.reasons[0] || '—', t.reasons.length > 1 ? h('div.small.muted', null, `+${t.reasons.length - 1} more`) : null),
+            h('td', null, dueChip(t, e), h('div.small.muted', { style: { marginTop: '3px' } }, `measured ${fmtDateTime(t.measuredAt)}`)),
+            h('td', null, levelChip(e.level), e.nextEscalationAt ? h('div.small.muted', { style: { marginTop: '3px' } }, `next ${fmtDuration(e.nextEscalationAt - store.now)}`) : null),
+            h('td', null, closureDots(t, e), h('div.small.muted', { style: { marginTop: '3px' } }, e.state.toLowerCase())),
+            h('td', null, h('div.row.wrap', { style: { gap: '3px' } },
+              t.queued ? h('span.tag.sky', { title: 'Over the 2-per-AWC monthly cap: on the monthly list, escalates at day 10' }, `queued #${t.queueRank}`) : null,
+              e.lateArrival ? h('span.tag.bad', { title: 'Event reached PoshanSetu after a deadline had passed — pipeline breach, not worker breach' }, 'late arrival') : null,
+              t.remeasureFirst ? h('span.tag.warn', { title: 'Feed reliability below cutoff — re-measure before acting' }, 're-measure first') : null,
+              t.toPHC ? h('span.tag', null, '→ PHC') : null,
+              h('span.tag', { title: 'Rule pack version' }, 'v' + t.packVersion))))))));
+        foot.textContent = '';
+        foot.append(h('span', null, `${rows.length} tasks`), h('span', null, `scope: ${store.scopeLabel()}`), h('span', null, `clock: event time (measurement), not ingestion time`));
+      }
+    }
+    render();
+    ctx.onCleanup(store.on('tick', render));
+    ctx.onCleanup(store.on('role', render));
+    ctx.onCleanup(store.on('task', render));
+    ctx.onCleanup(store.on('ingested', render));
+    ctx.onCleanup(store.on('mode', render));
+    ctx.setRefresh(render);
+  },
+};

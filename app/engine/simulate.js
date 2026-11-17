@@ -307,6 +307,15 @@ export function analyse(district, r, pack) {
       if (role === 'ASHA') addClosure(t, { by: 'ASHA', t: at, dtmf: { VISITED: 1, REFERRED: 2, REFUSED: 3, MIGRATED: 4 }[out] }, pack);
       else addClosure(t, { by: 'AWW', t: at, outcome: out, channel: 'APP' }, pack);
     }
+    // Escalation works: a supervisor nudge closes most remaining tasks late.
+    for (const role of roles) {
+      if (t.closures.some((c) => c.by === role)) continue;
+      if (!rr.chance(0.72)) continue;
+      const at = t.dueAt + rr() * 9 * DAY;
+      if (at > NOW) continue;
+      if (role === 'ASHA') addClosure(t, { by: 'ASHA', t: at, dtmf: t.tier === 'RED_A' ? 2 : 1 }, pack);
+      else addClosure(t, { by: 'AWW', t: at, outcome: t.tier === 'RED_A' ? 'REFERRED' : 'VISITED', channel: 'APP' }, pack);
+    }
     if (t.tier === 'RED_B' && rr.chance(diligence)) {
       const at = t.measuredAt + rr() * 96 * HOUR;
       if (at < NOW) addMilestone(t, { kind: 'APPETITE_TEST', t: at, result: rr.chance(0.85) ? 'PASS' : 'FAIL' });
