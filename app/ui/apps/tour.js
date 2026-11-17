@@ -33,7 +33,8 @@ function steps() {
 export default {
   id: 'tour', persistent: true, title: 'Jury tour — presenter', icon: ICONS.tour, dock: 'Jury tour', desk: 'Jury tour', size: [560, 200], key: 'j',
   mount(ctx) {
-    let i = 0;
+    let i = 0, auto = null;
+    const secs = (m) => { const [a, b] = m.split(':').map(Number); return a * 60 + b; };
     const S = steps();
     const bar = h('div.tourbar', { style: { position: 'absolute', left: '24px', right: '24px', top: '10px', zIndex: 8800, background: 'var(--ink)', color: 'var(--white)', border: '2px solid var(--ink)', boxShadow: '4px 4px 0 var(--hot)', display: 'flex', alignItems: 'stretch' } });
     desk().appendChild(bar);
@@ -50,10 +51,17 @@ export default {
         h('div', { style: { background: 'var(--hot)', color: 'var(--ink)', padding: '6px 12px', fontFamily: 'var(--font-pixel)', fontSize: '22px', display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap' } }, `${i + 1}/${S.length}`, h('span', { style: { fontSize: '16px' } }, st.min)),
         h('div', { style: { padding: '6px 12px', flex: 1 } }, h('div', { style: { fontWeight: 800, fontSize: '15px', letterSpacing: '-0.01em' } }, st.t), h('div', { style: { fontSize: '12.5px', lineHeight: 1.4, color: '#f2dce4' } }, st.say)),
         h('div.row', { style: { padding: '6px', gap: '6px' } },
+          h('button.btn.ghost.sm', { onclick: toggleAuto, title: 'Rehearsal: advance on the slot timings' }, auto ? '❚❚ auto' : '▶ auto'),
           h('button.btn.ghost.sm', { onclick: () => go(i - 1) }, '◂ prev'),
           h('button.btn.hot.sm', { onclick: () => go(i + 1) }, 'next ▸'),
           h('button.btn.sm', { onclick: () => ctx.win.el.querySelector('.tb button:last-child').click() }, '× end')));
     }
+    function toggleAuto() {
+      if (auto) { clearTimeout(auto); auto = null; render(); return; }
+      const tickNext = () => { if (i >= S.length - 1) { auto = null; render(); return; } const dur = Math.max(10, secs(S[i + 1].min) - secs(S[i].min)) * 1000; auto = setTimeout(async () => { await go(i + 1); tickNext(); }, dur); render(); };
+      tickNext();
+    }
+    ctx.onCleanup(() => clearTimeout(auto));
     const key = (e) => { if (e.target?.matches?.('input,textarea,select')) return; if (e.key === 'ArrowRight' || e.key === 'PageDown') go(i + 1); if (e.key === 'ArrowLeft' || e.key === 'PageUp') go(i - 1); };
     addEventListener('keydown', key);
     ctx.onCleanup(() => removeEventListener('keydown', key));
