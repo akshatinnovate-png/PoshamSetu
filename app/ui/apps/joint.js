@@ -17,7 +17,7 @@ const OUT = { 1: 'VISITED', 2: 'REFERRED', 3: 'REFUSED', 4: 'MIGRATED' };
 export default {
   id: 'joint', title: 'Joint-visit desk — async closure', icon: ICONS.phone, dock: 'Joint visit', desk: 'Joint visit', size: [1020, 640], key: '2',
   mount(ctx, opts) {
-    let sel = opts.taskId || null, lang = 'hi', filter = 'PARTIAL', calling = false, lastKey = null;
+    let sel = opts.taskId || null, lang = 'hi', filter = opts.taskId ? 'OPEN' : 'PARTIAL', calling = false, lastKey = null;
     function tasks() {
       return store.scopedTasks().filter((t) => t.required.includes('ASHA'))
         .map((t) => ({ t, e: store.esc(t) }))
