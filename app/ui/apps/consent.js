@@ -67,17 +67,17 @@ export default {
               h('div.grow'),
               c.consent && cs.usable ? h('button.btn.sm.ghost', { onclick: () => applyConsent(c, 'revoke') }, 'Guardian revokes') : null,
               c.consent && !cs.usable ? h('button.btn.sm', { onclick: () => applyConsent(c, 'renew') }, 'Renew at VHSND') : null,
-              !c.consent ? h('button.btn.sm', { onclick: () => applyConsent(c, 'grant') }, 'Record OTP consent') : null,
+              !c.consent || !cs.usable ? h('button.btn.sm.hot', { onclick: async () => { const mode = await consentFlow(c); if (mode) applyConsent(c, 'grant', mode); } }, 'Capture consent (guided)') : null,
               h('button.btn.sm.ghost', { onclick: () => open('child', { childId: c.id }) }, 'Open record')) : null,
             impact ? h('div.callout', null, h('b', null, 'Effect on triage: '), impact) : null,
             h('div.grow', { style: { minHeight: 0, overflow: 'auto', border: '2px solid var(--ink)' } }, right))));
     }
 
-    function applyConsent(c, kind) {
+    function applyConsent(c, kind, mode = 'OTP') {
       const before = c.current?.tier;
       if (kind === 'revoke') c.consent.revokedAt = store.now;
       if (kind === 'renew') { c.consent.revokedAt = null; c.consent.expiresAt = store.now + 180 * DAY; c.consent.reconfirmedAt = store.now; }
-      if (kind === 'grant') c.consent = { id: `CA-${c.id}-N`, childId: c.id, guardian: c.mother, mode: 'OTP', purpose: { code: 'CAREMGT', text: 'Care management — early warning of child undernutrition' }, hiTypes: ['WellnessRecord', 'ImmunizationRecord'], hip: 'U-WIN / RCH (MoHFW)', hiu: 'PoshanSetu (MoWCD)', flags: Object.keys(FLAG_DICTIONARY), grantedAt: store.now - 400 * DAY, expiresAt: store.now + 180 * DAY, reconfirmBy: null, reconfirmedAt: null, revokedAt: null };
+      if (kind === 'grant') c.consent = { id: `CA-${c.id}-N`, childId: c.id, guardian: c.mother, mode, purpose: { code: 'CAREMGT', text: 'Care management — early warning of child undernutrition' }, hiTypes: ['WellnessRecord', 'ImmunizationRecord'], hip: 'U-WIN / RCH (MoHFW)', hiu: 'PoshanSetu (MoWCD)', flags: Object.keys(FLAG_DICTIONARY), grantedAt: store.now, expiresAt: store.now + 180 * DAY, reconfirmBy: mode === 'ASSISTED' ? store.now + 30 * DAY : null, reconfirmedAt: null, revokedAt: null };
       const g = gateSignals(c.signalsRaw, c.consent, store.now);
       // revocation applies from now on: past signals used under valid consent stay in the audit trail, but new evaluations stop using them
       c.signals = kind === 'revoke' ? [] : g.allowed; c.signalsWithheld = kind === 'revoke' ? c.signalsRaw.map((x) => ({ ...x, why: 'Guardian revoked consent' })) : g.withheld;
@@ -94,3 +94,47 @@ export default {
     ctx.onCleanup(store.on('role', () => { childId = null; render(); }));
   },
 };
+
+const NOTICE_HI = [
+  ['क्या लेंगे', 'सिर्फ़ चार संकेत: टीका छूटा है, 30 दिन में दस्त, जन्म के समय कम वज़न, माँ की जोखिम वाली गर्भावस्था। पूरा रिकॉर्ड नहीं।'],
+  ['क्यों', 'आपके बच्चे का पोषण बिगड़ने से पहले आंगनवाड़ी दीदी और सहिया को समय पर बताने के लिए।'],
+  ['कितने समय', '180 दिन, फिर अगली मुलाक़ात पर दोबारा पूछेंगे।'],
+  ['आपका अधिकार', 'कभी भी मना कर सकते हैं — सेवाएँ और राशन बंद नहीं होंगे। शिकायत: ब्लॉक CDPO कार्यालय।'],
+];
+function consentFlow(c) {
+  return new Promise((resolve) => {
+    let step = 0, mode = c.abha ? 'ABHA' : c.phone ? 'OTP' : 'ASSISTED', code = String(100000 + Math.floor(Math.random() * 899999)), typed = '';
+    const body = h('div', { style: { padding: '14px', display: 'flex', flexDirection: 'column', gap: '10px' } });
+    const done = (v) => { scrim.remove(); resolve(v); };
+    const scrim = h('div.scrim', null, h('div.win.focused', { style: { position: 'relative', width: '560px', minHeight: 0 } },
+      h('div.tb', null, h('span.t', null, `Consent · ${c.mother} for ${c.pseudoId}`), h('button', { onclick: () => done(null) }, '×')), body));
+    function draw() {
+      const steps = ['Notice', 'Mode', mode === 'ASSISTED' ? 'Thumbprint' : 'Verify', 'Artefact'];
+      body.replaceChildren(
+        h('div.seg', null, steps.map((s2, i) => h('button', { class: i === step ? 'on' : '', disabled: true }, `${i + 1} ${s2}`))),
+        ...(step === 0 ? [
+          h('div.kicker', null, 'Itemised notice read aloud by the AWW (DPDP s.5) — Hindi; Ho / Santali / Mundari audio'),
+          ...NOTICE_HI.map(([k, v]) => h('div.reason', { style: { gridTemplateColumns: '110px 1fr' } }, h('b', { style: { fontFamily: 'Noto Sans Devanagari' } }, k), h('div', { style: { fontFamily: 'Noto Sans Devanagari', fontSize: '13.5px' } }, v))),
+          h('div.small.muted', null, 'Purpose: CAREMGT · flags only · HIU PoshanSetu (MoWCD) · HIP U-WIN / RCH (MoHFW)'),
+          h('div.row', { style: { justifyContent: 'flex-end' } }, h('button.btn.ghost', { onclick: () => done(null) }, 'Guardian declines'), h('button.btn', { onclick: () => { step = 1; draw(); } }, 'Guardian agrees ▸'))]
+        : step === 1 ? [
+          h('div.kicker', null, 'How will the guardian confirm?'),
+          ...[['ABHA', `Baal-ABHA via ABDM consent manager${c.abha ? '' : ' (no ABHA on record)'}`, c.abha], ['OTP', `OTP to guardian phone${c.phone ? ' ' + c.phone.slice(0, 6) + '•••••' : ' (no phone on record)'}`, !!c.phone], ['ASSISTED', 'Assisted: thumbprint on AWW device, reconfirm at next VHSND (Rule 10 check)', true]].map(([k, l, ok]) => h('label.row', { style: { gap: '8px', opacity: ok ? 1 : 0.4, fontSize: '13px' } }, h('input', { type: 'radio', name: 'm', checked: mode === k, disabled: !ok, onchange: () => { mode = k; } }), h('b', null, k), l)),
+          h('div.row', { style: { justifyContent: 'flex-end' } }, h('button.btn', { onclick: () => { step = 2; draw(); } }, 'Next ▸'))]
+        : step === 2 ? (mode === 'ASSISTED' ? [
+          h('div.p', null, 'Guardian places thumb on the AWW device. A witness (ASHA or ward member) is recorded. This consent lapses unless reconfirmed at the next Village Health & Nutrition Day.'),
+          h('div', { style: { width: '90px', height: '110px', border: '2px solid var(--ink)', borderRadius: '45px 45px 30px 30px', margin: '0 auto', background: 'repeating-radial-gradient(circle at 50% 60%, var(--ink) 0 2px, transparent 2px 6px)' } }),
+          h('div.row', { style: { justifyContent: 'flex-end' } }, h('button.btn', { onclick: () => { step = 3; draw(); } }, 'Captured ▸'))]
+          : [
+          h('div.p', null, mode === 'ABHA' ? 'Consent request pushed to the guardian\'s ABHA app / PHR via the ABDM consent manager. Demo code:' : 'OTP sent by SMS. Demo code:'),
+          h('div', { style: { fontFamily: 'var(--font-pixel)', fontSize: '34px', letterSpacing: '.2em', textAlign: 'center' } }, code),
+          h('input.input', { placeholder: 'enter the 6-digit code', value: typed, oninput: (e) => { typed = e.target.value; } }),
+          h('div.row', { style: { justifyContent: 'flex-end' } }, h('button.btn', { onclick: () => { if (typed.trim() === code) { step = 3; draw(); } else { typed = ''; draw(); body.querySelector('input').placeholder = 'wrong code — try again'; } } }, 'Verify ▸'))])
+        : [
+          h('div.callout', null, h('b', null, 'Artefact created. '), `${mode} · CAREMGT · 4 flags · 180 days${mode === 'ASSISTED' ? ' · reconfirm within 30 days' : ''}. Logged in the audit chain; the rules re-run with the newly permitted flags.`),
+          h('div.row', { style: { justifyContent: 'flex-end' } }, h('button.btn.hot', { onclick: () => done(mode) }, 'Done'))]));
+    }
+    draw();
+    document.body.appendChild(scrim);
+  });
+}
