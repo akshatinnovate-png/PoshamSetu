@@ -77,7 +77,7 @@ export function focus(id) {
   const w = wins.get(id);
   if (w) w.el.style.zIndex = ++z;
 }
-export function closeAll() { for (const id of [...wins.keys()]) close(id); }
+export function closeAll() { for (const [id, w] of [...wins]) if (!w.app.persistent) close(id); }
 export function openIds() { return [...wins.keys()]; }
 export function place(id, x, y, wdt, hgt) {
   const w = wins.get(id); if (!w) return;

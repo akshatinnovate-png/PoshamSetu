@@ -99,7 +99,8 @@ function shell() {
       { label: 'Silent trial (alerts logged, not shown)', on: store.silentMode, fn: () => { store.silentMode = true; store.emit('mode'); } },
     ]),
     menu('Layout', () => [
-      { label: 'Jury layout — tile the five audit fixes', fn: () => juryLayout() },
+      { label: 'Jury tour — presenter mode', k: 'J', fn: () => juryLayout() },
+      { label: 'Tile the five audit fixes', fn: () => tileLayout() },
       { label: 'Field layout — AWW day view', fn: () => fieldLayout() },
       { label: 'Close all windows', fn: () => closeAll() },
     ]),
@@ -138,7 +139,7 @@ function shell() {
 
   // keyboard
   addEventListener('keydown', (e) => {
-    if (e.target.matches('input, textarea, select')) return;
+    if (e.target?.matches?.('input, textarea, select')) return;
     if (e.key === 'H') store.advance(HOUR);
     if (e.key === 'D') store.advance(DAY);
     if (e.key === 'W') store.advance(7 * DAY);
@@ -146,7 +147,8 @@ function shell() {
     if (a && !e.metaKey && !e.ctrlKey) open(a.id);
   });
 
-  function juryLayout() {
+  function juryLayout() { open('tour'); }
+  function tileLayout() {
     closeAll();
     const W = desktop.clientWidth, H = desktop.clientHeight;
     const ids = ['bridge', 'joint', 'migration', 'reliability', 'budget'];
@@ -160,7 +162,7 @@ function shell() {
     open('worklist'); place('worklist', 20, 16, W * 0.56, H - 40);
     open('capture'); place('capture', W * 0.56 + 34, 16, W * 0.44 - 60, H - 40);
   }
-  window.psLayout = { juryLayout, fieldLayout };
+  window.psLayout = { juryLayout, fieldLayout, tileLayout };
 
   // initial windows
   const hash = location.hash.replace('#', '');

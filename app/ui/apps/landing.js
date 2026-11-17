@@ -26,7 +26,7 @@ export default {
         btn ? h('button', { onclick: fn, style: { marginTop: '12px', background: 'var(--ink)', color: '#fff', border: 0, fontFamily: 'var(--font-pixel)', fontSize: '22px', padding: '8px 22px' } }, btn) : null));
     const hero = h('div', { style: { position: 'relative', minHeight: '640px', overflow: 'hidden', borderBottom: '2px solid var(--ink)' } }, canvas,
       h('div', { style: { position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '28px', paddingTop: '90px' } },
-        news(fmtDate(store.now), 'ROUND 2 BUILD · 87 → 100', 'All five jury stress-tests answered in code', 'Enter PS.OS1 console', () => enter('jury')),
+        news(fmtDate(store.now), 'ROUND 2 BUILD · 87 → 100', 'All five jury stress-tests answered in code', 'Start the jury tour ▸', () => enter('jury')),
         news(fmtDate(store.consts.LIVE_FROM), `Silent trial complete: ${share}% of SAM cases`, `flagged a median ${lead} days earlier`, null),
         h('div', { style: { marginTop: '30px', fontSize: '22px', fontWeight: 600, letterSpacing: '-0.01em' } }, 'Introducing PoshanSetu ', h('span', { style: { letterSpacing: '0.2em' } }, '......................'), ' early warning beyond the line')));
     let raf, t = 0, last = 0;
@@ -50,7 +50,7 @@ export default {
     const fixes = h('div', { style: { background: 'var(--paper)', padding: '50px 26px 60px', borderTop: '2px solid var(--ink)' } },
       h('div.row.between', { style: { alignItems: 'flex-end', marginBottom: '20px' } },
         h('div', { style: { fontWeight: 800, fontSize: '56px', letterSpacing: '-0.045em', lineHeight: 0.9 } }, 'Five stress tests.', h('br'), 'Five answers in code.'),
-        h('button.btn.hot', { onclick: () => enter('jury') }, 'Tile all five ▸')),
+        h('div.row', null, h('button.btn.ghost', { onclick: () => enter('tile') }, 'Tile all five'), h('button.btn.hot', { onclick: () => enter('jury') }, 'Jury tour ▸'))),
       h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px' } },
         FIXES.map((f) => h('div.win.focused', { style: { position: 'relative', minHeight: '0' } },
           h('div.tb', null, h('span.t', null, `FIX ${f.n} · ${f.t}`)),
@@ -67,8 +67,9 @@ export default {
     ctx.body.append(hero, manifesto, numbers, fixes, footer);
 
     function enter(target) {
+      if (target === 'jury') return window.psLayout.juryLayout();
       close('landing');
-      if (target === 'jury') window.psLayout.juryLayout();
+      if (target === 'tile') window.psLayout.tileLayout();
       else open(target);
     }
   },
