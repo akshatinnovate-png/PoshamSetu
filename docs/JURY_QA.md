@@ -53,6 +53,8 @@ Each answer is short enough to say in the 5-minute interaction, and each points 
 
 **DPDP compliance?** Processing inside the Tracker rests on s.7(b) (State benefits). Cross-ministry flags pass only under an ABDM consent artefact: one purpose, a set time, renewed at later contacts, with assisted consent reconfirmed at the VHSND. Consent-manager rules have applied since 13 Nov 2026, and main duties apply from 13 May 2027. Names are masked above the sector, break-glass is logged, counts under 20 are suppressed above block level, and the audit chain is tamper-evident.
 
+**How does RED-B follow the CMAM protocol?** A RED-B task closes only when the AWW and ASHA visits *and* the two protocol milestones are on record: the appetite test within 72 hours and the Medical Officer screening by day 5. A failed appetite test raises a new RED-A task (complicated SAM, same-day referral).
+
 **What about children under 6 months?** MUAC is not used. They get a weight-for-length and feeding check, flags route to the PHC, and a wasted infant is RED-A.
 
 **Why not wait for SSBSK?** SSBSK stops at 36 months and has no public rule for when poor growth makes a child at-risk. PoshanSetu is designed to be its nutrition layer, and its AMBER list feeds the SSBSK at-risk visit schedule for children under 36 months.
