@@ -1,0 +1,27 @@
+{
+  "name": "poshansetu",
+  "productName": "PoshanSetu",
+  "version": "0.1.0",
+  "description": "PoshanSetu — early-warning, consent and continuity layer for the Poshan Tracker (Round 2 prototype)",
+  "main": "electron/main.cjs",
+  "type": "module",
+  "scripts": {
+    "start": "electron .",
+    "serve": "node scripts/serve.mjs",
+    "test": "node --test",
+    "build:who": "node scripts/build-who.mjs"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^45.3.3"
+  },
+  "dependencies": {
+    "@fontsource/inter-tight": "^5.3.0",
+    "@fontsource/jetbrains-mono": "^5.3.0",
+    "@fontsource/noto-sans-devanagari": "^5.3.0",
+    "@fontsource/noto-sans-ol-chiki": "^5.3.0",
+    "@fontsource/noto-sans-warang-citi": "^5.3.0",
+    "@fontsource/vt323": "^5.3.0",
+    "qrcode": "^1.5.4"
+  }
+}
