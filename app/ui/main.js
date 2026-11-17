@@ -75,7 +75,16 @@ function shell() {
   fitIcons();
   const redraw = () => { drawDesktop(canvas); fitIcons(); };
   redraw();
-  let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(redraw, 120); });
+  const clampWindows = () => {
+    const W = desktop.clientWidth, H = desktop.clientHeight;
+    for (const w of desktop.querySelectorAll('.win:not(.max)')) {
+      if (w.offsetWidth > W - 20) w.style.width = W - 20 + 'px';
+      if (w.offsetHeight > H - 20) w.style.height = H - 20 + 'px';
+      if (w.offsetLeft + w.offsetWidth > W) w.style.left = Math.max(0, W - w.offsetWidth - 10) + 'px';
+      if (w.offsetTop + w.offsetHeight > H) w.style.top = Math.max(0, H - w.offsetHeight - 10) + 'px';
+    }
+  };
+  let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { redraw(); clampWindows(); }, 120); });
 
   // ---------- menubar ----------
   let openMenu = null;
@@ -131,6 +140,9 @@ function shell() {
       { label: 'Tile the five audit fixes', fn: () => tileLayout() },
       { label: 'Field layout — AWW day view', fn: () => fieldLayout() },
       { label: 'Close all windows', fn: () => closeAll() },
+      '-',
+      { head: 'Presenter zoom (projectors)' },
+      ...[1, 1.15, 1.3].map((z) => ({ label: `${Math.round(z * 100)}%`, on: (parseFloat(document.documentElement.style.zoom) || 1) === z, fn: () => { document.documentElement.style.zoom = z; try { localStorage.setItem('ps-zoom', z); } catch {} dispatchEvent(new Event('resize')); } })),
     ]),
     menu('Help', () => [
       { label: 'Keyboard shortcuts', fn: () => showShortcuts() },
@@ -237,6 +249,7 @@ function shell() {
 }
 
 (async () => {
+  try { const z = parseFloat(localStorage.getItem('ps-zoom')); if (z) document.documentElement.style.zoom = z; } catch {}
   try { await boot(); shell(); } catch (e) {
     console.error(e);
     document.body.innerHTML = `<pre style="padding:30px;font:13px monospace;color:#c8102e">PS.OS1 failed to start:\n${e.stack || e}</pre>`;
