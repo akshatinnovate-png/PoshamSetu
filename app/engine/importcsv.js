@@ -45,8 +45,8 @@ export function analyseRows(rows, pack) {
     results.push({ k, ev });
     let sam = null, any = null;
     for (const v of ev.visits) { if (v.biv.length) continue; const f = trackerSingleReading(k, v, pack); if (f && any == null) any = v.t; if (f === 'SAM') { sam = v.t; break; } }
-    if (sam) { samKids++; const a = ev.results.find((r) => r.tier === 'AMBER' && r.t < sam); if (a) { earlier++; leads.push((sam - a.t) / 86400000); } }
-    if (any) { strictKids++; if (ev.results.some((r) => r.tier === 'AMBER' && r.t < any)) strictEarlier++; }
+    if (sam) { samKids++; const a = ev.results.find((r) => r.tier === 'AMBER' && r.t < sam && sam - r.t <= 180 * 86400000); if (a) { earlier++; leads.push((sam - a.t) / 86400000); } }
+    if (any) { strictKids++; if (ev.results.some((r) => r.tier === 'AMBER' && r.t < any && any - r.t <= 180 * 86400000)) strictEarlier++; }
   }
   const feeds = Object.entries(byAwc).map(([awc, vs]) => ({ awc, ...scoreFeed(vs, pack) })).sort((a, b) => a.R - b.R);
   return { children: kids.size, events: data.length, problems, tiers, feeds, samKids, earlier, leads, leadMedian: median(leads), strictKids, strictEarlier, results };
