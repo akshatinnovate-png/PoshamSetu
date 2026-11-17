@@ -9,6 +9,7 @@ import { TIER_LABEL } from '../engine/rulepack.js';
 import { APPS } from './apps/index.js';
 
 const native = window.psNative || null;
+const GROUP = { bridge: 'fix', joint: 'fix', migration: 'fix', reliability: 'fix', budget: 'fix', escalation: 'gov', consent: 'gov', rulepack: 'gov', audit: 'gov', report: 'gov' };
 
 async function boot() {
   const lines = h('div');
@@ -147,7 +148,7 @@ function shell() {
     const open_ = new Set(openIds());
     const overdue = store.scopedTasks ? store.scopedTasks().filter((t) => { const e = store.esc(t); return e.open && e.breached; }).length : 0;
     mount(dock,
-      getApps().filter((a) => a.dock).map((a) => h('div.app' + (open_.has(a.id) ? '.running' : ''), { onclick: () => toggle(a.id), title: a.title },
+      getApps().filter((a) => a.dock).map((a) => h('div.app' + (open_.has(a.id) ? '.running' : '') + (GROUP[a.id] ? '.' + GROUP[a.id] : ''), { onclick: () => toggle(a.id), title: a.title },
         h('div.ic', null, svgFrom(a.icon)), h('span', null, a.dock), a.id === 'worklist' && overdue ? h('span.badge', null, overdue) : null)),
       h('div.rolecard', { onclick: (e) => { e.stopPropagation(); menubar.querySelectorAll('.mi')[1].dispatchEvent(new MouseEvent('mousedown', { bubbles: true })); } },
         h('div', null, h('div.who', null, `${ROLES[store.role].label}`), h('div.scope', null, `${store.actorName()} · ${store.scopeLabel()}`)),
