@@ -131,6 +131,7 @@ function shell() {
     menu('Help', () => [
       { label: 'Keyboard shortcuts', fn: () => showShortcuts() },
       { label: 'About PS.OS1', fn: () => showAbout() },
+      { label: 'Export evidence pack (.json)', fn: () => exportEvidence() },
       '-',
       { label: 'Every window has a ? button', fn: () => {} },
     ]),
@@ -197,6 +198,23 @@ function shell() {
       h('div.tb', null, h('span.t', null, title), h('button', { onclick: () => scrim.remove() }, '×')),
       h('div', { style: { padding: '12px 14px', background: 'var(--white)' } }, h('table.grid', null, h('tbody', null, rows.map(([k, v]) => h('tr', null, h('td', null, h('b', null, k)), h('td', null, v))))))));
     document.body.appendChild(scrim);
+  }
+  function exportEvidence() {
+    const m = store.sim.metrics;
+    const pack = {
+      generatedAt: new Date().toISOString(), simClock: new Date(store.now).toISOString(),
+      note: 'All child data synthetic. Verify signatures with the public keys in app/engine/demo-keys.js (Ed25519 over canonical JSON).',
+      rulePack: store.signed,
+      backtest: { children: m.children, samKids: m.samKids, flaggedEarlier: m.flaggedEarlier, shareEarlier: m.shareEarlier, leadMedianDays: m.leadMedian, leadIQR: [m.leadP25, m.leadP75], precision: m.precision, strict: { ...m.strict, leads: undefined }, firstRule: m.firstRule, amberPerAwcMonth: m.amberPerAwcMonth, seed: 71100 },
+      reliability: Object.fromEntries(Object.entries(store.sim.feeds).map(([k, f]) => [store.awcById[k].code, { R: f.R, legacyR: f.legacyR, B: f.B, F: f.F, D: f.D, chronic: f.chronic }])),
+      bridge: Object.fromEntries(Object.entries(store.sim.bridge).filter(([k]) => k !== 'liveEvents').map(([k, v]) => [k, v.stats])),
+      audit: { verify: store.audit.verify(), entries: store.audit.entries },
+    };
+    const data = JSON.stringify(pack, null, 2);
+    const name = `poshansetu-evidence-${new Date(store.now).toISOString().slice(0, 10)}.json`;
+    store.audit.append({ at: store.now, actor: store.actorName(), role: store.role, action: 'EXPORT_EVIDENCE', subject: name });
+    if (native?.saveFile) native.saveFile(name, data);
+    else { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([data], { type: 'application/json' })); a.download = name; a.click(); }
   }
   function showShortcuts() {
     panel('Keyboard shortcuts', [['H / D / W', 'advance the clock 1 hour / 1 day / 7 days'], ['j', 'jury tour (← → to move)'], ['1 – 5', 'the five audit fixes'], ['b', 'brief'], ['m', 'map'], ['e', 'escalation ladder'], ['t', 'silent trial'], ['r', 'rule pack'], ['k', 'consent'], ['c', 'capture'], ['a', 'audit log'], ['p', 'convergence report'], ['A', 'architecture'], ['`', 'shell']]);
