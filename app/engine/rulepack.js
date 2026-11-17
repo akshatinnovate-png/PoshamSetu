@@ -70,7 +70,7 @@ export const DEFAULT_PACK = Object.freeze({
   ],
   reliability: {
     // R = 100 x (1 - min(1, wB*B + wF*F + wD*D*chronic)).
-    weights: { B: 4.0, F: 1.0, D: 0.5 },
+    weights: { B: 4.0, F: 1.0, D: 0.3 },
     legacyEqualWeights: true,
     dChronicMonths: 3,
     dAuditThreshold: 0.2,

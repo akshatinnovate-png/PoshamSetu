@@ -1,0 +1,16 @@
+import { generate } from '../app/engine/simulate.js';
+import { DEFAULT_PACK } from '../app/engine/rulepack.js';
+const t0 = performance.now();
+const S = generate({ pack: DEFAULT_PACK });
+const ms = performance.now() - t0;
+const m = S.metrics;
+console.log('ms', Math.round(ms), 'children', m.children, 'events', S.district.history.events.length);
+console.log('tiers', m.tierCounts);
+console.log('samKids', m.samKids, 'earlier', m.flaggedEarlier, 'share', m.shareEarlier.toFixed(2), 'lead median', m.leadMedian, 'p25', m.leadP25, 'p75', m.leadP75);
+console.log('alerts', m.alerts, 'precision', m.precision.toFixed(2), 'amber/awc/month', m.amberPerAwcMonth);
+console.log('tasks', S.tasks.length, 'open', S.escal.filter(e=>e.esc.open).length, 'states', S.escal.reduce((a,e)=>(a[e.esc.state]=(a[e.esc.state]||0)+1,a),{}));
+console.log('levels', S.escal.reduce((a,e)=>(a[e.esc.level]=(a[e.esc.level]||0)+1,a),{}), 'late', S.escal.filter(e=>e.esc.lateArrival).length);
+console.log('bridge r2', JSON.stringify(Object.fromEntries(Object.entries(S.bridge.round2.stats).map(([k,v])=>[k,{p50:(v.p50/3600000).toFixed(2),p95:(v.p95/3600000).toFixed(2)}]))));
+console.log('bridge r1', JSON.stringify(Object.fromEntries(Object.entries(S.bridge.round1.stats).map(([k,v])=>[k,{p50:(v.p50/3600000).toFixed(2),p95:(v.p95/3600000).toFixed(2)}]))));
+const Rs = Object.entries(S.feeds).map(([k,f])=>[S.awcById[k].quality,f.R,f.legacyR,f.B,f.F,f.D,f.chronic]);
+console.log('feeds', Rs.slice(0,36).map(x=>x.join(' ')).join('\n'));
