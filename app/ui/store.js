@@ -127,7 +127,7 @@ export const store = {
       const lag = sampleLagMs(r, this.rnd) * (mode === 'ROUND2' && this.awcById[c.awcId].connectivity === 'poor' && r === 'API_SETU' ? 2 : 1);
       if (!best || lag < best.lag) best = { adapter: r, lag };
     }
-    const rec = { event: e, adapter: best.adapter, receivedAt: e.t + best.lag, routes };
+    const rec = { event: e, adapter: best.adapter, receivedAt: Math.max(this.now, e.t) + best.lag * (e.t < this.now - 3600000 ? 0.1 : 1), routes };
     this.inflight.push(rec);
     this.audit.append({ at: this.now, actor: this.actorName(), role: this.role, action: 'CAPTURE', subject: childId, detail: `${best.adapter} ETA ${Math.round(best.lag / 60000)} min` });
     this.emit('inflight', rec);

@@ -18,5 +18,6 @@ import terminal from './terminal.js';
 import tour from './tour.js';
 import brief from './brief.js';
 import report from './report.js';
+import awwphone from './awwphone.js';
 
-export const APPS = [landing, brief, worklist, child, capture, district, escalation, bridge, joint, migration, reliability, budget, consent, rulepack, trial, audit, report, arch, terminal, tour];
+export const APPS = [landing, brief, worklist, awwphone, child, capture, district, escalation, bridge, joint, migration, reliability, budget, consent, rulepack, trial, audit, report, arch, terminal, tour];

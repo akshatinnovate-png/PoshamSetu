@@ -60,6 +60,7 @@ Open **Layout → Jury tour** (or press `j`). It has 12 steps with timings and t
 | **Brief** | Round 2 storyline: problem (cited figures), ecosystem table, stakeholder personas, roadmap Gantt + feasibility, Table 5 impact | sections 1–6 |
 | **Worklist** | Role-scoped tasks: tier, reason, event-time clock, escalation level, two-role closure, queue, late-arrival and re-measure flags | 4.4, 4.6 |
 | **Child record** | WHO weight-for-age curves, WHZ trajectory, MUAC, "why this tier", visits with ingest lag, consented vs withheld signals, break-glass | 4.2–4.4 |
+| **AWW phone** | Offline-first device: queue measurements with no signal, sync later — clocks still count from measurement; late data escalates on arrival | audit 1 |
 | **Capture** | AWW entry with live preview of the rule outcome and entry-time validation (decimal-slip demo) | 4.2, 4.7 |
 | **Map** | District → block → AWC, worst open task tier, reliability flags, k-anonymity above block | 4.6 |
 | **Ladder** | Table 3 as code: L0 AWW/ASHA → L1 Mukhya Sevika → L2 CDPO+BMO → L3 DPO+CMO | 4.6 |
