@@ -5,6 +5,9 @@ import { open } from '../wm.js';
 import { bars, lineChart } from '../charts.js';
 import { tierChip, nameOf, fmtDate, DAY, statCard, pct } from '../common.js';
 import { trackerSingleReading } from '../../engine/triage.js';
+import { generate } from '../../engine/simulate.js';
+
+let seeds = null;
 
 const TREND = ['R2_CONFIRMED', 'R2_SUSTAINED', 'INFANT_FALTERING', 'TREND_PLUS_SIGNAL', 'LBW_LOW_GAIN', 'WATCH_REPEAT'];
 const RULE_LABEL = { MAM_CONFIRMED: 'Confirmed MAM (Rule 1)', R2_CONFIRMED: 'WHZ fall, re-weighed (Rule 2)', R2_SUSTAINED: 'Sustained fall (Rule 2)', INFANT_FALTERING: 'Infant: 2 low gains', LBW_LOW_GAIN: 'LBW infant low gain', TREND_PLUS_SIGNAL: 'Trend + consented signal', WATCH_REPEAT: 'Two WATCH in a row' };
@@ -46,7 +49,12 @@ export default {
           h('div.row', { style: { gap: '8px', marginTop: '6px' } }, h('b', null, `${Math.round(ex.lead)} days of lead time.`), h('span.small', null, 'Reason at the first alert: '), h('span.small.mono', null, first.reasons.find((r) => r.tier === 'AMBER')?.text), h('div.grow'), h('button.btn.sm.ghost', { onclick: () => open('child', { childId: c.id }) }, 'Open record')));
       }
       mount(ctx.body,
-        h('div.toolbar', null, h('b', null, 'Eight weeks of alerts logged, not shown.'), h('span.small', null, 'Lead time and false alerts are measured at no cost to staff (Table 5 indicators).')),
+        h('div.toolbar', null, h('b', null, 'Eight weeks of alerts logged, not shown.'), h('span.small', null, 'Lead time and false alerts are measured at no cost to staff (Table 5 indicators).'), h('div.grow'),
+          h('button.btn.sm', { onclick: runSeeds }, seeds === 'running' ? 'running…' : 'Robustness: 5 more districts')),
+        Array.isArray(seeds) ? h('div', { style: { padding: '10px 12px 0' } }, h('div.card', null, h('div.kicker', null, 'Same rules on 5 independently generated districts (different seeds) — not a cherry-picked run'),
+          h('table.grid', { style: { marginTop: '6px' } }, h('thead', null, h('tr', null, ['Seed', 'SAM cases', 'Flagged earlier', 'Median lead', 'Before any listing', 'Precision'].map((x) => h('th', null, x)))),
+            h('tbody', null, seeds.map((r) => h('tr', null, h('td.mono', null, r.seed), h('td.num', null, r.m.samKids), h('td.num', null, pct(r.m.shareEarlier)), h('td.num', null, `${Math.round(r.m.leadMedian)} d`), h('td.num', null, pct(r.m.strict.share)), h('td.num', null, pct(r.m.precision)))),
+              h('tr', null, h('td', null, h('b', null, 'range')), h('td'), ...[(x) => x.shareEarlier, (x) => x.leadMedian, (x) => x.strict.share, (x) => x.precision].map((f, i) => { const v = seeds.map((r) => f(r.m)); const fm = i === 1 ? (x) => `${Math.round(x)} d` : (x) => pct(x); return h('td.num', null, h('b', null, `${fm(Math.min(...v))}–${fm(Math.max(...v))}`)); })))))) : null,
         h('div.col', { style: { padding: '12px', gap: '12px' } },
           h('div.row.wrap', { style: { gap: '10px' } },
             statCard(pct(m.shareEarlier), `SAM cases flagged earlier (target ≥ 50%)`, { cls: 'pinkc' }),
@@ -72,6 +80,15 @@ export default {
               bars({ w: 420, h: 150, bars: Array.from({ length: 10 }, (_, k) => ({ label: k === 9 ? '9+' : String(k + 1), value: m.amberLoads.filter((x) => (k === 9 ? x >= 10 : x === k + 1)).length, color: k + 1 > store.pack.workload.newAmberCapPerAwcPerMonth ? '#f2a20c' : '#1f1b1d' })), valueLabels: true, vline: store.pack.workload.newAmberCapPerAwcPerMonth }),
               h('div.small.muted', null, `The cap binds in ${m.amberPerAwcMonth.overCap} of ${m.amberPerAwcMonth.cells} AWC-months at this district's ~30% wasting. Excess cases are ranked (tier → youngest → longest unmeasured) and wait on the monthly list, escalating at day 10. Calibrating the cap is a Phase 1 decision.`))),
           exView));
+    }
+    async function runSeeds() {
+      if (seeds === 'running') return;
+      seeds = 'running'; render();
+      const out = [];
+      for (const seed of [1101, 2202, 3303, 4404, 5505]) { await new Promise((r) => setTimeout(r, 20)); out.push({ seed, m: generate({ pack: store.pack, seed }).metrics }); }
+      seeds = out;
+      store.audit.append({ at: store.now, actor: store.actorName(), role: store.role, action: 'BACKTEST_SEEDS', subject: store.pack.version, detail: out.map((r) => Math.round(r.m.shareEarlier * 100) + '%').join(' ') });
+      render();
     }
     render();
   },
