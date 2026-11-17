@@ -70,7 +70,7 @@ export default {
           let ts = store.scopedTasks().map((t) => ({ t, e: store.esc(t) }));
           if (a[0] === 'open') ts = ts.filter((x) => x.e.open);
           if (a[0] === 'late') ts = ts.filter((x) => x.e.open && x.e.breached);
-          ts.slice(0, 30).forEach(({ t, e }) => print(`${t.id.padEnd(16)} ${TIER_LABEL[t.tier].padEnd(8)} L${e.level} ${e.state.padEnd(8)} due ${fmtDuration(t.dueAt - store.now)}`));
+          ts.slice(0, 30).forEach(({ t, e }) => print(`${t.id.padEnd(16)} ${TIER_LABEL[t.tier].padEnd(8)} L${e.level} ${e.state.padEnd(8)} ${t.dueAt < store.now ? 'overdue ' + fmtDuration(store.now - t.dueAt) : 'due in ' + fmtDuration(t.dueAt - store.now)}`));
           print(`${ts.length} task(s)`);
           break;
         }

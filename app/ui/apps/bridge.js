@@ -100,7 +100,7 @@ export default {
               ...['RED_A', 'RED_B', 'AMBER', 'WATCH'].map((t) => h('div.row.between', { style: { padding: '5px 0', borderBottom: '1px dashed #bbb' } }, tierChip(t), h('b.mono', null, `${cf[t][1]} / ${cf[t][0]}`), h('span.tag' + (cf[t][1] ? '.bad' : '.ok'), null, cf[t][0] ? Math.round((cf[t][1] / cf[t][0]) * 100) + '%' : '—'))),
               h('div.small.muted', { style: { marginTop: '6px' } }, 'Counterfactual replay of the 1 Oct – 17 Nov pilot events through each design.'))),
           h('div.row.wrap', { style: { alignItems: 'stretch', gap: '12px' } },
-            h('div.card.grow', null, h('div.kicker', null, `Ingest lag distribution · ${lags.length.toLocaleString('en-IN')} events`), bars({ w: 520, h: 170, bars: hist(lags).map((b, i) => ({ ...b, color: i < 3 ? '#e94fbf' : i < 5 ? '#f2a20c' : '#1f1b1d' })), valueLabels: true })),
+            h('div.card.grow', null, h('div.kicker', null, `Ingest lag distribution · ${lags.length.toLocaleString('en-IN')} events${mode === 'ROUND2' ? ` · ${B.round2.dupes} duplicate copies (SMS + API) absorbed by the idempotent store` : ''}`), bars({ w: 520, h: 170, bars: hist(lags).map((b, i) => ({ ...b, color: i < 3 ? '#e94fbf' : i < 5 ? '#f2a20c' : '#1f1b1d' })), valueLabels: true })),
             h('div.card', { style: { flex: '0 0 300px' } }, h('div.kicker', null, 'Try it — events in flight'),
               h('p.p.small', null, 'Capture a RED-A (oedema) reading for a child in scope and watch it cross the bridge. Advance the clock with ', h('span.kbd', null, 'H'), ' / ', h('span.kbd', null, 'D'), '.'),
               h('div.row', { style: { gap: '6px', margin: '8px 0' } },
