@@ -96,3 +96,12 @@ test('simulation is deterministic and meets the Table 5 hypotheses on synthetic 
   assert.ok(a.shareEarlier >= 0.5, String(a.shareEarlier));
   assert.ok(a.leadMedian >= 30, String(a.leadMedian));
 });
+
+test('queued AMBER escalates to the Mukhya Sevika at day 10, not day 7', async () => {
+  const { escalation } = await import('../app/engine/tasks.js');
+  const t = { tier: 'AMBER', measuredAt: T0, ingestedAt: T0, dueAt: T0 + 10 * DAY, required: ['AWW'], closures: [], queued: true };
+  assert.equal(escalation(t, T0 + 8 * DAY, P).level, 0);
+  assert.equal(escalation(t, T0 + 10 * DAY + 1, P).level, 1);
+  const u = { ...t, queued: false, dueAt: T0 + 7 * DAY };
+  assert.equal(escalation(u, T0 + 8 * DAY, P).level, 1);
+});

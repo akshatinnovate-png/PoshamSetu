@@ -84,12 +84,14 @@ export function escalation(task, now, pack) {
   const elapsed = end - task.measuredAt;
   let level = 0;
   const steps = [];
+  // Queued (over-cap) AMBER cases wait on the monthly AWC list: their ladder starts at day N, not day 7.
+  const shift = task.queued ? Math.max(0, pack.workload.queuedEscalateDay - pack.jointVisit.windowDays) * DAY : 0;
   for (const L of pack.escalation) {
     if (!L.when) continue;
     const w = L.when[task.tier];
     if (!w) continue;
-    const at = task.measuredAt + span(w);
-    const hit = elapsed >= span(w);
+    const at = task.measuredAt + span(w) + shift;
+    const hit = elapsed >= span(w) + shift;
     steps.push({ level: L.level, role: L.role, label: L.label, at, hit, late: hit && task.ingestedAt > at });
     if (hit) level = L.level;
   }
