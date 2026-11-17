@@ -20,7 +20,20 @@ Other pieces built:
 - **Synthetic district:** Paschimi Singhbhum, 3 blocks, 36 AWCs, 1,440 children.
 - **Windows:** silent-trial backtest with a strict baseline and a robustness check across 5 more districts; a Phase 1 CSV import tool; a DPO convergence report (PDF); the Brief (problem, ecosystem, stakeholders, roadmap, impact, references); a 15-step Jury tour presenter mode; the Shell.
 - **Companion HTTP service:** HMAC webhook, SMS, IVR, tasks, FHIR and tokens.
-- **Tests and packaging:** 44 tests, a Chromium smoke test across every window × role × tab, and packaging scripts for Windows, Linux and Mac (the Linux build was launched and verified).
+- **Tests and packaging:** 47 tests, a Chromium smoke test across every window × role × tab, and packaging scripts for Windows, Linux and Mac (the Linux build was launched and verified).
+
+Added later in the night:
+
+- **AWW phone (offline-first):** measurements queue with no signal and sync later. Clocks still run from measurement time, and late data escalates on arrival.
+- **Import:** run the engine on your own anonymised CSV (the Phase 1 tool).
+- **Impact scenario:** an assumption-driven card in Brief → Impact. Truth-based, with the zero-effect baseline subtracted.
+- **Rule pack lifecycle:** draft → both ministries sign → activate. Past alerts keep their version.
+- **Consent capture flow:** DPDP itemised notice in Hindi; ABHA / OTP / assisted modes.
+- **Help menu:** shortcuts, About, and **Export evidence pack**, plus `scripts/verify-evidence.mjs` to check it.
+- **Supervisor cap override:** logged with a reason.
+- **RED-B closure follows CMAM:** appetite test and MO screening milestones.
+- **Child timeline tab,** and quarantined readings marked on the chart.
+- **DPO aggregate-only enforcement** across all windows, with break-glass for child records.
 
 ## Honest findings worth knowing before the finals
 
