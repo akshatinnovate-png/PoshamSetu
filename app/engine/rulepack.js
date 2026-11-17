@@ -27,6 +27,7 @@ export const DEFAULT_PACK = Object.freeze({
   },
   trend: {
     whzDropSd: 0.5,
+    sustainedDropSd: 0.5,
     wazLines: [-1, -2, -3],
     confirmWindowDays: 14,
     watchRepeatsToAmber: 2,

@@ -160,3 +160,11 @@ test('batch exports are never clock-safe for RED-A', () => {
   assert.equal(clockSafety(s, P).RED_A.safe, false);
   assert.equal(clockSafety(lagStats([10 * 60000, 20 * 60000]), P).RED_A.safe, true);
 });
+
+test('Rule 2 (sustained): two monthly falls adding to 0.5 SD become AMBER without a re-weigh', () => {
+  const c = child(30);
+  const evs = [ev(T0, 12.4, 88, 142), ev(T0 + 30 * DAY, 12.1, 88.3, 140), ev(T0 + 60 * DAY, 11.8, 88.6, 138)];
+  const r = evaluate(c, evs, [], P).current;
+  assert.equal(r.tier, 'AMBER', JSON.stringify(r.reasons));
+  assert.ok(r.reasons.some((x) => x.code === 'R2_SUSTAINED'));
+});

@@ -14,3 +14,4 @@ console.log('bridge r2', JSON.stringify(Object.fromEntries(Object.entries(S.brid
 console.log('bridge r1', JSON.stringify(Object.fromEntries(Object.entries(S.bridge.round1.stats).map(([k,v])=>[k,{p50:(v.p50/3600000).toFixed(2),p95:(v.p95/3600000).toFixed(2)}]))));
 const Rs = Object.entries(S.feeds).map(([k,f])=>[S.awcById[k].quality,f.R,f.legacyR,f.B,f.F,f.D,f.chronic]);
 console.log('feeds', Rs.slice(0,36).map(x=>x.join(' ')).join('\n'));
+console.log('strict', JSON.stringify({ ...m.strict, leads: undefined }), 'firstRule', JSON.stringify(m.firstRule));

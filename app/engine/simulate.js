@@ -332,8 +332,8 @@ export function analyse(district, r, pack) {
 
 /** Silent-trial backtest: PoshanSetu vs the Tracker's single-reading lists. */
 export function backtest(district, evalByChild, pack) {
-  const leads = [];
-  let samKids = 0, flaggedEarlier = 0;
+  const leads = [], strictLeads = [], firstRule = {};
+  let samKids = 0, flaggedEarlier = 0, strictKids = 0, strictEarlier = 0;
   let alerts = 0, alertsTrue = 0;
   const perAwcMonth = new Map();
   const tierCounts = { RED_A: 0, RED_B: 0, AMBER: 0, WATCH: 0, GREEN: 0 };
@@ -342,11 +342,12 @@ export function backtest(district, evalByChild, pack) {
     const ev = evalByChild[c.id];
     if (!ev.results.length) continue;
     tierCounts[ev.current.tier]++;
-    // first Tracker SAM listing
-    let trackerSam = null;
+    // first Tracker SAM listing, and first listing of any kind (MAM or SAM)
+    let trackerSam = null, trackerAny = null;
     for (const v of ev.visits) {
       const f = trackerSingleReading(c, v, pack);
       if (f) baselineFlags++;
+      if (f && !v.biv.length && trackerAny == null) trackerAny = v.t;
       if (f === 'SAM' && !v.biv.length) { trackerSam = v.t; break; }
     }
     // PoshanSetu alerts
@@ -363,7 +364,18 @@ export function backtest(district, evalByChild, pack) {
     }
     if (trackerSam && trackerSam > SIM_START + 45 * DAY) {
       samKids++;
-      if (firstAlertBeforeSam) { flaggedEarlier++; leads.push((trackerSam - firstAlertBeforeSam) / DAY); }
+      if (firstAlertBeforeSam) {
+        flaggedEarlier++; leads.push((trackerSam - firstAlertBeforeSam) / DAY);
+        const first = ev.results.find((r) => r.t === firstAlertBeforeSam);
+        const code = first.reasons.find((r) => r.tier === 'AMBER')?.code || 'OTHER';
+        firstRule[code] = (firstRule[code] || 0) + 1;
+      }
+      // stricter: did a PoshanSetu AMBER come before the Tracker's FIRST listing of any kind?
+      if (trackerAny && trackerAny > SIM_START + 45 * DAY) {
+        strictKids++;
+        const a = ev.results.find((r) => r.tier === 'AMBER' && r.t < trackerAny && trackerAny - r.t <= 180 * DAY);
+        if (a) { strictEarlier++; strictLeads.push((trackerAny - a.t) / DAY); }
+      }
     }
   }
   const loads = [...perAwcMonth.values()];
@@ -372,7 +384,9 @@ export function backtest(district, evalByChild, pack) {
     leadMedian: median(leads), leadP25: quantile(leads, 0.25), leadP75: quantile(leads, 0.75), leads,
     alerts, precision: alerts ? alertsTrue / alerts : 0,
     amberPerAwcMonth: { median: median(loads), p90: quantile(loads, 0.9), max: loads.length ? Math.max(...loads) : 0, overCap: loads.filter((x) => x > pack.workload.newAmberCapPerAwcPerMonth).length, cells: loads.length },
-    tierCounts, baselineFlags,
+    tierCounts, baselineFlags, firstRule,
+    strict: { kids: strictKids, earlier: strictEarlier, share: strictKids ? strictEarlier / strictKids : 0, leadMedian: median(strictLeads), leads: strictLeads },
+    amberLoads: loads,
     children: district.children.length,
   };
 }

@@ -6,6 +6,9 @@ import { bars, lineChart } from '../charts.js';
 import { tierChip, nameOf, fmtDate, DAY, statCard, pct } from '../common.js';
 import { trackerSingleReading } from '../../engine/triage.js';
 
+const TREND = ['R2_CONFIRMED', 'R2_SUSTAINED', 'INFANT_FALTERING', 'TREND_PLUS_SIGNAL', 'LBW_LOW_GAIN', 'WATCH_REPEAT'];
+const RULE_LABEL = { MAM_CONFIRMED: 'Confirmed MAM (Rule 1)', R2_CONFIRMED: 'WHZ fall, re-weighed (Rule 2)', R2_SUSTAINED: 'Sustained fall (Rule 2)', INFANT_FALTERING: 'Infant: 2 low gains', LBW_LOW_GAIN: 'LBW infant low gain', TREND_PLUS_SIGNAL: 'Trend + consented signal', WATCH_REPEAT: 'Two WATCH in a row' };
+
 export default {
   id: 'trial', title: 'Silent trial — does it flag earlier?', icon: ICONS.trial, dock: 'Trial', desk: 'Silent trial', size: [1060, 700], key: 't',
   mount(ctx) {
@@ -18,7 +21,9 @@ export default {
         const first = ev.results.find((r) => r.tier === 'AMBER' && r.t < sam.t);
         if (!first) continue;
         const lead = (sam.t - first.t) / DAY;
-        if (lead > 45 && lead < 120 && (!best || Math.abs(lead - 75) < Math.abs(best.lead - 75))) best = { c, sam, first, lead };
+        const trend = first.reasons.some((r) => TREND.includes(r.code)) && first.visit.ix.whz > -2;
+        const score = (trend ? 0 : 1000) + Math.abs(lead - 75);
+        if (lead > 30 && lead < 150 && (!best || score < best.score)) best = { c, sam, first, lead, score };
       }
       return best;
     }
@@ -49,7 +54,7 @@ export default {
             statCard(`${Math.round(m.leadP25)}–${Math.round(m.leadP75)} d`, 'inter-quartile lead'),
             statCard(pct(m.precision), 'alert precision (truth-checked)'),
             statCard(m.samKids, 'children reaching Tracker SAM list'),
-            statCard(`${m.amberPerAwcMonth.median}`, 'median new AMBER / AWC / month', { cls: 'dark' })),
+            statCard(pct(m.strict.share), `flagged before ANY Tracker listing (median ${Math.round(m.strict.leadMedian || 0)} d)`, { cls: 'dark' })),
           h('div.row', { style: { gap: '12px', alignItems: 'stretch' } },
             h('div.card.grow', null, h('div.kicker', null, 'Lead time: first AMBER → Tracker SAM listing (days)'), bars({ w: 520, h: 190, bars: hist, valueLabels: true })),
             h('div.card', { style: { flex: '0 0 360px' } }, h('div.kicker', null, 'How this was measured'),
@@ -59,6 +64,13 @@ export default {
                 h('li', null, 'Lead = days between the first confirmed AMBER and the first SAM listing (within 180 d).'),
                 h('li', null, 'Precision = AMBER/RED alerts where the true child state was MAM/SAM, falling ≥ 0.4 SD, or became SAM within 90 d.')),
               h('div.callout', { style: { marginTop: '8px' } }, h('b', null, 'Honest caveat: '), 'these are synthetic children tuned to NFHS-5 / NITI-IFPRI district levels. Phase 1 repeats this on anonymised Tracker exports under a state agreement; thresholds are then fixed in a signed rule pack.'))),
+          h('div.row', { style: { gap: '12px', alignItems: 'stretch' } },
+            h('div.card.grow', null, h('div.kicker', null, 'Which rule fired first (children flagged before SAM)'),
+              (() => { const tot = Object.values(m.firstRule).reduce((a, b) => a + b, 0) || 1; return Object.entries(m.firstRule).sort((a, b) => b[1] - a[1]).map(([k, n]) => h('div.row', { style: { gap: '8px', padding: '3px 0' } }, h('span', { style: { width: '200px', fontSize: '12px' } }, RULE_LABEL[k] || k), h('div', { style: { height: '12px', width: (n / tot) * 260 + 'px', background: TREND.includes(k) ? 'var(--hot)' : 'var(--ink)', border: '1.5px solid var(--ink)' } }), h('span.mono.small', null, `${n}`))); })(),
+              h('div.small.muted', { style: { marginTop: '6px' } }, 'Black: a MAM reading the Tracker would also list, but without an owner, deadline or escalation. Pink: trend rules that catch a child the Tracker does not list at all.')),
+            h('div.card.grow', null, h('div.kicker', null, `New AMBER visits per AWC-month vs the cap of ${store.pack.workload.newAmberCapPerAwcPerMonth}`),
+              bars({ w: 420, h: 150, bars: Array.from({ length: 10 }, (_, k) => ({ label: k === 9 ? '9+' : String(k + 1), value: m.amberLoads.filter((x) => (k === 9 ? x >= 10 : x === k + 1)).length, color: k + 1 > store.pack.workload.newAmberCapPerAwcPerMonth ? '#f2a20c' : '#1f1b1d' })), valueLabels: true, vline: store.pack.workload.newAmberCapPerAwcPerMonth }),
+              h('div.small.muted', null, `The cap binds in ${m.amberPerAwcMonth.overCap} of ${m.amberPerAwcMonth.cells} AWC-months at this district's ~30% wasting. Excess cases are ranked (tier → youngest → longest unmeasured) and wait on the monthly list, escalating at day 10. Calibrating the cap is a Phase 1 decision.`))),
           exView));
     }
     render();

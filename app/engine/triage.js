@@ -64,6 +64,7 @@ export function evaluate(child, events, signals, pack, opts = {}) {
   let pendingFall = null; // { refT, refWhz, refWaz, t }
   let lastValid = null, lastTier = 'GREEN', lastMam = null;
   let lastMonthly = null; // last valid visit that was not a within-window re-measure
+  let prevMonthly = null; // the monthly visit before that
 
   for (const v of visits) {
     const reasons = [];
@@ -109,9 +110,10 @@ export function evaluate(child, events, signals, pack, opts = {}) {
 
       // --- Rule 2 / WAZ line crossing (12 months and older) ---
       if (isRemeasure) {
-        const stillDown = (whz != null && pendingFall.refWhz != null && whz <= pendingFall.refWhz - (T.whzDropSd - 0.1)) ||
-          (waz != null && pendingFall.line != null && waz < pendingFall.line);
-        if (stillDown) add('AMBER', 'R2_CONFIRMED', 'Rule 2', `Re-weigh confirms fall: WHZ ${pendingFall.refWhz} → ${whz}`, { confirmedBy: pendingFall.t });
+        const whzDown = whz != null && pendingFall.refWhz != null && whz <= pendingFall.refWhz - (T.whzDropSd - 0.1);
+        const lineDown = waz != null && pendingFall.line != null && waz < pendingFall.line;
+        if (whzDown) add('AMBER', 'R2_CONFIRMED', 'Rule 2', `Re-weigh confirms fall: WHZ ${pendingFall.refWhz} → ${whz}`, { confirmedBy: pendingFall.t });
+        else if (lineDown) add('AMBER', 'R2_CONFIRMED', 'Rule 2', `Re-weigh confirms weight-for-age below the ${pendingFall.line} SD line (WAZ ${pendingFall.refWaz} → ${waz})`, { confirmedBy: pendingFall.t });
         pendingFall = null;
       } else if (ref && months >= IV.maxAgeMonths) {
         const dWhz = whz != null && ref.ix.whz != null ? whz - ref.ix.whz : null;
@@ -125,7 +127,16 @@ export function evaluate(child, events, signals, pack, opts = {}) {
             add('WATCH', 'R2_UNCONFIRMED', 'Rule 2', `${txt} — re-weigh to confirm`, { remeasure: true });
             pendingFall = { t: v.t, refWhz: ref.ix.whz, refWaz: ref.ix.waz, line: crossed ?? null };
           }
-        } else if (pendingFall && v.t - pendingFall.t > T.confirmWindowDays * DAY) pendingFall = null;
+        } else {
+          // Sustained fall: two monthly falls in a row adding up to the threshold. Two readings
+          // a month apart confirm each other, like the infant two-low-gains rule.
+          const p2 = prevMonthly && ref && ref.t - prevMonthly.t >= 21 * DAY && v.t - prevMonthly.t <= 80 * DAY ? prevMonthly : null;
+          const sus = T.sustainedDropSd ?? 0.5;
+          if (p2 && whz != null && ref.ix.whz != null && p2.ix.whz != null && whz < ref.ix.whz && ref.ix.whz < p2.ix.whz && whz - p2.ix.whz <= -sus) {
+            add('AMBER', 'R2_SUSTAINED', 'Rule 2 (sustained)', `WHZ fell two months running: ${p2.ix.whz} → ${ref.ix.whz} → ${whz} (${round(p2.ix.whz - whz, 2)} SD)`);
+          }
+          if (pendingFall && v.t - pendingFall.t > T.confirmWindowDays * DAY) pendingFall = null;
+        }
       }
 
       // --- Infant velocity (under 12 months): two monthly gains in a row below WHO 15th centile ---
@@ -193,7 +204,7 @@ export function evaluate(child, events, signals, pack, opts = {}) {
     if (!quarantined) {
       lastValid = v;
       const isWithinWindowRemeasure = lastMonthly && v.t - lastMonthly.t < 21 * DAY;
-      if (!isWithinWindowRemeasure) lastMonthly = v;
+      if (!isWithinWindowRemeasure) { prevMonthly = lastMonthly; lastMonthly = v; }
     }
     lastTier = tier;
   }
