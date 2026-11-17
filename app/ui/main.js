@@ -50,7 +50,7 @@ function shell() {
   desktop.append(icons);
 
   // desktop widgets (behind windows): Clock Tool + Pulse
-  const clockW = h('div.widget', { style: { right: '210px', top: '46px', width: '250px' } });
+  const clockW = h('div.widget', { style: { left: '60px', top: '46px', width: '250px' } });
   const pulseW = h('div.widget', { style: { left: '60px', bottom: '40px', width: '300px' } });
   desktop.append(clockW, pulseW);
   function renderWidgets() {
@@ -70,7 +70,9 @@ function shell() {
   renderWidgets();
   store.on('tick', renderWidgets); store.on('role', renderWidgets); store.on('task', renderWidgets); store.on('inflight', renderWidgets); store.on('ingested', renderWidgets);
 
-  const redraw = () => drawDesktop(canvas);
+  const fitIcons = () => { icons.style.gridTemplateRows = `repeat(${Math.max(3, Math.floor((desktop.clientHeight - 80) / 84))}, 78px)`; };
+  fitIcons();
+  const redraw = () => { drawDesktop(canvas); fitIcons(); };
   redraw();
   let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(redraw, 120); });
 

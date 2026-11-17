@@ -9,6 +9,9 @@ const ROOT = path.join(__dirname, '..');
 const APP_DIR = path.join(ROOT, 'app');
 const MODULES = path.join(ROOT, 'node_modules');
 
+// Chromium refuses to run as root without this (common in containers / CI).
+if (process.platform === 'linux' && process.getuid?.() === 0) app.commandLine.appendSwitch('no-sandbox');
+
 protocol.registerSchemesAsPrivileged([
   { scheme: 'app', privileges: { standard: true, secure: true, supportFetchAPI: true, corsEnabled: true, stream: true } },
 ]);

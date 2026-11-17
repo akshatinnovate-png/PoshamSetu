@@ -27,7 +27,8 @@
 .desk-frame::before { content: ''; position: absolute; inset: 0; background-image: radial-gradient(rgba(31,27,29,.55) .7px, transparent .8px); background-size: 7px 7px; opacity: .55; }
 .desk-label { position: absolute; top: 14px; left: 14px; background: var(--ink); color: var(--white); font-family: var(--font-pixel); font-size: 20px; padding: 0 8px; z-index: 2; }
 .vtext { position: absolute; left: 30px; bottom: 30px; writing-mode: vertical-rl; transform: rotate(180deg); font-family: var(--font-mono); font-size: 10px; letter-spacing: .12em; color: var(--ink); opacity: .75; z-index: 1; user-select: all; }
-.desk-icons { position: absolute; top: 46px; right: 26px; display: grid; grid-template-columns: repeat(2, 84px); gap: 10px 6px; z-index: 2; }
+.desk-icons { position: absolute; top: 46px; right: 26px; display: grid; grid-auto-flow: column; grid-auto-columns: 84px; direction: rtl; gap: 6px 6px; z-index: 2; }
+.desk-icons > * { direction: ltr; }
 .desk-icon { display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 6px 2px; border: 1.5px solid transparent; cursor: default; user-select: none; }
 .desk-icon:hover { border-color: var(--ink); background: rgba(255,255,255,.35); }
 .desk-icon .ic { width: 42px; height: 42px; background: var(--white); border: 2px solid var(--ink); box-shadow: 3px 3px 0 var(--ink); display: grid; place-items: center; }
