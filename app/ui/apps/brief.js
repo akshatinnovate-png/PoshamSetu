@@ -25,6 +25,7 @@ const PERSONAS = [
   ['CDPO', 'CDPO + Block MO', 'Block-level counts arrive monthly; migration inflow invisible.', 'Weekly overdue RED/AMBER, transfers, route notice before the season; names only via logged break-glass.', 'district'],
   ['FAM', 'Migrant mother', 'Leaves for a kiln in Nov–Jan; MCP card often lost; phone off for days; fingerprints worn.', 'Signed token verifies offline; IVR short code; eKYC on the AWC tablet incl. face auth; ration entitlement travels.', 'migration'],
 ];
+const REFS = ['NITI Aayog, SDG India Index 2023-24.', 'MoHFW, NFHS-5 2019-21; Economic Survey 2021-22.', 'Rajya Sabha reply, MoHFW, 11 March 2025.', 'PIB, Malnutrition among Children, March 2022.', 'Rajya Sabha reply, 4 Dec 2024 (7.31 crore children).', 'Mertens A, et al., Nature 2023;621:558-67.', 'Mertens A, et al., Nature 2023 (growth faltering).', 'Onyango AW, et al., J Nutr 2015;145:2725-31.', 'Roshania R, et al., PMC8818295.', "Scroll.in, India's migrant children fall through the cracks.", 'MoWCD, Poshan Tracker FAQ and release notes.', "Jaacks L, et al., on India's Poshan Tracker.", 'PIB, Launch of SSBSK, 29 June 2026 (ID 2279075).', 'MoWCD and MoHFW, Protocol for Management of Malnutrition in Children, 2023; MoHFW, Facility Based Management of SAM, 2011.', 'Census of India 2011.', 'DPDP Act 2023; DPDP Rules 2025; NDGFP 2022.', 'NHA, ABDM FHIR profiles.', 'WHO Child Growth Standards.', 'MoWCD, Tracker migration module, 2023.', 'PIB, Poshan Tracker factsheet, July 2026.', 'NITI Aayog and IFPRI, District Nutrition Profile: Pashchimi Singhbhum, 2022.'];
 const PHASES = [
   { n: 'Phase 1', m: [1, 3], t: 'Calibrate', what: 'Tracker baselines; interviews with AWWs, Sahiyas, supervisors; backtest on anonymised data (fallback NGO/synthetic); FHIR mapping in NHA sandbox; DPDP basis & MUAC completeness', exit: 'Lead time and alert accuracy measured; thresholds fixed in signed pack 2.x' },
   { n: 'Phase 2', m: [4, 9], t: 'Pilot', what: '2–3 blocks, ~250 AWCs, one migration season. Weeks 1–8 silent, then live alerts; staff training through ICDS cascade', exit: 'Deadlines met; workload and alert fatigue assessed' },
@@ -35,7 +36,7 @@ export default {
   id: 'brief', title: 'Brief — Round 2 storyline', icon: ICONS.brief, dock: 'Brief', desk: 'Brief', size: [1100, 700], key: 'b',
   mount(ctx) {
     let tab = 'problem';
-    const TABS = [['problem', '1 · Problem'], ['ecosystem', '2 · Ecosystem'], ['people', '3 · Stakeholders'], ['roadmap', '4 · Roadmap & feasibility'], ['impact', '5 · Impact & scale']];
+    const TABS = [['problem', '1 · Problem'], ['ecosystem', '2 · Ecosystem'], ['people', '3 · Stakeholders'], ['roadmap', '4 · Roadmap & feasibility'], ['impact', '5 · Impact & scale'], ['refs', 'References']];
     function render() {
       let body;
       if (tab === 'problem') body = h('div.col', { style: { gap: '12px' } },
@@ -69,6 +70,8 @@ export default {
               h('li', null, 'Trend rules give a median lead of ≥ 30 days within the visit limit (prototype backtest: see Trial).'),
               h('li', null, 'Sahiyas can act on voice tasks (IVR pilot in one sector first).')),
             h('div.row', { style: { gap: '6px', marginTop: '8px' } }, h('button.btn.sm.ghost', { onclick: () => open('budget') }, 'Costs ▸'), h('button.btn.sm.ghost', { onclick: () => open('trial') }, 'Backtest ▸'), h('button.btn.sm.ghost', { onclick: () => open('rulepack') }, 'Calibration ▸'))));
+      } else if (tab === 'refs') {
+        body = h('div.card', null, h('div.kicker', null, 'Round 1 proposal references (as submitted)'), h('ol', { style: { margin: '8px 0 0 22px', padding: 0, fontSize: '12.5px', lineHeight: 1.7 } }, REFS.map((r) => h('li', null, r))), h('div.small.muted', { style: { marginTop: '8px' } }, 'Prototype-only sources: WHO 2006 LMS tables (via pygrowup, BSD); WHO 2009 velocity standards (approximated, flagged in the rule pack).'));
       } else {
         const m = store.sim.metrics;
         const closedIn = (() => { const am = store.tasks.filter((t) => t.tier === 'AMBER' && (t.kind === 'NEW' || t.kind === 'WORSENING') && !t.queued); const ok = am.filter((t) => { const e = store.esc(t); return e.state === 'CLOSED' && e.closedAt <= t.dueAt; }); return am.length ? ok.length / am.length : null; })();
