@@ -127,6 +127,12 @@ function shell() {
       { label: 'Field layout — AWW day view', fn: () => fieldLayout() },
       { label: 'Close all windows', fn: () => closeAll() },
     ]),
+    menu('Help', () => [
+      { label: 'Keyboard shortcuts', fn: () => showShortcuts() },
+      { label: 'About PS.OS1', fn: () => showAbout() },
+      '-',
+      { label: 'Every window has a ? button', fn: () => {} },
+    ]),
     h('div.spacer'),
     h('div.right', null,
       h('div.clock', null, h('span.pulse', { style: { width: '8px', height: '8px', background: 'var(--hot)', display: 'inline-block', border: '1.5px solid var(--ink)' } }), clockEl),
@@ -184,6 +190,19 @@ function shell() {
     const W = desktop.clientWidth, H = desktop.clientHeight;
     open('worklist'); place('worklist', 20, 16, W * 0.56, H - 40);
     open('capture'); place('capture', W * 0.56 + 34, 16, W * 0.44 - 60, H - 40);
+  }
+  function panel(title, rows) {
+    const scrim = h('div.scrim', { onclick: (e) => { if (e.target === scrim) scrim.remove(); } }, h('div.win.focused', { style: { position: 'relative', width: '520px', minHeight: 0 } },
+      h('div.tb', null, h('span.t', null, title), h('button', { onclick: () => scrim.remove() }, '×')),
+      h('div', { style: { padding: '12px 14px', background: 'var(--white)' } }, h('table.grid', null, h('tbody', null, rows.map(([k, v]) => h('tr', null, h('td', null, h('b', null, k)), h('td', null, v))))))));
+    document.body.appendChild(scrim);
+  }
+  function showShortcuts() {
+    panel('Keyboard shortcuts', [['H / D / W', 'advance the clock 1 hour / 1 day / 7 days'], ['j', 'jury tour (← → to move)'], ['1 – 5', 'the five audit fixes'], ['b', 'brief'], ['m', 'map'], ['e', 'escalation ladder'], ['t', 'silent trial'], ['r', 'rule pack'], ['k', 'consent'], ['c', 'capture'], ['a', 'audit log'], ['p', 'convergence report'], ['A', 'architecture'], ['`', 'shell']]);
+  }
+  async function showAbout() {
+    const info = native ? await native.info() : null;
+    panel('About PS.OS1', [['Build', 'PoshanSetu Round 2 prototype · Team 7, Gulmohur High School, Jamshedpur'], ['Rule pack', `${store.pack.id}@${store.pack.version} · ${store.packVerified?.ok ? 'dual signature verified' : 'unverified'}`], ['Data', `${store.sim.district.children.length.toLocaleString('en-IN')} synthetic children · ${store.sim.district.history.events.length.toLocaleString('en-IN')} events · seed 71100`], ['Growth standard', 'WHO Child Growth Standards 2006 (LMS)'], ['Audit head', store.audit.head.slice(0, 32) + '…'], ['Runtime', info ? `Electron ${info.electron} · Chromium ${info.chrome} · ${info.platform}` : 'web build'], ['Offline', 'Everything runs locally; no network calls']]);
   }
   window.psLayout = { juryLayout, fieldLayout, tileLayout };
 
