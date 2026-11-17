@@ -63,7 +63,7 @@ Each answer is short enough to say in the 5-minute interaction, and each points 
 
 **What if MoWCD does not expose a Tracker API in time?** The bridge is a ladder, not a bet:
 1. The Tracker Open API via API Setu (the target).
-2. A State data-sharing MoU for a nightly delta from the State ICDS mirror. That is safe for AMBER and WATCH clocks (p95 well under 16.8 h and 33.6 h).
+2. A State data-sharing MoU for a nightly delta from the State ICDS mirror. Modelled honestly in the Bridge window ('Fallback' mode), it is clock-safe for WATCH and borderline for AMBER: p95 is about 17 h against our 16.8 h budget, so it can eat roughly a day of the 7-day window.
 3. The SMS flash for RED signs, which does not depend on either. So RED clocks stay safe in every case.
 
 The Bridge window's clock-safety matrix is how we decide which path may drive which clock. A path that fails the test can still feed data, but it never starts or stops a deadline.

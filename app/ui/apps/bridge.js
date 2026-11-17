@@ -32,7 +32,10 @@ export default {
       }
       return out;
     }
-    const cf1 = counterfactual(r1ById), cf2 = counterfactual(r2ById);
+    const fbById = Object.fromEntries(B.fallback.arrivals.map((a) => [a.id, a]));
+    const cf1 = counterfactual(r1ById), cf2 = counterfactual(r2ById), cfF = counterfactual(fbById);
+    const RUN = { ROUND1: B.round1, ROUND2: B.round2, FALLBACK: B.fallback };
+    const CF = { ROUND1: cf1, ROUND2: cf2, FALLBACK: cfF };
 
     function pipeline() {
       const W = 900, H = 210;
@@ -44,9 +47,9 @@ export default {
         sub.split('\n').forEach((ln, i) => g.append(s('text', { x: x + 8, y: y + 30 + i * 12, 'font-size': 9.5, fill: '#3a3236' }, ln)));
         svg.append(g);
       };
-      const r2 = mode === 'ROUND2';
+      const r2 = mode !== 'ROUND1';
       box(10, 80, 150, 64, 'AWW device', 'Poshan Tracker app\noffline-first, dated events', '#fbd3e0');
-      box(250, 14, 190, 52, 'API Setu webhook', `Tracker Open API · p95 ${fmtDuration(B.round2.stats.API_SETU.p95)}`, '#fff', !r2);
+      box(250, 14, 190, 52, mode === 'FALLBACK' ? 'State nightly delta' : 'API Setu webhook', mode === 'FALLBACK' ? `02:00 IST cut · p95 ${fmtDuration(B.fallback.stats.STATE_DELTA.p95)}` : `Tracker Open API · p95 ${fmtDuration(B.round2.stats.API_SETU.p95)}`, '#fff', !r2);
       box(250, 86, 190, 52, 'SMS / USSD flash', `RED signs on 2G · p95 ${fmtDuration(B.round2.stats.SMS_FLASH.p95)}`, '#fff', !r2);
       box(250, 158, 190, 46, 'Weekly CSV export', `p50 ${fmtDuration(B.round1.stats.BATCH_EXPORT.p50)} · reconcile only`, '#ececec', r2);
       box(520, 80, 160, 64, 'Event store', 'append-only · idempotent\nkey = hash(child,t,values)', '#d3e8fb');
@@ -74,14 +77,14 @@ export default {
     }
 
     function render() {
-      const stats = mode === 'ROUND2' ? B.round2.stats : B.round1.stats;
+      const stats = RUN[mode].stats;
       const adapters = Object.keys(stats);
-      const cf = mode === 'ROUND2' ? cf2 : cf1;
-      const lags = (mode === 'ROUND2' ? B.round2 : B.round1).arrivals.map((a) => a.lagMs);
+      const cf = CF[mode];
+      const lags = RUN[mode].arrivals.map((a) => a.lagMs);
       const inflight = store.inflight;
       mount(ctx.body,
         h('div.toolbar', null, h('span.fix', null, 'AUDIT FIX 01'), h('b', null, 'Batch exports cannot run a 24-hour clock.'),
-          h('div.grow'), h('div.seg', null, [['ROUND1', 'Round 1: dashboard export'], ['ROUND2', 'Round 2: event bridge']].map(([k, l]) => h('button', { class: mode === k ? 'on' : '', onclick: () => { mode = k; render(); } }, l)))),
+          h('div.grow'), h('div.seg', null, [['ROUND1', 'Round 1: dashboard export'], ['FALLBACK', 'Fallback: nightly delta'], ['ROUND2', 'Round 2: event bridge']].map(([k, l]) => h('button', { class: mode === k ? 'on' : '', onclick: () => { mode = k; render(); } }, l)))),
         h('div.col', { style: { padding: '12px', gap: '12px' } },
           h('div.card', null, pipeline()),
           h('div.row.wrap', { style: { alignItems: 'stretch', gap: '12px' } },
@@ -95,6 +98,7 @@ export default {
                 }))),
               h('p.p.small', { style: { marginTop: '8px' } }, mode === 'ROUND2'
                 ? 'RED signs travel on the SMS flash path, so RED-A/B clocks are safe even when the Tracker app has not synced. The API carries everything else; the CSV export is kept only to reconcile counts.'
+                : mode === 'FALLBACK' ? 'If no Tracker API is available in time: a State nightly delta is clock-safe for WATCH and borderline for AMBER (it can eat up to ~17 h of the 7-day window). RED clocks stay safe because RED signs still go by SMS flash. This is why the API is the target, not an option.'
                 : 'Every adapter is unsafe for every tier: a child measured on Monday is not seen until the export lands days later.')),
             h('div.card', { style: { flex: '0 0 300px' } }, h('div.kicker', null, 'Same live tasks — arrived after their deadline'),
               ...['RED_A', 'RED_B', 'AMBER', 'WATCH'].map((t) => h('div.row.between', { style: { padding: '5px 0', borderBottom: '1px dashed #bbb' } }, tierChip(t), h('b.mono', null, `${cf[t][1]} / ${cf[t][0]}`), h('span.tag' + (cf[t][1] ? '.bad' : '.ok'), null, cf[t][0] ? Math.round((cf[t][1] / cf[t][0]) * 100) + '%' : '—'))),

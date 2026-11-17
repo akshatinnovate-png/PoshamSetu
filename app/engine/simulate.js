@@ -273,6 +273,7 @@ export function analyse(district, r, pack) {
   const rr = rng(4242);
   const bridgeR2 = replay(liveEvents, 'ROUND2', rr);
   const bridgeR1 = replay(liveEvents, 'ROUND1', rng(4243));
+  const bridgeFB = replay(liveEvents, 'FALLBACK', rng(4244));
   const arrivalById = Object.fromEntries(bridgeR2.arrivals.map((a) => [a.id, a]));
   for (const e of district.history.events) {
     const a = arrivalById[e.id];
@@ -327,7 +328,7 @@ export function analyse(district, r, pack) {
 
   return {
     pack, district, awcById, feeds, metrics, tasks, escal,
-    bridge: { round2: bridgeR2, round1: bridgeR1, liveEvents: liveEvents.length },
+    bridge: { round2: bridgeR2, round1: bridgeR1, fallback: bridgeFB, liveEvents: liveEvents.length },
     now: NOW,
   };
 }

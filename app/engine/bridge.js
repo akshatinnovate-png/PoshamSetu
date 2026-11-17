@@ -20,6 +20,12 @@ export const ADAPTERS = {
     offlineMedianH: 0.05, offlineSigma: 0.9, apiDelayMin: [0, 2], availability: 0.995,
     color: '#1f1b1d',
   },
+  STATE_DELTA: {
+    id: 'STATE_DELTA', name: 'State ICDS mirror — nightly delta (fallback)',
+    detail: 'If no Tracker API is available in time: a State data-sharing MoU gives a nightly delta at 02:00 IST of events synced that day.',
+    offlineMedianH: 1.2, offlineSigma: 1.1, batchHourIST: 2, processingH: 1, availability: 0.99,
+    color: '#3f7fe0',
+  },
   BATCH_EXPORT: {
     id: 'BATCH_EXPORT', name: 'State dashboard export (Round 1 design)',
     detail: 'Weekly CSV export from the ICDS dashboard. Kept only as a reconciliation feed — it can never start or stop a clock.',
@@ -31,6 +37,13 @@ export const ADAPTERS = {
 export function sampleLagMs(adapterId, rnd) {
   const a = ADAPTERS[adapterId];
   if (adapterId === 'BATCH_EXPORT') return rnd() * a.batchDays * DAY + a.processingH * HOUR;
+  if (adapterId === 'STATE_DELTA') {
+    // synced at t + offline; then waits for the next 02:00 IST cut. Uses a uniform time-of-day for the sync.
+    const off = Math.exp(Math.log(a.offlineMedianH) + a.offlineSigma * rnd.normal()) * HOUR;
+    const syncHour = (10 + rnd() * 6 + off / HOUR) % 24; // growth sessions run ~10:00-16:00 IST
+    const wait = ((a.batchHourIST - syncHour + 24) % 24) * HOUR;
+    return off + wait + a.processingH * HOUR + (rnd() > a.availability ? DAY : 0);
+  }
   const off = Math.exp(Math.log(a.offlineMedianH) + a.offlineSigma * rnd.normal()) * HOUR;
   const api = (a.apiDelayMin[0] + rnd() * (a.apiDelayMin[1] - a.apiDelayMin[0])) * 60000;
   const outage = rnd() > a.availability ? (1 + rnd() * 5) * HOUR : 0;
@@ -40,6 +53,7 @@ export function sampleLagMs(adapterId, rnd) {
 /** Which adapter carries an event: RED signs go over SMS flash as well as the API. */
 export function routeFor(event, mode) {
   if (mode === 'ROUND1') return ['BATCH_EXPORT'];
+  if (mode === 'FALLBACK') return ['STATE_DELTA'].concat(event.oedema || (event.danger && event.danger.length) || (event.muacMm != null && event.muacMm < 115) || event.appetite === 'FAIL' ? ['SMS_FLASH'] : []);
   const red = event.oedema || (event.danger && event.danger.length) || (event.muacMm != null && event.muacMm < 115) || event.appetite === 'FAIL';
   return red ? ['SMS_FLASH', 'API_SETU'] : ['API_SETU'];
 }
