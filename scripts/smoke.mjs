@@ -7,7 +7,7 @@ const { chromium } = require('playwright');
 const b = await chromium.launch();
 const p = await b.newPage({ viewport: { width: 1440, height: 900 } });
 const errs = [];
-p.on('pageerror', (e) => errs.push('PAGEERROR ' + e.message));
+p.on('pageerror', (e) => errs.push('PAGEERROR ' + (e.stack || e.message).split('\n').slice(0, 4).join(' | ')));
 p.on('console', (m) => { if (m.type() === 'error') errs.push(m.text()); });
 await p.goto(`http://localhost:${process.env.PORT || 5173}/#worklist`);
 await p.waitForSelector('.menubar', { timeout: 30000 });

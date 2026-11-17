@@ -110,18 +110,23 @@ export default {
     function routes() {
       const all = store.sim.district.history.migrations;
       const k = store.pack.privacy.kAnonMin;
-      const agg = routeAggregates(all.map((m) => ({ fromBlock: store.blockById[m.fromBlock].name, destination: DESTINATIONS.find((d) => d.id === m.destination).label })), k);
-      const byDest = {};
-      for (const a of agg) byDest[a.to] = (byDest[a.to] || 0) + a.n;
-      const max = Math.max(...agg.map((a) => a.n));
+      const label = (id) => DESTINATIONS.find((d) => d.id === id).label;
+      // What leaves the district: totals per destination (all pilot blocks combined), k-anonymous.
+      const shared = routeAggregates(all.map((m) => ({ fromBlock: 'Paschimi Singhbhum', destination: label(m.destination) })), k);
+      // Home-side detail: only the viewer's own block (never shared).
+      const ownBlock = store.role === 'CDPO' ? store.scope : null;
+      const own = ownBlock ? routeAggregates(all.filter((m) => m.fromBlock === ownBlock).map((m) => ({ fromBlock: store.blockById[m.fromBlock].name, destination: label(m.destination) })), 1) : [];
+      const max = Math.max(1, ...shared.map((a) => a.n));
+      const bar = (n, sup) => h('div', { style: { width: Math.max(8, (n / max) * 240) + 'px', height: '12px', background: sup ? 'repeating-linear-gradient(45deg,#1f1b1d 0 2px,#fff 2px 5px)' : 'var(--hot)', border: '1.5px solid var(--ink)', display: 'inline-block', verticalAlign: 'middle' } });
       return h('div.col', { style: { padding: '14px', gap: '12px' } },
-        h('div.callout', null, h('b', null, 'Advance notice. '), `Before the season, each destination CDPO gets aggregate route counts so AWCs near kilns can plan THR stock and Migrate Beneficiary slots. Counts below ${k} are suppressed — no child is identifiable from this view.`),
-        h('div.card', null, h('table.grid', null,
-          h('thead', null, h('tr', null, h('th', null, 'From block'), h('th', null, 'Destination'), h('th', null, 'Children'), h('th', null, 'Shared with destination CDPO'))),
-          h('tbody', null, agg.map((a) => h('tr', null, h('td', null, a.from), h('td', null, a.to),
-            h('td', null, h('div', { style: { width: Math.max(8, (a.n / max) * 220) + 'px', height: '12px', background: a.suppressed ? 'repeating-linear-gradient(45deg,#1f1b1d 0 2px,#fff 2px 5px)' : 'var(--hot)', border: '1.5px solid var(--ink)', display: 'inline-block', verticalAlign: 'middle' } }), ' ', h('span.mono', null, a.n)),
-            h('td', null, h('span.tag' + (a.suppressed ? '.warn' : '.ok'), null, a.shown))))))),
-        h('div.small.muted', null, `Cross-state ration reallocation (Bihar, Odisha, Punjab, West Bengal) needs MoWCD guidance — a stated dependency, not assumed.`));
+        h('div.callout', null, h('b', null, 'Advance notice. '), `Before the season, each destination CDPO receives the number of children expected from this district, so AWCs near kilns can plan THR stock and Migrate Beneficiary slots. Only district totals leave the district, and totals below ${k} are suppressed — no child is identifiable from what is shared.`),
+        h('div.card', null, h('div.kicker', null, 'Shared with destination CDPOs (district totals)'),
+          h('table.grid', { style: { marginTop: '6px' } }, h('thead', null, h('tr', null, h('th', null, 'Destination'), h('th', null, 'Sent'), h('th', null, ''))),
+            h('tbody', null, shared.map((a) => h('tr', null, h('td', null, a.to), h('td', null, h('span.tag' + (a.suppressed ? '.warn' : '.ok'), null, a.shown)), h('td', null, a.suppressed ? h('span.small.muted', null, 'suppressed — below k') : bar(a.n, false))))))),
+        ownBlock ? h('div.card', null, h('div.kicker', null, `Home-side planning detail · ${store.blockById[ownBlock].name} block only · not shared`),
+          h('table.grid', { style: { marginTop: '6px' } }, h('thead', null, h('tr', null, h('th', null, 'Destination'), h('th', null, 'Children from your block'))),
+            h('tbody', null, own.map((a) => h('tr', null, h('td', null, a.to), h('td', null, h('span.mono', null, a.n))))))) : h('div.small.muted', null, 'Block-level detail is visible to each home CDPO for their own block only.'),
+        h('div.small.muted', null, 'Cross-state ration reallocation (Bihar, Odisha, Punjab, West Bengal) needs MoWCD guidance — a stated dependency, not assumed.'));
     }
 
     render();

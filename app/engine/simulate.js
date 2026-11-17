@@ -148,7 +148,7 @@ function simulateHistory(district, r, pack) {
     };
     c.truthAt = truthAt;
     c.migration = mig ? { ...mig, depAt: months[Math.min(mig.depMonth, 12)] + r.int(3, 20) * DAY, retAt: mig.retMonth <= 12 ? months[mig.retMonth] + r.int(1, 15) * DAY : null, destination: mig.dest } : null;
-    if (c.migration) out.migrations.push({ childId: c.id, fromBlock: awc.blockId, destination: mig.dest.id, ...c.migration });
+    if (c.migration) out.migrations.push({ childId: c.id, fromBlock: awc.blockId, ...c.migration, destination: mig.dest.id });
 
     // --- consent ---
     const cr = r();
