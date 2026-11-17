@@ -5,6 +5,7 @@ import { ICONS } from '../icons.js';
 import { tierChip, nameOf, ageLabel, dueChip, levelChip, closureDots, statCard, fmtDateTime, fmtDuration } from '../common.js';
 import { TIER_RANK } from '../../engine/rulepack.js';
 import { ROLES } from '../../engine/access.js';
+import { ask } from '../modal.js';
 
 const DO = {
   RED_A: ['आज ही PHC / NRC भेजें', 'Refer to PHC / NRC today — supervisor already told'],
@@ -97,6 +98,7 @@ export default {
             h('td', null, closureDots(t, e), h('div.small.muted', { style: { marginTop: '3px' } }, e.state.toLowerCase())),
             h('td', null, h('div.row.wrap', { style: { gap: '3px' } },
               t.queued ? h('span.tag.sky', { title: 'Over the 2-per-AWC monthly cap: on the monthly list, escalates at day 10' }, `queued #${t.queueRank}`) : null,
+              t.queued && e.open && (store.role === 'MS' || store.role === 'CDPO') ? h('button.btn.sm.ghost', { style: { padding: '0 5px', fontSize: '10px' }, onclick: async (ev) => { ev.stopPropagation(); const r = await ask({ title: 'Promote queued case', label: 'Supervisor override of the visit cap. Reason (logged):', value: 'Youngest child, second fall this season', ok: 'Promote & log' }); if (!r) return; t.queued = false; t.dueAt = t.measuredAt + store.pack.jointVisit.windowDays * 86400000; t.required = ['AWW', 'ASHA']; store.audit.append({ at: store.now, actor: store.actorName(), role: store.role, action: 'CAP_OVERRIDE', subject: t.id, detail: r }); store.emit('task', t); } }, 'promote') : null,
               e.lateArrival ? h('span.tag.bad', { title: 'Event reached PoshanSetu after a deadline had passed — pipeline breach, not worker breach' }, 'late arrival') : null,
               t.remeasureFirst ? h('span.tag.warn', { title: 'Feed reliability below cutoff — re-measure before acting' }, 're-measure first') : null,
               t.toPHC ? h('span.tag', null, '→ PHC') : null,
