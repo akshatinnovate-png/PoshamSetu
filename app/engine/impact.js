@@ -6,6 +6,7 @@ import { trackerSingleReading } from './triage.js';
 
 const hash01 = (s) => { let h = 2166136261; for (const ch of s) h = Math.imul(h ^ ch.charCodeAt(0), 16777619); return ((h >>> 0) % 10000) / 10000; };
 
+/** @param {any[]} children @param {any} pack @param {{ effect?: number, months?: number, compliance?: number, from?: number, to?: number }} [opts] */
 export function impactScenario(children, pack, { effect = 0.15, months = 3, compliance = 0.8, from, to } = {}) {
   let samKids = 0, flagged = 0, acted = 0, averted = 0;
   for (const c of children) {

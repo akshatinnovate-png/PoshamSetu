@@ -116,6 +116,7 @@ export function extractFlags(bundle, allowed = ['VACCINE_OVERDUE', 'DIARRHOEA', 
 /** What U-WIN / RCH would hold for this child (synthetic), as a FHIR R4 bundle. */
 export function hipBundle(child, vaccines, signalsRaw) {
   const pid = child.pseudoId;
+  /** @type {{ resource: import('./types.js').FhirResource }[]} */
   const entry = [{ resource: { resourceType: 'Patient', id: pid, gender: child.sex === 'F' ? 'female' : 'male', birthDate: new Date(child.dob).toISOString().slice(0, 10) } }];
   for (const v of vaccines.filter((x) => x.given)) entry.push({ resource: { resourceType: 'Immunization', id: `imm-${v.antigen}`, status: 'completed', vaccineCode: { text: v.antigen }, patient: { reference: `Patient/${pid}` }, occurrenceDateTime: new Date(v.given).toISOString() } });
   const overdue = vaccines.filter((v) => !v.given || v.given - v.due > 28 * 86400000);

@@ -15,6 +15,7 @@ const obs = (id, pid, t, code, display, value, unit, ucum) => ({
 
 export function wellnessBundle(child, visits, triage, consent) {
   const pid = child.pseudoId;
+  /** @type {import('./types.js').FhirResource[]} */
   const entries = [{
     resourceType: 'Patient', id: pid,
     identifier: [{ system: 'https://poshantracker.in/beneficiary', value: child.pseudoId }],

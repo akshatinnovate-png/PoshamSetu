@@ -4,7 +4,7 @@
 import { DAY } from './util.js';
 
 /**
- * @param {object} ctx { child, visit, ref, prev2, velocity, signals, priorEpisodes, now, pack }
+ * @param {import('./types.js').RiskContext} ctx
  * @returns {{ score: number, factors: {code:string, points:number, text:string}[] }}
  */
 export function riskPoints(ctx) {

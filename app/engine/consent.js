@@ -14,6 +14,7 @@ export const MODES = {
   ASSISTED: { label: 'Assisted consent (thumbprint) — reconfirm at next VHSND', verifiable: false },
 };
 
+/** @param {{ id: string, childId: string, guardian: string, mode: 'ABHA'|'OTP'|'ASSISTED', grantedAt: number, days?: number, flags?: string[], reconfirmDays?: number }} o */
 export function makeConsent({ id, childId, guardian, mode, grantedAt, days = 180, flags, reconfirmDays = 30 }) {
   return {
     id, childId, guardian, mode,

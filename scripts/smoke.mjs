@@ -2,8 +2,10 @@
 // Usage: npm run serve (in another shell) && node scripts/smoke.mjs
 import { createRequire } from 'node:module';
 import { execSync } from 'node:child_process';
-const require = createRequire(execSync('npm root -g').toString().trim() + '/');
-const { chromium } = require('playwright');
+// Local install (CI) first, then the global one (dev containers with a pre-installed browser).
+let chromium;
+try { ({ chromium } = createRequire(import.meta.url)('playwright')); }
+catch { ({ chromium } = createRequire(execSync('npm root -g').toString().trim() + '/')('playwright')); }
 const b = await chromium.launch();
 const p = await b.newPage({ viewport: { width: 1440, height: 900 } });
 const errs = [];

@@ -49,6 +49,7 @@ export function makeTask({ child, result, pack, ingestedAt, id }) {
 }
 
 /** Record a closure from either worker. ASHA uses DTMF keys 1-4 on any phone. */
+/** @param {any} task @param {import('./types.js').Closure} closure @param {any} pack */
 export function addClosure(task, { by, t, outcome, channel, dtmf }, pack) {
   if (dtmf != null) outcome = pack.jointVisit.dtmf[dtmf];
   task.closures.push({ by, t, outcome, channel: channel || (by === 'ASHA' ? 'IVR' : 'APP'), dtmf: dtmf ?? null });
