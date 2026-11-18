@@ -62,3 +62,16 @@ test('tasks listing is pseudonymous; FHIR read is logged; token lookup by short 
   assert.equal((await fetch(base + `/v1/tokens/${tok.short}`)).status, 200);
   assert.equal((await fetch(base + '/v1/tokens/0000-0000-00')).status, 404);
 });
+
+test('AWW device sync: batch accepted once, duplicates acknowledged, wrong AWC rejected', async () => {
+  const c = svc.children.find((x) => x.eval.lastValid);
+  const awc = svc.sim.awcById[c.awcId].code;
+  const ev = { id: 'dev-1', beneficiaryRef: c.pseudoId, measuredAt: '2026-11-17T04:00:00Z', weightKg: c.eval.lastValid.weightKg, heightCm: c.eval.lastValid.heightCm, muacMm: 110, lying: c.eval.lastValid.lying };
+  const r1 = await (await post('/v1/device/events', { events: [ev] }, { 'x-ps-device': awc })).json();
+  assert.equal(r1.results[0].accepted, true);
+  const r2 = await (await post('/v1/device/events', { events: [ev] }, { 'x-ps-device': awc })).json();
+  assert.equal(r2.results[0].duplicate, true);
+  const r3 = await (await post('/v1/device/events', { events: [{ ...ev, id: 'dev-2' }] }, { 'x-ps-device': '000000000' })).json();
+  assert.equal(r3.results[0].accepted, false);
+  assert.equal((await fetch(base + '/pwa/index.html')).status, 200);
+});

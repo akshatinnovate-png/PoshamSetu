@@ -23,6 +23,19 @@ import { consentStatus } from '../app/engine/consent.js';
 import { issueToken, tokenPayload, MigrationRegistry } from '../app/engine/migration.js';
 import { AuditLog } from '../app/engine/audit.js';
 
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+const APP_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'app');
+const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.woff2': 'font/woff2', '.ogg': 'audio/ogg', '.webmanifest': 'application/manifest+json' };
+function serveStatic(p, res) {
+  const rel = decodeURIComponent(p).replace(/^\/+/, '') || 'index.html';
+  const f = path.normalize(path.join(APP_DIR, rel.endsWith('/') ? rel + 'index.html' : rel));
+  if (!f.startsWith(APP_DIR) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) { res.writeHead(404); return res.end('not found'); }
+  res.writeHead(200, { 'content-type': TYPES[path.extname(f)] || 'application/octet-stream' });
+  fs.createReadStream(f).pipe(res);
+}
+
 export async function createService({ secret = process.env.PS_HMAC_SECRET || 'demo-shared-secret', clock = () => NOW } = {}) {
   const pack = DEFAULT_PACK;
   const signed = await signPack(pack);
@@ -39,6 +52,7 @@ export async function createService({ secret = process.env.PS_HMAC_SECRET || 'de
     registry.register(tok, c.uidToken);
   }
   let seq = 0;
+  const seenDevice = new Set();
 
   const json = (res, code, body) => { res.writeHead(code, { 'content-type': 'application/json' }); res.end(JSON.stringify(body)); };
   const readBody = (req) => new Promise((resolve, reject) => { let b = ''; req.on('data', (d) => { b += d; if (b.length > 1e6) reject(new Error('too large')); }); req.on('end', () => resolve(b)); });
@@ -67,6 +81,26 @@ export async function createService({ secret = process.env.PS_HMAC_SECRET || 'de
     try {
       const u = new URL(req.url, 'http://x');
       const p = u.pathname;
+      res.setHeader('access-control-allow-origin', '*');
+      res.setHeader('access-control-allow-headers', 'content-type, x-ps-device, x-ps-signature, x-ps-actor');
+      if (req.method === 'OPTIONS') { res.writeHead(204); return res.end(); }
+
+      // AWW device sync (PWA): batch of measurements made offline, idempotent by device event id.
+      if (req.method === 'POST' && p === '/v1/device/events') {
+        const device = req.headers['x-ps-device'];
+        if (!device) return json(res, 401, { error: 'missing x-ps-device' });
+        const { events = [] } = JSON.parse(await readBody(req));
+        const results = [];
+        for (const ev of events.slice(0, 500)) {
+          if (seenDevice.has(ev.id)) { results.push({ id: ev.id, duplicate: true }); continue; }
+          const c = byPseudo.get(ev.beneficiaryRef);
+          if (!c || sim.awcById[c.awcId].code !== device) { results.push({ id: ev.id, accepted: false, error: 'beneficiary not in this AWC' }); continue; }
+          const r = ingest(c, { t: Date.parse(ev.measuredAt), weightKg: ev.weightKg, heightCm: ev.heightCm, muacMm: ev.muacMm ?? null, oedema: !!ev.oedema, danger: ev.danger || [], lying: ev.lying }, 'DEVICE_SYNC');
+          seenDevice.add(ev.id);
+          results.push({ id: ev.id, ...r });
+        }
+        return json(res, 200, { results });
+      }
       if (req.method === 'GET' && p === '/health') return json(res, 200, { ok: true, pack: `${pack.id}@${pack.version}`, children: children.length, events: store.events.length });
       if (req.method === 'GET' && p === '/v1/pack') return json(res, 200, signed);
 
@@ -126,6 +160,8 @@ export async function createService({ secret = process.env.PS_HMAC_SECRET || 'de
         const tok = registry.lookupShort(mt[1], 'IVR');
         return tok ? json(res, 200, { qr: tok.qr, short: tok.short, home: tok.payload.h, tier: tok.payload.t }) : json(res, 404, { error: 'unknown or mistyped short code' });
       }
+      // Static app (console at /, AWW PWA at /pwa/) so a phone on the same network can use it.
+      if (req.method === 'GET' && !p.startsWith('/v1/')) return serveStatic(p, res);
       json(res, 404, { error: 'not found' });
     } catch (e) {
       json(res, 400, { error: e.message });
@@ -137,5 +173,10 @@ export async function createService({ secret = process.env.PS_HMAC_SECRET || 'de
 if (import.meta.url === `file://${process.argv[1]}`) {
   const svc = await createService();
   const port = Number(process.env.PORT || 8080);
-  http.createServer(svc.handler).listen(port, () => console.log(`PoshanSetu service on http://localhost:${port} — try /health, /v1/tasks?open=1`));
+  http.createServer(svc.handler).listen(port, '0.0.0.0', async () => {
+    const os = await import('node:os');
+    const lan = Object.values(os.networkInterfaces()).flat().find((i) => i && i.family === 'IPv4' && !i.internal)?.address;
+    console.log(`PoshanSetu service on http://localhost:${port}  (console /, AWW app /pwa/, API /v1/…)`);
+    if (lan) console.log(`On a phone on the same Wi-Fi: http://${lan}:${port}/pwa/`);
+  });
 }

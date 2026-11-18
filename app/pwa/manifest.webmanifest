@@ -1,0 +1,13 @@
+{
+  "name": "PoshanSetu — Anganwadi Worker",
+  "short_name": "पोषण सेतु",
+  "description": "Offline-first growth-day companion for Anganwadi Workers: who needs a visit today, and why.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f3879f",
+  "theme_color": "#1f1b1d",
+  "lang": "hi",
+  "icons": [{ "src": "../assets/icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }]
+}
