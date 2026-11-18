@@ -164,7 +164,7 @@ export default {
       const out = [];
       for (const seed of [1101, 2202, 3303, 4404, 5505]) { await new Promise((r) => setTimeout(r, 20)); out.push({ seed, m: generate({ pack: store.pack, seed }).metrics }); }
       seeds = out;
-      store.audit.append({ at: store.now, actor: store.actorName(), role: store.role, action: 'BACKTEST_SEEDS', subject: store.pack.version, detail: out.map((r) => Math.round(r.m.shareEarlier * 100) + '%').join(' ') });
+      store.log({ at: store.now, actor: store.actorName(), role: store.role, action: 'BACKTEST_SEEDS', subject: store.pack.version, detail: out.map((r) => Math.round(r.m.shareEarlier * 100) + '%').join(' ') });
       render();
     }
     function toolbarTabs() { return h('div.toolbar', null, h('div.seg', null, [['results', 'Results'], ['tradeoffs', 'Trade-off curve'], ['ablation', 'Ablation — which rules earned their place']].map(([k, l]) => h('button', { class: view === k ? 'on' : '', onclick: () => { view = k; render(); } }, l)))); }

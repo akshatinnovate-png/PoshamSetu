@@ -1,7 +1,7 @@
 // Hindi-first strings for the AWW app (English as the second language).
 export const STR = {
   hi: {
-    today: 'आज का काम', children: 'बच्चे', queue: 'भेजना बाकी', settings: 'सेटिंग',
+    hello: 'नमस्ते', today: 'आज का काम', children: 'बच्चे', queue: 'भेजना बाकी', settings: 'सेटिंग',
     online: 'नेटवर्क है', offline: 'नेटवर्क नहीं', synced: 'सब भेज दिया', pending: (n) => `${n} नाप भेजना बाकी`,
     weigh: 'वज़न लें', save: 'सहेजें', back: 'वापस', why: 'क्यों', what: 'क्या करें', due: 'समय सीमा',
     weight: 'वज़न (kg)', height: 'लंबाई / ऊँचाई (cm)', muac: 'बाँह का घेरा MUAC (mm)', oedema: 'दोनों पैरों में सूजन',
@@ -14,7 +14,7 @@ export const STR = {
     searchPh: 'नाम खोजें', measuredAt: 'नापने का समय', clockNote: 'समय सीमा नापने के समय से गिनी जाती है, भेजने के समय से नहीं।',
   },
   en: {
-    today: "Today's work", children: 'Children', queue: 'To send', settings: 'Settings',
+    hello: 'Hello', today: "Today's work", children: 'Children', queue: 'To send', settings: 'Settings',
     online: 'Online', offline: 'No signal', synced: 'All sent', pending: (n) => `${n} measurement(s) waiting`,
     weigh: 'Weigh', save: 'Save', back: 'Back', why: 'Why', what: 'What to do', due: 'Due',
     weight: 'Weight (kg)', height: 'Length / height (cm)', muac: 'MUAC (mm)', oedema: 'Swelling of both feet',

@@ -1,6 +1,6 @@
 # Demo script — Round 2, 10 minutes + 5 minutes Q&A
 
-Start the app with `npm start` (or run the packaged build). Wait for the boot log, then press **`j`** to start the Jury tour. Each step's talking points appear on the caption bar. Use **→ / ←** to move between steps. The clicks below are the live moments that make the demo land.
+Start the app with `npm start` (or run the packaged build). Wait for the boot log, then press **`j`** to start the Jury tour — or **`s`** for Riya's story, the same demo told through the people (script in `docs/STORY.md`). Each step's talking points appear on the caption bar. Use **→ / ←** to move between steps. The clicks below are the live moments that make the demo land.
 
 | Time | Step | What to do on screen |
 |---|---|---|

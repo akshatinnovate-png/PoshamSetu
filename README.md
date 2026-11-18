@@ -62,7 +62,15 @@ CI runs the type check, the tests and the Chromium smoke test on every push. Pus
 
 On Windows, after `npm run dist:win`, double-click `dist\PoshanSetu-win32-x64\PoshanSetu.exe`. Copy that whole folder to the presentation laptop; it runs fully offline. The app adds `--no-sandbox` by itself when started as root on Linux.
 
-Deep links: `#worklist`, `#bridge`, `#joint`, `#migration`, `#reliability`, `#budget`, `#trial`, `#arch`, or `#jury` for presenter mode.
+Deep links: `#story` for Riya's story, `#worklist`, `#bridge`, `#joint`, `#migration`, `#reliability`, `#budget`, `#trial`, `#arch`, or `#jury` for presenter mode.
+
+## Riya's story
+
+Press **`s`** (or **Layout → Riya's story**) for the same demo told through people: Riya, a synthetic girl the engine chose because it flagged her 125 days before the Tracker's SAM list; her mother Sunita; Kamla Devi, the Anganwadi Worker; Phulmani Hansda, the Sahiya; Smt. Basanti Tiu, the supervisor; and Smt. Anita Purty, the CDPO. Each of the 12 steps shows who is speaking. The cast runs through every window and the AWW phone app. Script, Riya's month-by-month record and the questions it invites: [`docs/STORY.md`](docs/STORY.md).
+
+| | |
+|---|---|
+| ![The people](docs/screens/people.png) | ![Riya's story](docs/screens/story.png) |
 
 ## The 10-minute presentation: Jury tour
 

@@ -53,26 +53,13 @@ export function statCard(v, l, opts = {}) {
 export const pct = (x, d = 0) => (x == null ? '—' : `${(x * 100).toFixed(d)}%`);
 
 import { trackerSingleReading } from '../engine/triage.js';
-let showcase;
-store.on('regenerated', () => { showcase = undefined; });
 /** The child used across Home, the tour and the trial: caught by a trend rule before any Tracker listing. */
+/** Riya — the story child chosen by engine/story.js (an eventual-SAM child flagged AMBER first). */
 export function showcaseChild() {
-  if (showcase !== undefined) return showcase;
-  const TREND = ['R2_CONFIRMED', 'R2_SUSTAINED', 'INFANT_FALTERING', 'TREND_PLUS_SIGNAL'];
-  let pick = null;
-  for (const c of store.sim.district.children) {
-    const ev = c.eval;
-    const samI = ev.visits.findIndex((v) => trackerSingleReading(c, v, store.pack) === 'SAM' && !v.biv.length);
-    if (samI < 3) continue;
-    const firstAnyI = ev.visits.findIndex((v) => trackerSingleReading(c, v, store.pack) && !v.biv.length);
-    const aI = ev.results.findIndex((r) => r.tier === 'AMBER');
-    if (aI < 0 || aI >= firstAnyI) continue;
-    const trend = ev.results[aI].reasons.some((r) => TREND.includes(r.code));
-    const score = (trend ? 0 : 100) + Math.abs(samI - 6);
-    if (!pick || score < pick.score) pick = { c, samI, aI, score };
-  }
-  showcase = pick;
-  return pick;
+  const st = store.story;
+  if (!st) return null;
+  const c = store.childById[st.childId];
+  return c ? { c, samI: st.samI, aI: st.aI } : null;
 }
 
 /** Save an on-screen SVG as a standalone vector file (for slides). */

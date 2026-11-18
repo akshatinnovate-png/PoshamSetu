@@ -9,6 +9,7 @@ import { ROLES, inScope } from '../engine/access.js';
 import { sampleLagMs, routeFor } from '../engine/bridge.js';
 import { rng, DAY, HOUR } from '../engine/util.js';
 import { gateSignals, FLAG_DICTIONARY } from '../engine/consent.js';
+import { castStory } from '../engine/story.js';
 
 const listeners = new Map();
 
@@ -38,11 +39,13 @@ export const store = {
     progress?.('generating synthetic district — 3 blocks, 36 AWCs, 1,440 children');
     await tick();
     this.sim = generate({ pack: this.pack, seed: this.seed });
+    this.story = castStory(this.sim, this.pack);
     this.childById = Object.fromEntries(this.sim.district.children.map((c) => [c.id, c]));
     this.awcById = this.sim.awcById;
     this.sectorById = Object.fromEntries(this.sim.district.sectors.map((s) => [s.id, s]));
     this.blockById = Object.fromEntries(this.sim.district.blocks.map((b) => [b.id, b]));
     this.tasks = this.sim.tasks;
+    this.scope = this.defaultScope(this.role);
     this.audit.append({ at: this.now, actor: 'system', role: 'SYSTEM', action: 'PACK_ACTIVATED', subject: `${this.pack.id}@${this.pack.version}`, detail: 'Verified dual signature MoWCD + MoHFW' });
     const saved = await loadJournal();
     if (saved.length) {
@@ -69,6 +72,7 @@ export const store = {
         else if (o.op === 'consent') this.applyConsent(o.childId, o.kind, o.mode);
         else if (o.op === 'pack') await this.activatePack(o.signed);
         else if (o.op === 'regenerate') this.regenerate(o.seed);
+        else if (o.op === 'log') this.audit.append(o.e);
       } catch (e) { console.warn('replay skipped', o.op, e.message); }
     }
     this.journal = ops.slice();
@@ -127,6 +131,7 @@ export const store = {
     this.record({ op: 'regenerate', seed });
     this.seed = seed;
     this.sim = generate({ pack: this.pack, seed });
+    this.story = castStory(this.sim, this.pack);
     this.childById = Object.fromEntries(this.sim.district.children.map((c) => [c.id, c]));
     this.awcById = this.sim.awcById;
     this.sectorById = Object.fromEntries(this.sim.district.sectors.map((s) => [s.id, s]));
@@ -145,10 +150,11 @@ export const store = {
   },
   defaultScope(role) {
     const d = this.sim.district;
-    const sc = ROLES[role].scope;
-    if (sc === 'awc') return d.awcs[0].id;
-    if (sc === 'sector') return d.sectors[0].id;
-    if (sc === 'block') return d.blocks[0].id;
+    const sc = ROLES[role].scope, st = this.story;
+    // Default scopes follow Riya's story: Kamla's AWC, Basanti's sector, Anita's block.
+    if (sc === 'awc') return st?.awcId || d.awcs[0].id;
+    if (sc === 'sector') return st?.sectorId || d.sectors[0].id;
+    if (sc === 'block') return st?.blockId || d.blocks[0].id;
     return 'DISTRICT';
   },
   scopeLabel() {
@@ -171,9 +177,15 @@ export const store = {
   scopedTasks() { return this.tasks.filter((t) => this.inScope(this.childById[t.childId]) && t.ingestedAt <= this.now); },
   esc(task) { return escalation(task, this.now, this.pack); },
 
+  /** Append a user-initiated audit entry and journal it, so a restart replays to the same chain head. */
+  log(entry) {
+    const e = { ...entry, at: entry.at ?? this.now };
+    this.record({ op: 'log', e });
+    return this.audit.append(e);
+  },
   selectChild(id, why = 'VIEW') {
     this.selectedChildId = id;
-    this.audit.append({ at: this.now, actor: this.actorName(), role: this.role, action: why, subject: id });
+    this.log({ actor: this.actorName(), role: this.role, action: why, subject: id });
     this.emit('child', id);
   },
   grantBreakGlass(id, reason) {

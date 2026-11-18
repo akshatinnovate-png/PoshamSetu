@@ -115,7 +115,7 @@ export default {
       const esc = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
       const csv = [head.join(','), ...rows.map(({ t, e, c }) => [t.id, c.pseudoId, c.awcCode, t.tier, t.kind, new Date(t.measuredAt).toISOString(), new Date(t.ingestedAt).toISOString(), new Date(t.dueAt).toISOString(), e.state, e.level, e.lateArrival, !!t.queued, t.packVersion, t.reasons[0]].map(esc).join(','))].join('\n');
       const name = `poshansetu-tasks-${store.scope}-${new Date(store.now).toISOString().slice(0, 10)}.csv`;
-      store.audit.append({ at: store.now, actor: store.actorName(), role: store.role, action: 'EXPORT', subject: store.scope, detail: `${rows.length} tasks, pseudonymous` });
+      store.log({ at: store.now, actor: store.actorName(), role: store.role, action: 'EXPORT', subject: store.scope, detail: `${rows.length} tasks, pseudonymous` });
       if (window.psNative?.saveFile) window.psNative.saveFile(name, csv);
       else { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = name; a.click(); }
     }

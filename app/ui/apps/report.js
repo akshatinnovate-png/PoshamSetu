@@ -52,7 +52,7 @@ export default {
           h('div.mono.small', null, 'DPO (ICDS) ________   CMO ________')));
       mount(ctx.body,
         h('div.toolbar', null, h('b', null, 'L3 artefact of Table 3.'), h('span.small', null, 'Aggregate, k-anonymous, printable.'), h('div.grow'),
-          h('button.btn.sm.hot', { onclick: () => { store.audit.append({ at: store.now, actor: store.actorName(), role: store.role, action: 'REPORT_PRINT', subject: 'DISTRICT' }); if (window.psNative?.printPDF) window.psNative.printPDF(`PoshanSetu-convergence-${new Date(store.now).toISOString().slice(0, 7)}.pdf`); else window.print(); } }, 'Print / save PDF')),
+          h('button.btn.sm.hot', { onclick: () => { store.log({ at: store.now, actor: store.actorName(), role: store.role, action: 'REPORT_PRINT', subject: 'DISTRICT' }); if (window.psNative?.printPDF) window.psNative.printPDF(`PoshanSetu-convergence-${new Date(store.now).toISOString().slice(0, 7)}.pdf`); else window.print(); } }, 'Print / save PDF')),
         h('div', { style: { padding: '16px', background: 'var(--paper-2)' } }, sheet));
     }
     render();
