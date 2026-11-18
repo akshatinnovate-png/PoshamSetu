@@ -24,3 +24,15 @@ test('import runs the engine on an export and reports tiers and reliability', ()
 test('import reports missing columns', () => {
   assert.match(analyseRows([['foo', 'bar']], DEFAULT_PACK).error, /Missing columns/);
 });
+
+test('real SMART survey: plausibility report computes sane values', async () => {
+  const fs = await import('node:fs');
+  const { isSmartSurvey, smartReport } = await import('../app/engine/importcsv.js');
+  const rows = parseCsv(fs.readFileSync('test/fixtures/smart-dist-ex01.csv', 'utf8'));
+  assert.ok(isSmartSurvey(rows));
+  const r = smartReport(rows, DEFAULT_PACK);
+  assert.ok(r.n > 800);
+  assert.ok(r.sdWhz > 0.7 && r.sdWhz < 1.5, String(r.sdWhz));
+  assert.ok(r.wasting > 0 && r.wasting < 0.5);
+  assert.equal(r.checks.length, 6);
+});
