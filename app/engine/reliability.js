@@ -23,6 +23,22 @@ export function digitPreference(values) {
   return { index: clamp((dis - e0) / (0.9 - e0), 0, 1), raw: dis, expected: e0, n, hist };
 }
 
+/**
+ * Digit Preference Score (SMART / WHO): DPS = 100 * sqrt(chi2 / (n * (k - 1))) over the terminal digit.
+ * SMART grading: 0-7 excellent, 8-12 good, 13-20 acceptable, > 20 problematic.
+ */
+export function digitPreferenceScore(values) {
+  const d = values.filter((v) => v != null && Number.isFinite(v)).map((v) => Math.round(v * 10) % 10);
+  const n = d.length;
+  if (n < 10) return { dps: 0, n, grade: 'n/a' };
+  const c = new Array(10).fill(0);
+  for (const x of d) c[x]++;
+  const e = n / 10;
+  const chi = c.reduce((s, o) => s + ((o - e) ** 2) / e, 0);
+  const dps = 100 * Math.sqrt(chi / (n * 9));
+  return { dps: round(dps, 1), n, grade: dps <= 7 ? 'excellent' : dps <= 12 ? 'good' : dps <= 20 ? 'acceptable' : 'problematic' };
+}
+
 /** Share of readings that belong to runs of >= runLen identical weights for one child. */
 export function flatShare(childSeries, runLen) {
   let total = 0, flat = 0;
@@ -49,7 +65,10 @@ export function scoreFeed(visitsByChild, pack, monthlyD = []) {
   const B = n ? all.filter((v) => v.biv.length).length / n : 0;
   const F = flatShare(visitsByChild.map((vs) => vs.map((v) => v.weightKg)), cfg.flatRunLength);
   const dp = digitPreference(all.map((v) => v.weightKg));
-  const D = dp.index;
+  const dpH = digitPreference(all.map((v) => v.heightCm));
+  // Heaping on either the scale or the board counts; height heaping is the commoner problem in real surveys.
+  const D = Math.max(dp.index, dpH.index);
+  const dpsW = digitPreferenceScore(all.map((v) => v.weightKg)), dpsH = digitPreferenceScore(all.map((v) => v.heightCm));
   const recent = [...monthlyD, D].slice(-cfg.dChronicMonths);
   const chronic = recent.length >= cfg.dChronicMonths && recent.every((d) => d >= cfg.dAuditThreshold);
   const w = cfg.weights;
@@ -59,11 +78,12 @@ export function scoreFeed(visitsByChild, pack, monthlyD = []) {
   const flags = [];
   if (B > 0) flags.push({ code: 'BIV', severity: 'high', text: `${round(B * 100, 1)}% implausible readings — check scale / entry` });
   if (F >= 0.1) flags.push({ code: 'FLAT', severity: 'med', text: `${round(F * 100, 1)}% of readings in flat runs — possible copy-forward` });
+  if (dpsH.grade === 'problematic' || dpsW.grade === 'problematic') flags.push({ code: 'DPS_SMART', severity: 'low', text: `SMART digit-preference score problematic (weight ${dpsW.dps}, height ${dpsH.dps})` });
   if (D >= cfg.dAuditThreshold) flags.push({ code: chronic ? 'DIGIT_CHRONIC' : 'DIGIT_AUDIT', severity: chronic ? 'med' : 'low', text: chronic ? `Digit preference ${round(D, 2)} for ${cfg.dChronicMonths}+ months — now counts in R` : `Digit preference ${round(D, 2)} — audit flag only (not yet chronic)` });
   return {
     R, legacyR, B: round(B, 4), F: round(F, 4), D: round(D, 4), chronic, n,
     contributions: { B: round(w.B * B * 100, 1), F: round(w.F * F * 100, 1), D: round((chronic ? w.D * D : 0) * 100, 1) },
-    hist: dp.hist, flags, belowCutoff: R < cfg.cutoff,
+    hist: dp.hist, histH: dpH.hist, dps: { weight: dpsW, height: dpsH }, flags, belowCutoff: R < cfg.cutoff,
   };
 }
 
