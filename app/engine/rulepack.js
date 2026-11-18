@@ -63,7 +63,7 @@ export const DEFAULT_PACK = Object.freeze({
     AMBER: { deadlineDays: 7, action: 'SSBSK at-risk visit (<36 mo) or joint AWW + ASHA visit (36-59 mo); ration review' },
     WATCH: { deadlineDays: 14, action: 'Counselling and re-measurement; two WATCH in a row become AMBER' },
   },
-  workload: { newAmberCapPerAwcPerMonth: 2, queuedEscalateDay: 10 },
+  workload: { newAmberCapPerAwcPerMonth: 2, queuedEscalateDay: 10, ranking: 'risk' },
   jointVisit: {
     windowDays: 7,
     requireBoth: true,

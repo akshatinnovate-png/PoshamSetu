@@ -87,12 +87,13 @@ export default {
           mount(list, h('div.empty', null, h('div.h2', null, 'Silent trial in progress'), h('p.p', null, `${rows.length} alerts logged for lead-time and false-alert measurement — not shown to staff.`)));
         } else if (!rows.length) mount(list, h('div.empty', null, 'Nothing here. ', h('span.kbd', null, 'All clear')));
         else mount(list, h('table.grid', null,
-          h('thead', null, h('tr', null, ['Tier', 'Child', 'AWC', 'Why', 'Clock', 'Escalation', 'Closure', 'Flags'].map((x) => h('th', null, x)))),
+          h('thead', null, h('tr', null, ['Tier', 'Child', 'AWC', 'Why', 'Risk', 'Clock', 'Escalation', 'Closure', 'Flags'].map((x) => h('th', null, x)))),
           h('tbody', null, rows.slice(0, 400).map(({ t, e, c }) => h('tr.click', { onclick: () => { store.selectChild(c.id); open('child', { childId: c.id, taskId: t.id }); } },
             h('td', null, tierChip(t.tier), h('div.small.muted', { style: { marginTop: '3px' } }, t.kind.toLowerCase())),
             h('td', null, h('b', null, nameOf(c)), h('div.small.muted', null, `${c.sex} · ${ageLabel(t.ageMonths)}`)),
             h('td', null, store.awcById[c.awcId].name, h('div.small.muted', null, store.awcById[c.awcId].code)),
             h('td', { style: { maxWidth: '260px' } }, t.reasons[0] || '—', t.reasons.length > 1 ? h('div.small.muted', null, `+${t.reasons.length - 1} more`) : null),
+            h('td', { title: (t.riskFactors || []).map((f) => `+${f.points} ${f.text}`).join('\n') || 'no factors' }, h('div', { style: { display: 'flex', alignItems: 'center', gap: '4px' } }, h('div', { style: { width: '44px', height: '8px', border: '1.5px solid var(--ink)', background: '#fff' } }, h('div', { style: { width: Math.min(100, (t.risk || 0) * 10) + '%', height: '100%', background: (t.risk || 0) >= store.pack.risk.amberAt ? 'var(--red-a)' : (t.risk || 0) >= 4 ? 'var(--amber)' : 'var(--ink)' } })), h('b.mono', null, t.risk || 0))),
             h('td', null, dueChip(t, e), h('div.small.muted', { style: { marginTop: '3px' } }, `measured ${fmtDateTime(t.measuredAt)}`)),
             h('td', null, levelChip(e.level), e.nextEscalationAt ? h('div.small.muted', { style: { marginTop: '3px' } }, `next ${fmtDuration(e.nextEscalationAt - store.now)}`) : null),
             h('td', null, closureDots(t, e), h('div.small.muted', { style: { marginTop: '3px' } }, e.state.toLowerCase())),

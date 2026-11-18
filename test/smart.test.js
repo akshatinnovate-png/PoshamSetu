@@ -38,3 +38,10 @@ test('risk points are named and additive', () => {
   for (const c of ['WHZ_NEAR_MAM', 'WHZ_FALL_BIG', 'MUAC_LOW', 'MUAC_FALL', 'VELOCITY_LOW', 'SIGNAL', 'UNDER_2', 'LEAN_SEASON']) assert.ok(codes.includes(c), c);
   assert.equal(r.score, r.factors.reduce((s, f) => s + f.points, 0));
 });
+
+test('risk-ranked queue sends more capped visits to children who really become SAM than youngest-first', async () => {
+  const { generate } = await import('../app/engine/simulate.js');
+  let age = 0, risk = 0;
+  for (const seed of [71100, 2202]) { const q = generate({ pack: P, seed }).metrics.queue; age += q.hitAge; risk += q.hitRisk; }
+  assert.ok(risk > age, `risk ${risk} vs age ${age}`);
+});

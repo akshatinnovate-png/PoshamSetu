@@ -132,6 +132,11 @@ export default {
             h('div.card.grow', null, h('div.kicker', null, `New AMBER visits per AWC-month vs the cap of ${store.pack.workload.newAmberCapPerAwcPerMonth}`),
               bars({ w: 420, h: 150, bars: Array.from({ length: 10 }, (_, k) => ({ label: k === 9 ? '9+' : String(k + 1), value: m.amberLoads.filter((x) => (k === 9 ? x >= 10 : x === k + 1)).length, color: k + 1 > store.pack.workload.newAmberCapPerAwcPerMonth ? '#f2a20c' : '#1f1b1d' })), valueLabels: true, vline: store.pack.workload.newAmberCapPerAwcPerMonth }),
               h('div.small.muted', null, `The cap binds in ${m.amberPerAwcMonth.overCap} of ${m.amberPerAwcMonth.cells} AWC-months at this district's ~30% wasting. Excess cases are ranked (tier → youngest → longest unmeasured) and wait on the monthly list, escalating at day 10. Calibrating the cap is a Phase 1 decision.`))),
+          (() => { const q = m.queue; if (!q || !q.badTotal) return null; const bar = (v, c) => h('div', { style: { height: '18px', width: Math.round(v * 300) + 'px', background: c, border: '1.5px solid var(--ink)' } });
+            return h('div.card', null, h('div.kicker', null, `Who gets the ${store.pack.workload.newAmberCapPerAwcPerMonth} visits? ${q.overCapGroups} AWC-months had more new AMBER cases than the cap`),
+              h('div.row', { style: { gap: '10px', marginTop: '8px' } }, h('span', { style: { width: '230px', fontSize: '12px' } }, 'Round 1 order (youngest first)'), bar(q.captureAge, '#9c8f94'), h('b.mono', null, `${q.hitAge} of ${q.badTotal} (${pct(q.captureAge)})`)),
+              h('div.row', { style: { gap: '10px', marginTop: '6px' } }, h('span', { style: { width: '230px', fontSize: '12px' } }, 'Risk-point order (shipped)'), bar(q.captureRisk, 'var(--hot)'), h('b.mono', null, `${q.hitRisk} of ${q.badTotal} (${pct(q.captureRisk)})`)),
+              h('div.small.muted', { style: { marginTop: '6px' } }, 'Counts the children in over-cap months who really became SAM within 120 days (simulated truth), and how many of them got one of the capped visits. Same cap, same workload — better aim.')); })(),
           exView));
     }
     async function runSeeds() {

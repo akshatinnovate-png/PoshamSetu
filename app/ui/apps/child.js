@@ -55,7 +55,15 @@ export default {
         cur ? h('div', null,
           cur.reasons.length ? cur.reasons.map((r) => h('div.reason', null, tierChip(r.tier), h('div', null, r.text), h('div.rule', null, `${r.rule}${r.consentId ? ' · consent ' + r.consentId : ''}`))) : h('p.p', null, 'No rule fired at the last visit — on track.'),
           cur.remeasure ? h('div.callout', { style: { marginTop: '8px' } }, h('b', null, 'Re-measure requested. '), cur.remeasureFirst ? `AWC feed reliability R=${store.sim.feeds[c.awcId].R} is below ${store.pack.reliability.cutoff}: re-weigh before acting.` : 'Confirmation needed before the tier escalates.') : null,
-          cur.toPHC ? h('div.callout', { style: { marginTop: '8px' } }, h('b', null, 'Under 6 months. '), 'MUAC not used; weight-for-length + feeding check; flags route to the PHC.') : null)
+          cur.toPHC ? h('div.callout', { style: { marginTop: '8px' } }, h('b', null, 'Under 6 months. '), 'MUAC not used; weight-for-length + feeding check; flags route to the PHC.') : null,
+          cur.forecast ? h('div', { style: { marginTop: '10px', borderTop: '1.5px dashed var(--ink)', paddingTop: '8px' } },
+            h('div.kicker', null, 'Trajectory forecast (Kalman)'),
+            h('div.row', { style: { gap: '8px', alignItems: 'baseline' } }, h('div', { style: { fontWeight: 800, fontSize: '26px', letterSpacing: '-0.03em', color: cur.forecast.prob >= 0.5 ? 'var(--red-a)' : 'inherit' } }, `${Math.round(cur.forecast.prob * 100)}%`), h('div.small', null, `chance of WHZ < −2 within ${store.pack.forecast.horizonDays} days`)),
+            h('div.small.mono', null, `trend ${cur.forecast.slope >= 0 ? '+' : ''}${cur.forecast.slope.toFixed(2)} SD/month · level ${cur.forecast.level.toFixed(2)}`),
+            cur.forecast.crossInDays != null && cur.forecast.level > -2 ? h('div.small', null, `At this rate she/he crosses −2 SD around ${new Date(cur.t + cur.forecast.crossInDays * DAY).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}.`) : null) : null,
+          cur.risk ? h('div', { style: { marginTop: '10px', borderTop: '1.5px dashed var(--ink)', paddingTop: '8px' } },
+            h('div.row.between', null, h('div.kicker', null, 'Risk points (used to rank the visit queue)'), h('span.tag' + (cur.risk.score >= store.pack.risk.amberAt ? '.bad' : cur.risk.score >= 4 ? '.warn' : ''), null, `${cur.risk.score} pts`)),
+            cur.risk.factors.length ? cur.risk.factors.map((f) => h('div.row', { style: { gap: '6px', fontSize: '11.5px', padding: '2px 0' } }, h('span.mono', { style: { width: '22px', textAlign: 'right', fontWeight: 700 } }, `+${f.points}`), h('span', null, f.text))) : h('div.small.muted', null, 'No risk factors at the last visit.')) : null)
           : h('p.p', null, 'No measurements yet.'));
 
       const tabs = h('div.seg', null, [['growth', 'Growth'], ['timeline', 'Timeline'], ['visits', `Visits (${ev.visits.length})`], ['signals', 'Health signals'], ['tasks', `Tasks (${tasks.length})`]].map(([k, l]) => h('button', { class: tab === k ? 'on' : '', onclick: () => { tab = k; render(); } }, l)));
@@ -92,13 +100,26 @@ export default {
       const t0 = vs[0].t, t1 = Math.max(vs[vs.length - 1].t, store.now);
       const whzPts = vs.map((v, i) => [v.t, v.ix.whz, { fill: TIER_COLOR[res[i].tier], title: `${fmtDate(v.t)} · WHZ ${v.ix.whz}${v.remeasure ? ' (re-weigh)' : ''}` }]).filter((p) => p[1] != null && !Number.isNaN(p[1]));
       const months = []; for (let t = t0; t <= t1; t += 61 * DAY) months.push(t);
+      // Forecast cone from the last monthly reading (Kalman local linear trend), 90 days ahead.
+      const lastRes = ev.results[ev.results.length - 1];
+      const fc = lastRes?.forecast;
+      const cone = [];
+      if (fc) for (let d = 0; d <= 90; d += 15) { const hM = d / 30.4375; const mean = fc.level + fc.slope * hM; cone.push([lastRes.t + d * DAY, mean]); }
+      const coneSd = fc ? (d) => fc.sd * Math.sqrt(Math.max(0.3, d / 60)) : null;
+      const tEnd = fc ? Math.max(t1, lastRes.t + 90 * DAY) : t1;
       const whz = lineChart({
-        w: 620, h: 190, x: { min: t0 - 5 * DAY, max: t1 + 5 * DAY, ticks: months }, y: { min: -5, max: 2, ticks: [-5, -4, -3, -2, -1, 0, 1, 2] },
+        w: 620, h: 190, x: { min: t0 - 5 * DAY, max: tEnd + 5 * DAY, ticks: months }, y: { min: -5, max: 2, ticks: [-5, -4, -3, -2, -1, 0, 1, 2] },
         xfmt: (t) => new Date(t).toLocaleDateString('en-IN', { month: 'short', year: '2-digit' }), yfmt: (v) => v,
         bands: [{ y0: -5, y1: -3, fill: '#ffd3da', label: 'SAM' }, { y0: -3, y1: -2, fill: '#ffeac2', label: 'MAM' }],
         vlines: [{ x: store.now, label: 'now', color: '#e94fbf' }, ...vs.filter((v) => v.biv.length).map((v, i) => ({ x: v.t, label: `✕ quarantined (${v.weightKg} kg)`, color: '#c8102e', dy: 14 + i * 12 }))],
         ylabel: 'WHZ',
-        series: [{ points: whzPts, color: '#1f1b1d', width: 2, dots: true, r: 4 }],
+        series: [
+          ...(fc ? [
+            { points: cone.map(([t, m]) => [t, m + 1.96 * coneSd((t - lastRes.t) / DAY)]), color: '#e94fbf', width: 1, dash: '2 3' },
+            { points: cone.map(([t, m]) => [t, m - 1.96 * coneSd((t - lastRes.t) / DAY)]), color: '#e94fbf', width: 1, dash: '2 3' },
+            { points: cone, color: '#e94fbf', width: 2, dash: '6 4', label: 'forecast' },
+          ] : []),
+          { points: whzPts, color: '#1f1b1d', width: 2, dots: true, r: 4 }],
       });
       const mu = vs.filter((v) => v.muacMm != null && v.ageMonths >= 6);
       const muac = mu.length ? lineChart({

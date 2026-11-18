@@ -41,6 +41,8 @@ export function makeTask({ child, result, pack, ingestedAt, id }) {
     ageMonths: result.visit.ageMonths,
     remeasureFirst: !!result.remeasureFirst,
     toPHC: result.toPHC,
+    risk: result.risk?.score ?? 0,
+    riskFactors: result.risk?.factors || [],
     // Table 2: new/worsening AMBER under 36 months joins the SSBSK at-risk visit list; 36-59 months gets a joint AWW + ASHA visit.
     route: result.tier === 'AMBER' ? (result.visit.ageMonths < 36 ? 'SSBSK' : 'JOINT') : result.tier === 'RED_A' ? 'REFERRAL' : result.tier === 'RED_B' ? 'CMAM' : 'REMEASURE',
   };
@@ -128,7 +130,10 @@ export function allocate(tasks, childrenById, pack, monthOf) {
     groups.get(k).push(t);
   }
   for (const [, g] of groups) {
-    g.sort((a, b) => TIER_RANK[a.tier] - TIER_RANK[b.tier] || a.ageMonths - b.ageMonths || a.measuredAt - b.measuredAt);
+    // Workload-aware ranking: explainable risk points first (pack.workload.ranking = 'risk'),
+    // falling back to the Round 1 order (tier, then youngest, then longest wait).
+    const byRisk = (pack.workload.ranking ?? 'risk') === 'risk';
+    g.sort((a, b) => TIER_RANK[a.tier] - TIER_RANK[b.tier] || (byRisk ? (b.risk || 0) - (a.risk || 0) : 0) || a.ageMonths - b.ageMonths || a.measuredAt - b.measuredAt);
     g.forEach((t, i) => {
       if (i >= cap) {
         t.queued = true;

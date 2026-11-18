@@ -403,7 +403,38 @@ export function backtest(district, evalByChild, pack) {
     tierCounts, baselineFlags, firstRule,
     strict: { kids: strictKids, earlier: strictEarlier, share: strictKids ? strictEarlier / strictKids : 0, leadMedian: median(strictLeads), leads: strictLeads },
     amberLoads: loads,
+    queue: queueEval(district, evalByChild, pack),
     truth: { episodes: truthEpisodes, flagged: truthFlagged, flagged14: truthFlagged14, share14: truthEpisodes ? truthFlagged14 / truthEpisodes : 0, leadMedian: median(truthLeads) },
     children: district.children.length,
   };
+}
+
+/**
+ * Which children get the capped visits? For every AWC-month with more new AMBER alerts than the cap,
+ * compare picks under the Round 1 order (youngest first) and the risk-point order, against what really
+ * happened next (simulated truth: WHZ < -3 within 120 days).
+ */
+export function queueEval(district, evalByChild, pack) {
+  const cap = pack.workload.newAmberCapPerAwcPerMonth;
+  const groups = new Map();
+  for (const c of district.children) {
+    if (!c.truthAt) continue;
+    for (const r of evalByChild[c.id].results) {
+      if (r.tier !== 'AMBER' || !(r.kind === 'NEW' || r.kind === 'WORSENING')) continue;
+      let bad = false;
+      for (let t = r.t; t <= r.t + 120 * DAY; t += 7 * DAY) if (c.truthAt(t).whz < -3) { bad = true; break; }
+      const k = c.awcId + '|' + new Date(r.t).toISOString().slice(0, 7);
+      if (!groups.has(k)) groups.set(k, []);
+      groups.get(k).push({ age: r.visit.ageMonths, risk: r.risk?.score ?? 0, bad, t: r.t });
+    }
+  }
+  let overCapGroups = 0, badTotal = 0, hitAge = 0, hitRisk = 0;
+  for (const g of groups.values()) {
+    if (g.length <= cap) continue;
+    overCapGroups++;
+    badTotal += g.filter((x) => x.bad).length;
+    hitAge += [...g].sort((a, b) => a.age - b.age || a.t - b.t).slice(0, cap).filter((x) => x.bad).length;
+    hitRisk += [...g].sort((a, b) => b.risk - a.risk || a.age - b.age || a.t - b.t).slice(0, cap).filter((x) => x.bad).length;
+  }
+  return { overCapGroups, badTotal, hitAge, hitRisk, captureAge: badTotal ? hitAge / badTotal : 0, captureRisk: badTotal ? hitRisk / badTotal : 0, randomExpected: null };
 }
