@@ -3,6 +3,9 @@
 import { indices, bivFlags, DAYS_PER_MONTH } from './growth.js';
 import { TIER_RANK } from './rulepack.js';
 import { DAY, round } from './util.js';
+import { velocityZ } from './velocity.js';
+import { riskPoints } from './risk.js';
+import { kalmanTrend, forecastCross } from './forecast.js';
 
 const IST = 5.5 * 3600000;
 export const dayKey = (t) => Math.floor((t + IST) / DAY);
@@ -60,7 +63,9 @@ export function evaluate(child, events, signals, pack, opts = {}) {
   const A = pack.anthropometry, T = pack.trend, IV = pack.infantVelocity;
   const visits = buildVisits(child, events, pack);
   const results = [];
-  let lowGainStreak = 0, watchStreak = 0;
+  let lowGainStreak = 0, watchStreak = 0, lowVel2Streak = 0;
+  const R = pack.rules || {};
+  const zHist = []; // monthly (non re-weigh) valid WHZ readings for the forecast
   let pendingFall = null; // { refT, refWhz, refWaz, t }
   let lastValid = null, lastTier = 'GREEN', lastMam = null;
   let lastMonthly = null; // last valid visit that was not a within-window re-measure
@@ -144,9 +149,14 @@ export function evaluate(child, events, signals, pack, opts = {}) {
         const days = (v.t - ref.t) / DAY;
         if (days <= 45) {
           const mi = Math.min(11, Math.floor(ref.ageMonths));
-          const gain = ((v.weightKg - ref.weightKg) * 1000) * (DAYS_PER_MONTH / days);
-          const p15 = IV.p15g[child.sex === 'F' ? 'F' : 'M'][mi];
-          if (gain < p15) {
+          let gain = ((v.weightKg - ref.weightKg) * 1000) * (DAYS_PER_MONTH / days);
+          let p15 = IV.p15g[child.sex === 'F' ? 'F' : 'M'][mi];
+          let low = gain < p15;
+          if (R.velocityOfficial) {
+            const vz = velocityZ(child.sex, ref.ageDays, v.ageDays, v.weightKg - ref.weightKg);
+            if (vz) { gain = vz.grams; p15 = vz.p15; low = vz.z < (pack.velocity?.zCut ?? -1.04); }
+          }
+          if (low) {
             lowGainStreak++;
             const g = `${Math.round(gain)} g/month vs WHO 15th centile ${p15} g`;
             if (lowGainStreak >= IV.consecutiveLow) add('AMBER', 'INFANT_FALTERING', 'Table 2 AMBER', `Two monthly gains in a row below 15th centile (${g})`);
@@ -155,6 +165,22 @@ export function evaluate(child, events, signals, pack, opts = {}) {
           } else lowGainStreak = 0;
         }
       } else if (ref && ref.ageMonths >= IV.maxAgeMonths) lowGainStreak = 0;
+
+      // --- 12-24 months: 2-month weight increment below the WHO 15th centile, twice running ---
+      const p2m = prevMonthly && ref && v.t - prevMonthly.t >= 45 * DAY && v.t - prevMonthly.t <= 80 * DAY ? prevMonthly : null;
+      if (R.velocity2m && p2m && months >= IV.maxAgeMonths && months < 24 && v.weightKg != null && p2m.weightKg != null) {
+        const vz = velocityZ(child.sex, p2m.ageDays, v.ageDays, v.weightKg - p2m.weightKg);
+        if (vz && vz.z < (pack.velocity?.zCut ?? -1.04)) {
+          lowVel2Streak++;
+          if (lowVel2Streak >= 2) add('AMBER', 'VELOCITY_2M', 'WHO velocity (2-month)', `Two-month weight gain below WHO 15th centile twice running (${vz.grams} g vs ${vz.p15} g, ${vz.interval})`);
+        } else if (vz) lowVel2Streak = 0;
+      }
+      // --- MUAC trend: falling month after month while still above the MAM cut-off ---
+      if (R.muacTrend && muacValid && p2m && ref && ref.muacMm != null && p2m.muacMm != null) {
+        const MT = pack.muacTrend;
+        if (v.muacMm >= MT.minMm && v.muacMm < ref.muacMm && ref.muacMm < p2m.muacMm && p2m.muacMm - v.muacMm >= MT.totalDropMm)
+          add('AMBER', 'MUAC_TREND', 'MUAC trend', `MUAC falling two months running: ${p2m.muacMm} → ${ref.muacMm} → ${v.muacMm} mm`);
+      }
 
       // --- Downward trend + consented health signal ---
       if (ref) {
@@ -165,6 +191,33 @@ export function evaluate(child, events, signals, pack, opts = {}) {
           if (sig) add('AMBER', 'TREND_PLUS_SIGNAL', 'Table 2 AMBER', `Downward trend (${round(Math.min(dW, dA), 2)} SD) with ${sig.type === 'DIARRHOEA' ? 'diarrhoea' : 'an overdue vaccine'} in 30 days`, { consentId: sig.consentId, signal: sig.type });
         }
       }
+    }
+
+    // --- trajectory forecast (Kalman local linear trend) ---
+    let forecast = null;
+    if (!quarantined && v.ix.whz != null) {
+      const obs = [...zHist, { t: v.t, z: v.ix.whz }];
+      const FC = pack.forecast;
+      if (FC && obs.length >= FC.minReadings) {
+        const st = kalmanTrend(obs, FC);
+        forecast = forecastCross(st, FC.line, FC.horizonDays);
+        const already = reasons.some((r) => TIER_RANK[r.tier] <= TIER_RANK.AMBER);
+        if (R.forecast && !already && v.ix.whz > FC.line && forecast.prob >= FC.minProb) {
+          const when = forecast.crossInDays != null ? new Date(v.t + forecast.crossInDays * DAY).toISOString().slice(0, 10) : null;
+          add('AMBER', 'FORECAST', 'Trajectory forecast', `On its current trend (${forecast.slope.toFixed(2)} SD/month) WHZ is likely below ${FC.line} within ${FC.horizonDays} days (p=${forecast.prob.toFixed(2)})${when ? `, around ${when}` : ''}`);
+        }
+      }
+    }
+
+    // --- explainable risk points (combined weak signals) ---
+    let risk = null;
+    if (!quarantined && pack.risk) {
+      const refR = lastMonthly && v.t - lastMonthly.t >= 21 * DAY ? lastMonthly : null;
+      const vel = refR && v.weightKg != null && refR.weightKg != null && v.ageMonths < 24 ? velocityZ(child.sex, refR.ageDays, v.ageDays, v.weightKg - refR.weightKg) : null;
+      const priorEpisodes = results.filter((r) => TIER_RANK[r.tier] <= TIER_RANK.AMBER && v.t - r.t <= 180 * DAY).length;
+      risk = riskPoints({ child, visit: v, ref: refR, velocity: vel, signals, priorEpisodes, pack });
+      const hasAmberPlus = reasons.some((r) => TIER_RANK[r.tier] <= TIER_RANK.AMBER);
+      if (R.weakSignals && !hasAmberPlus && risk.score >= pack.risk.amberAt) add('AMBER', 'WEAK_SIGNALS', 'Combined weak signals', `Risk ${risk.score} pts ≥ ${pack.risk.amberAt}: ${risk.factors.map((x) => x.text).join('; ')}`);
     }
 
     // --- choose tier ---
@@ -202,13 +255,15 @@ export function evaluate(child, events, signals, pack, opts = {}) {
       remeasureFirst: lowR && (tier === 'AMBER' || tier === 'WATCH'),
       toPHC,
       quarantined,
+      risk,
+      forecast,
       packVersion: pack.version,
     };
     results.push(res);
     if (!quarantined) {
       lastValid = v;
       const isWithinWindowRemeasure = lastMonthly && v.t - lastMonthly.t < 21 * DAY;
-      if (!isWithinWindowRemeasure) { prevMonthly = lastMonthly; lastMonthly = v; }
+      if (!isWithinWindowRemeasure) { prevMonthly = lastMonthly; lastMonthly = v; if (v.ix.whz != null) zHist.push({ t: v.t, z: v.ix.whz }); }
     }
     lastTier = tier;
   }

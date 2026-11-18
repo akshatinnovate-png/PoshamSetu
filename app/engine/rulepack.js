@@ -44,6 +44,15 @@ export const DEFAULT_PACK = Object.freeze({
       F: [790, 680, 470, 330, 240, 170, 120, 85, 60, 45, 35, 25],
     },
   },
+  // muacTrend is implemented but OFF: in the backtest it bought ~1 pt of strict lift for ~3 pts of precision.
+  rules: { velocityOfficial: true, velocity2m: true, muacTrend: false, weakSignals: true, forecast: true },
+  forecast: { horizonDays: 60, line: -2, minProb: 0.5, minReadings: 3, measSd: 0.22, levelSd: 0.12, slopeSd: 0.08 },
+  velocity: { zCut: -1.04, source: 'WHO 2009 weight-velocity standards (official LMS tables)' },
+  muacTrend: { totalDropMm: 6, minMm: 125 },
+  risk: {
+    amberAt: 7,
+    points: { whzNearMam: 2, whzLow: 1, whzFall: 1, whzFallBig: 2, muacLow: 1, muacFall: 1, velocityLow: 2, signal: 1, lbw: 1, under2: 1, priorEpisode: 1, leanSeason: 1, returnedMigrant: 1 },
+  },
   signals: {
     windowDays: 30,
     allowed: ['VACCINE_OVERDUE', 'DIARRHOEA', 'LBW', 'HIGH_RISK_PREGNANCY'],

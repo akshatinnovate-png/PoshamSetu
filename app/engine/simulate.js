@@ -334,8 +334,10 @@ export function analyse(district, r, pack) {
 }
 
 /** Silent-trial backtest: PoshanSetu vs the Tracker's single-reading lists. */
+const TIER_RANK_LOCAL = { RED_A: 0, RED_B: 1, AMBER: 2, WATCH: 3, GREEN: 4 };
 export function backtest(district, evalByChild, pack) {
   const leads = [], strictLeads = [], firstRule = {};
+  const truthLeads = []; let truthEpisodes = 0, truthFlagged = 0, truthFlagged14 = 0;
   let samKids = 0, flaggedEarlier = 0, strictKids = 0, strictEarlier = 0;
   let alerts = 0, alertsTrue = 0;
   const perAwcMonth = new Map();
@@ -365,6 +367,17 @@ export function backtest(district, evalByChild, pack) {
         if (trackerSam && res.t < trackerSam && trackerSam - res.t <= 180 * DAY && firstAlertBeforeSam == null && res.tier === 'AMBER') firstAlertBeforeSam = res.t;
       }
     }
+    // Truth-based: when did the (simulated) child really cross WHZ < -3?
+    if (c.truthAt) {
+      const t0 = ev.visits[0].t + 45 * DAY, t1 = ev.visits[ev.visits.length - 1].t;
+      let onset = null;
+      for (let t = t0; t <= t1; t += 7 * DAY) if (c.truthAt(t).whz < -3) { onset = t; break; }
+      if (onset) {
+        truthEpisodes++;
+        const a = ev.results.find((r) => TIER_RANK_LOCAL[r.tier] <= 2 && r.t < onset && onset - r.t <= 180 * DAY);
+        if (a) { truthFlagged++; const L = (onset - a.t) / DAY; truthLeads.push(L); if (L >= 14) truthFlagged14++; }
+      }
+    }
     if (trackerSam && trackerSam > SIM_START + 45 * DAY) {
       samKids++;
       if (firstAlertBeforeSam) {
@@ -390,6 +403,7 @@ export function backtest(district, evalByChild, pack) {
     tierCounts, baselineFlags, firstRule,
     strict: { kids: strictKids, earlier: strictEarlier, share: strictKids ? strictEarlier / strictKids : 0, leadMedian: median(strictLeads), leads: strictLeads },
     amberLoads: loads,
+    truth: { episodes: truthEpisodes, flagged: truthFlagged, flagged14: truthFlagged14, share14: truthEpisodes ? truthFlagged14 / truthEpisodes : 0, leadMedian: median(truthLeads) },
     children: district.children.length,
   };
 }
