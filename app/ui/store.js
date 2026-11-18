@@ -8,6 +8,7 @@ import { AuditLog } from '../engine/audit.js';
 import { ROLES, inScope } from '../engine/access.js';
 import { sampleLagMs, routeFor } from '../engine/bridge.js';
 import { rng, DAY, HOUR } from '../engine/util.js';
+import { gateSignals, FLAG_DICTIONARY } from '../engine/consent.js';
 
 const listeners = new Map();
 
@@ -23,6 +24,8 @@ export const store = {
   silentMode: false,     // when true, alerts are logged but not shown (silent trial)
   rnd: rng(9001),
   seed: 71100,
+  journal: [],          // event-sourced user actions, persisted and replayed on boot
+  replaying: false,
   consts: { NOW, LIVE_FROM, SILENT_FROM },
 
   on(evt, fn) { if (!listeners.has(evt)) listeners.set(evt, new Set()); listeners.get(evt).add(fn); return () => listeners.get(evt).delete(fn); },
@@ -41,13 +44,75 @@ export const store = {
     this.blockById = Object.fromEntries(this.sim.district.blocks.map((b) => [b.id, b]));
     this.tasks = this.sim.tasks;
     this.audit.append({ at: this.now, actor: 'system', role: 'SYSTEM', action: 'PACK_ACTIVATED', subject: `${this.pack.id}@${this.pack.version}`, detail: 'Verified dual signature MoWCD + MoHFW' });
+    const saved = await loadJournal();
+    if (saved.length) {
+      progress?.(`restoring saved session — replaying ${saved.length} action(s)`);
+      await this.replay(saved);
+    }
     progress?.('engine ready');
+  },
+
+  // ---------- persistence: an append-only journal of user actions ----------
+  record(op) { if (this.replaying) return; this.journal.push(op); saveJournal(this.journal); },
+  async replay(ops) {
+    this.replaying = true;
+    for (const o of ops) {
+      try {
+        if (o.op === 'capture') this.capture(o.childId, o.m, o.mode);
+        else if (o.op === 'advance') this.advance(o.ms);
+        else if (o.op === 'reset') this.resetClock();
+        else if (o.op === 'role') this.setRole(o.role, o.scope);
+        else if (o.op === 'close') { const t = this.tasks.find((x) => x.id === o.taskId); if (t) this.close(t, o.closure); }
+        else if (o.op === 'milestone') this.milestone(o.taskId, o.kind, o.result);
+        else if (o.op === 'promote') this.promote(o.taskId, o.reason);
+        else if (o.op === 'breakGlass') this.grantBreakGlass(o.id, o.reason);
+        else if (o.op === 'consent') this.applyConsent(o.childId, o.kind, o.mode);
+        else if (o.op === 'pack') await this.activatePack(o.signed);
+        else if (o.op === 'regenerate') this.regenerate(o.seed);
+      } catch (e) { console.warn('replay skipped', o.op, e.message); }
+    }
+    this.journal = ops.slice();
+    this.replaying = false;
+  },
+  clearSaved() { this.journal = []; saveJournal([]); },
+
+  milestone(taskId, kind, result) {
+    const t = this.tasks.find((x) => x.id === taskId); if (!t) return;
+    this.record({ op: 'milestone', taskId, kind, result });
+    t.milestones.push({ kind, t: this.now, result });
+    this.audit.append({ at: this.now, actor: this.awcById[t.awcId].aww, role: 'AWW', action: kind, subject: t.id, detail: result });
+    this.emit('task', t);
+  },
+  promote(taskId, reason) {
+    const t = this.tasks.find((x) => x.id === taskId); if (!t) return;
+    this.record({ op: 'promote', taskId, reason });
+    t.queued = false; t.dueAt = t.measuredAt + this.pack.jointVisit.windowDays * DAY; t.required = ['AWW', 'ASHA'];
+    this.audit.append({ at: this.now, actor: this.actorName(), role: this.role, action: 'CAP_OVERRIDE', subject: t.id, detail: reason });
+    this.emit('task', t);
+  },
+  /** Guardian consent change: grant (mode), renew, or revoke — rules re-run with or without the flags. */
+  applyConsent(childId, kind, mode = 'OTP') {
+    const c = this.childById[childId]; if (!c) return null;
+    this.record({ op: 'consent', childId, kind, mode });
+    const before = c.current?.tier;
+    if (kind === 'revoke' && c.consent) c.consent.revokedAt = this.now;
+    if (kind === 'renew' && c.consent) { c.consent.revokedAt = null; c.consent.expiresAt = this.now + 180 * DAY; c.consent.reconfirmedAt = this.now; }
+    if (kind === 'grant') c.consent = { id: `CA-${c.id}-N`, childId: c.id, guardian: c.mother, mode, purpose: { code: 'CAREMGT', text: 'Care management — early warning of child undernutrition' }, hiTypes: ['WellnessRecord', 'ImmunizationRecord'], hip: 'U-WIN / RCH (MoHFW)', hiu: 'PoshanSetu (MoWCD)', flags: Object.keys(FLAG_DICTIONARY), grantedAt: this.now, expiresAt: this.now + 180 * DAY, reconfirmBy: mode === 'ASSISTED' ? this.now + 30 * DAY : null, reconfirmedAt: null, revokedAt: null };
+    const g = gateSignals(c.signalsRaw, c.consent, this.now);
+    c.signals = kind === 'revoke' ? [] : g.allowed;
+    c.signalsWithheld = kind === 'revoke' ? c.signalsRaw.map((x) => ({ ...x, why: 'Guardian revoked consent' })) : g.withheld;
+    const ev = evaluate(c, c.events, c.signals, this.pack, { feedR: this.sim.feeds[c.awcId].R });
+    c.eval = ev; c.current = ev.current;
+    this.audit.append({ at: this.now, actor: this.actorName(), role: this.role, action: 'CONSENT_' + kind.toUpperCase(), subject: c.id, detail: c.consent?.id });
+    this.emit('child', c.id);
+    return { before, after: c.current?.tier };
   },
 
   /** Activate a dual-signed pack: future evaluations use it; past alerts keep the version that produced them. */
   async activatePack(signed) {
     const v = await verifyPack(signed);
     if (!v.ok) throw new Error('pack signatures invalid');
+    this.record({ op: 'pack', signed });
     const prev = this.pack.version;
     this.signed = signed; this.packVerified = v; this.pack = signed.pack;
     for (const c of this.sim.district.children) {
@@ -59,6 +124,7 @@ export const store = {
   },
   /** Regenerate the whole synthetic district with a new seed (shows nothing is hard-coded). */
   regenerate(seed) {
+    this.record({ op: 'regenerate', seed });
     this.seed = seed;
     this.sim = generate({ pack: this.pack, seed });
     this.childById = Object.fromEntries(this.sim.district.children.map((c) => [c.id, c]));
@@ -71,6 +137,7 @@ export const store = {
     this.emit('regenerated'); this.emit('role'); this.emit('tick', this.now);
   },
   setRole(role, scope) {
+    this.record({ op: 'role', role, scope });
     this.role = role;
     this.scope = scope ?? this.defaultScope(role);
     this.audit.append({ at: this.now, actor: this.actorName(), role, action: 'SESSION', subject: this.scope });
@@ -110,12 +177,14 @@ export const store = {
     this.emit('child', id);
   },
   grantBreakGlass(id, reason) {
+    this.record({ op: 'breakGlass', id, reason });
     this.breakGlass.add(id);
     this.audit.append({ at: this.now, actor: this.actorName(), role: this.role, action: 'BREAK_GLASS', subject: id, detail: reason });
     this.emit('child', id);
   },
 
   advance(ms) {
+    if (ms) this.record({ op: 'advance', ms });
     const before = this.now;
     this.now += ms;
     // deliver in-flight bridge events whose arrival time has passed
@@ -129,10 +198,12 @@ export const store = {
     }
     this.emit('tick', this.now);
   },
-  resetClock() { this.now = this.startNow; this.emit('tick', this.now); },
+  resetClock() { this.record({ op: 'reset' }); this.now = this.startNow; this.emit('tick', this.now); },
 
   /** Capture a new measurement in the app (AWW device) and send it through the bridge. */
   capture(childId, m, mode = 'ROUND2') {
+    m = { ...m, t: m.t ?? this.now };
+    this.record({ op: 'capture', childId, m, mode });
     const c = this.childById[childId];
     const e = { id: `L${++this.liveSeq}`, childId, awcId: c.awcId, t: m.t ?? this.now, by: 'AWW', ...m };
     const routes = routeFor(e, mode);
@@ -165,6 +236,7 @@ export const store = {
     this.emit('ingested', { rec, child: c, task });
   },
   close(task, closure) {
+    this.record({ op: 'close', taskId: task.id, closure });
     addClosure(task, closure, this.pack);
     this.audit.append({ at: closure.t, actor: closure.by === 'ASHA' ? this.awcById[task.awcId].asha : this.awcById[task.awcId].aww, role: closure.by, action: 'CLOSE', subject: task.id, detail: closure.dtmf ? `DTMF ${closure.dtmf}` : closure.outcome });
     this.emit('task', task);
@@ -172,4 +244,21 @@ export const store = {
 };
 
 const tick = () => new Promise((r) => setTimeout(r, 0));
+const KEY = 'ps-os1-journal-v1';
+async function loadJournal() {
+  try {
+    if (globalThis.window?.psNative?.loadState) { const s = await window.psNative.loadState(); return Array.isArray(s) ? s : []; }
+    const s = globalThis.localStorage?.getItem(KEY); return s ? JSON.parse(s) : [];
+  } catch { return []; }
+}
+let saveTimer = null;
+function saveJournal(ops) {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    try {
+      if (globalThis.window?.psNative?.saveState) window.psNative.saveState(ops);
+      else globalThis.localStorage?.setItem(KEY, JSON.stringify(ops));
+    } catch {}
+  }, 150);
+}
 export { DAY, HOUR };

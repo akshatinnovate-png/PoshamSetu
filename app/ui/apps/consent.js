@@ -117,20 +117,11 @@ export default {
             h('div', { style: { maxHeight: '420px', overflow: 'auto' } }, jsonView(m.payload)))));
     }
     function applyConsent(c, kind, mode = 'OTP') {
-      const before = c.current?.tier;
-      if (kind === 'revoke') c.consent.revokedAt = store.now;
-      if (kind === 'renew') { c.consent.revokedAt = null; c.consent.expiresAt = store.now + 180 * DAY; c.consent.reconfirmedAt = store.now; }
-      if (kind === 'grant') c.consent = { id: `CA-${c.id}-N`, childId: c.id, guardian: c.mother, mode, purpose: { code: 'CAREMGT', text: 'Care management — early warning of child undernutrition' }, hiTypes: ['WellnessRecord', 'ImmunizationRecord'], hip: 'U-WIN / RCH (MoHFW)', hiu: 'PoshanSetu (MoWCD)', flags: Object.keys(FLAG_DICTIONARY), grantedAt: store.now, expiresAt: store.now + 180 * DAY, reconfirmBy: mode === 'ASSISTED' ? store.now + 30 * DAY : null, reconfirmedAt: null, revokedAt: null };
-      const g = gateSignals(c.signalsRaw, c.consent, store.now);
-      // revocation applies from now on: past signals used under valid consent stay in the audit trail, but new evaluations stop using them
-      c.signals = kind === 'revoke' ? [] : g.allowed; c.signalsWithheld = kind === 'revoke' ? c.signalsRaw.map((x) => ({ ...x, why: 'Guardian revoked consent' })) : g.withheld;
-      const ev = evaluate(c, c.events, c.signals, store.pack, { feedR: store.sim.feeds[c.awcId].R });
-      c.eval = ev; c.current = ev.current;
-      store.audit.append({ at: store.now, actor: store.actorName(), role: store.role, action: 'CONSENT_' + kind.toUpperCase(), subject: c.id, detail: c.consent?.id });
-      impact = before === c.current?.tier ? `tier unchanged (${before}). Flags now ${kind === 'revoke' ? 'withheld' : 'available'} for future evaluations.` : `tier ${before} → ${c.current?.tier}. Rules re-ran without/with the consented flags.`;
-      store.emit('child', c.id);
+      const r = store.applyConsent(c.id, kind, mode);
+      impact = r.before === r.after ? `tier unchanged (${r.before}). Flags now ${kind === 'revoke' ? 'withheld' : 'available'} for future evaluations.` : `tier ${r.before} → ${r.after}. Rules re-ran without/with the consented flags.`;
       render();
     }
+
 
     render();
     ctx.setRefresh((o) => { if (o?.childId) { childId = o.childId; impact = null; } render(); });

@@ -129,8 +129,7 @@ export default {
     }
 
     function milestone(t, kind, result) {
-      t.milestones.push({ kind, t: store.now, result });
-      store.audit.append({ at: store.now, actor: store.awcById[t.awcId].aww, role: 'AWW', action: kind, subject: t.id, detail: result });
+      store.milestone(t.id, kind, result);
       if (kind === 'APPETITE_TEST' && result === 'FAIL') {
         // Failed appetite test = complicated SAM: same-day referral under a new RED-A task.
         store.capture(t.childId, { ...(() => { const v = store.childById[t.childId].eval.lastValid; return { weightKg: v.weightKg, heightCm: v.heightCm, lying: v.lying, muacMm: v.muacMm }; })(), appetite: 'FAIL', danger: [], oedema: false });

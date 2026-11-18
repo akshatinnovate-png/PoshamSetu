@@ -46,6 +46,12 @@ const res = await p.evaluate(async () => {
   for (let i = 0; i < 12; i++) { window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight' })); await sleep(120); }
   return { log, tasks: store.tasks.length, audit: store.audit.entries.length };
 });
+// persistence: the journal survives a reload and replays to the same audit-chain head
+const head1 = await p.evaluate(async () => { const { store } = await import('/ui/store.js'); await new Promise((r) => setTimeout(r, 400)); return { head: store.audit.head, n: store.journal.length }; });
+await p.reload(); await p.waitForSelector('.menubar', { timeout: 60000 }); await p.waitForTimeout(800);
+const head2 = await p.evaluate(async () => { const { store } = await import('/ui/store.js'); const h = store.audit.head; store.clearSaved(); return { head: h }; });
+if (head1.head !== head2.head) res.log.push(`persistence mismatch after ${head1.n} actions`);
+res.persisted = head1.n;
 console.log(JSON.stringify(res));
 console.log(errs.length ? errs.join('\n') : 'no page errors');
 await b.close();

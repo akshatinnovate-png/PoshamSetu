@@ -65,6 +65,9 @@ app.whenReady().then(() => {
     fs.writeFileSync(r.filePath, data);
     return { ok: true, path: r.filePath };
   });
+  const statePath = () => path.join(app.getPath('userData'), 'poshansetu-session.json');
+  ipcMain.handle('state:load', () => { try { return JSON.parse(fs.readFileSync(statePath(), 'utf8')); } catch { return []; } });
+  ipcMain.handle('state:save', (_e, ops) => { try { fs.mkdirSync(path.dirname(statePath()), { recursive: true }); fs.writeFileSync(statePath(), JSON.stringify(ops)); return true; } catch { return false; } });
   ipcMain.handle('app:info', () => ({ electron: process.versions.electron, chrome: process.versions.chrome, node: process.versions.node, platform: process.platform }));
   createWindow();
   app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });

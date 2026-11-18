@@ -148,6 +148,7 @@ function shell() {
       { label: 'Keyboard shortcuts', fn: () => showShortcuts() },
       { label: 'About PS.OS1', fn: () => showAbout() },
       { label: 'Export evidence pack (.json)', fn: () => exportEvidence() },
+      { label: `Saved session: ${store.journal.length} action(s) — clear & restart`, fn: () => { store.clearSaved(); setTimeout(() => location.reload(), 300); } },
       '-',
       { label: 'Every window has a ? button', fn: () => {} },
     ]),
