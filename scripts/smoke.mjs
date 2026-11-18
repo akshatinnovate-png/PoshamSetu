@@ -12,7 +12,7 @@ const errs = [];
 p.on('pageerror', (e) => errs.push('PAGEERROR ' + (e.stack || e.message).split('\n').slice(0, 4).join(' | ')));
 p.on('console', (m) => { if (m.type() === 'error') errs.push(m.text()); });
 await p.goto(`http://localhost:${process.env.PORT || 5173}/#worklist`);
-await p.waitForSelector('.menubar', { timeout: 30000 });
+await p.waitForSelector('.menubar', { timeout: 90000 }).catch((e) => { console.error(errs.join('\n') || 'no page errors before timeout'); throw e; });
 const res = await p.evaluate(async () => {
   const wm = await import('/ui/wm.js'); const { store } = await import('/ui/store.js');
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));

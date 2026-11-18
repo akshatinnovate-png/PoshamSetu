@@ -25,7 +25,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm install --no-save playwright@1.48.2 && npx playwright install --with-deps chromium
+      - run: npm install --no-save playwright@1.63.0 && npx playwright install --with-deps chromium
       - name: Smoke test every window × role in Chromium
         run: |
           node scripts/serve.mjs &
