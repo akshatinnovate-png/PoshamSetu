@@ -8,6 +8,9 @@ import { publicKeyFingerprint } from '../../engine/signing.js';
 import { generate } from '../../engine/simulate.js';
 
 const KNOBS = [
+  ['risk.amberAt', 'Combined weak signals: AMBER at (points)', 4, 10, 1],
+  ['forecast.minProb', 'Forecast: AMBER when P(below −2 in 60 d) ≥', 0.2, 0.9, 0.05],
+  ['forecast.horizonDays', 'Forecast horizon (days)', 30, 120, 15],
   ['trend.whzDropSd', 'Rule 2 · WHZ drop that triggers (SD)', 0.3, 0.8, 0.05],
   ['anthropometry.muacMamMm', 'MAM MUAC upper cut-off (mm)', 120, 130, 1],
   ['trend.signalTrendDropSd', 'Trend needed with a health signal (SD)', 0.1, 0.5, 0.05],
@@ -19,8 +22,12 @@ const get = (o, p) => p.split('.').reduce((a, k) => a[k], o);
 
 export default {
   id: 'rulepack', title: 'Rule pack — versioned, dual-signed', icon: ICONS.pack, dock: 'Rule pack', desk: 'Rule pack', size: [1100, 700], key: 'r',
-  mount(ctx) {
+  mount(ctx, opts = {}) {
     let draft = null, draftSigs = [], verify = null, bt = null, running = false, view = 'diff';
+    const newDraft = (base) => { const d = deepClone(base); d.version = base.version.split('.').map((x, i) => (i === 1 ? +x + 1 : i === 2 ? 0 : x)).join('.'); d.supersedes = base.version; d.changelog = ['Calibration proposal from Phase 1 backtest.']; return d; };
+    const applyPatch = (o) => { if (!o?.patch) return; draft = newDraft(store.signed.pack); for (const [k, val] of Object.entries(o.patch)) Object.assign(draft[k], val); if (o.label) draft.changelog = [`Operating point chosen on the trade-off curve: ${o.label}.`]; draftSigs = []; bt = null; };
+    applyPatch(opts);
+    ctx.setRefresh((o) => { applyPatch(o); render(); });
     verifyPack(store.signed).then((v) => { verify = v; render(); });
     function render() {
       const live = store.signed;

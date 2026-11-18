@@ -9,12 +9,15 @@ import { generate } from '../../engine/simulate.js';
 
 let seeds = null;
 
-const TREND = ['R2_CONFIRMED', 'R2_SUSTAINED', 'INFANT_FALTERING', 'TREND_PLUS_SIGNAL', 'LBW_LOW_GAIN', 'WATCH_REPEAT'];
-const RULE_LABEL = { MAM_CONFIRMED: 'Confirmed MAM (Rule 1)', R2_CONFIRMED: 'WHZ fall, re-weighed (Rule 2)', R2_SUSTAINED: 'Sustained fall (Rule 2)', INFANT_FALTERING: 'Infant: 2 low gains', LBW_LOW_GAIN: 'LBW infant low gain', TREND_PLUS_SIGNAL: 'Trend + consented signal', WATCH_REPEAT: 'Two WATCH in a row' };
+const TREND = ['R2_CONFIRMED', 'R2_SUSTAINED', 'INFANT_FALTERING', 'TREND_PLUS_SIGNAL', 'LBW_LOW_GAIN', 'WATCH_REPEAT', 'FORECAST', 'WEAK_SIGNALS', 'VELOCITY_2M', 'MUAC_TREND'];
+let TRADE = null;
+fetch(new URL('../../data/tradeoff.json', import.meta.url)).then((r) => r.json()).then((d) => { TRADE = d; }).catch(() => {});
+const RULE_LABEL = { MAM_CONFIRMED: 'Confirmed MAM (Rule 1)', R2_CONFIRMED: 'WHZ fall, re-weighed (Rule 2)', R2_SUSTAINED: 'Sustained fall (Rule 2)', INFANT_FALTERING: 'Infant: 2 low gains', LBW_LOW_GAIN: 'LBW infant low gain', TREND_PLUS_SIGNAL: 'Trend + consented signal', WATCH_REPEAT: 'Two WATCH in a row', FORECAST: 'Kalman trajectory forecast', WEAK_SIGNALS: 'Combined weak signals (risk pts)', VELOCITY_2M: 'WHO 2-month velocity', MUAC_TREND: 'MUAC trend' };
 
 export default {
   id: 'trial', title: 'Silent trial — does it flag earlier?', icon: ICONS.trial, dock: 'Trial', desk: 'Silent trial', size: [1060, 700], key: 't',
   mount(ctx) {
+    let view = 'results';
     function exampleChild() {
       let best = null;
       for (const c of store.sim.district.children) {
@@ -30,7 +33,56 @@ export default {
       }
       return best;
     }
+    function tradeoffs() {
+      if (!TRADE) return h('div.empty', null, 'Trade-off data not built — run npm run build:tradeoff');
+      const pts = TRADE.points;
+      const W = 760, H = 420, pad = 56;
+      const xMin = 0.1, xMax = 0.36, yMin = 0.44, yMax = 0.64;
+      const X = (v) => pad + ((v - xMin) / (xMax - xMin)) * (W - pad - 20), Y = (v) => H - pad + 10 - ((v - yMin) / (yMax - yMin)) * (H - pad - 20);
+      const svg = s('svg', { viewBox: `0 0 ${W} ${H}`, width: '100%', style: 'display:block;max-width:900px;font-family:var(--font-mono)' });
+      svg.append(s('rect', { x: pad, y: 10, width: W - pad - 20, height: H - pad - 10, fill: '#fff', stroke: '#1f1b1d', 'stroke-width': 1.5 }));
+      svg.append(s('rect', { x: pad, y: Y(0.55), width: W - pad - 20, height: H - pad + 10 - Y(0.55), fill: '#ffd3da', opacity: 0.5 }));
+      svg.append(s('text', { x: pad + 8, y: H - pad + 2, 'font-size': 10, fill: '#c8102e' }, 'below the 55% precision floor'));
+      for (let v = 0.1; v <= 0.36; v += 0.05) { svg.append(s('line', { x1: X(v), x2: X(v), y1: 10, y2: H - pad + 10, stroke: '#1f1b1d', 'stroke-opacity': 0.08 }), s('text', { x: X(v), y: H - pad + 24, 'text-anchor': 'middle', 'font-size': 10 }, `${Math.round(v * 100)}%`)); }
+      for (let v = 0.45; v <= 0.64; v += 0.05) { svg.append(s('line', { x1: pad, x2: W - 20, y1: Y(v), y2: Y(v), stroke: '#1f1b1d', 'stroke-opacity': 0.08 }), s('text', { x: pad - 6, y: Y(v) + 3, 'text-anchor': 'end', 'font-size': 10 }, `${Math.round(v * 100)}%`)); }
+      svg.append(s('text', { x: (W + pad) / 2, y: H - 8, 'text-anchor': 'middle', 'font-size': 11 }, 'eventual SAM cases flagged before ANY Tracker listing (strict) →'));
+      svg.append(s('text', { x: 14, y: H / 2, 'text-anchor': 'middle', 'font-size': 11, transform: `rotate(-90 14 ${H / 2})` }, 'alert precision →'));
+      const fr = pts.filter((p) => p.pareto).sort((a, b) => a.strict - b.strict);
+      svg.append(s('path', { d: fr.map((p, i) => `${i ? 'L' : 'M'}${X(p.strict)},${Y(p.precision)}`).join(''), fill: 'none', stroke: '#e94fbf', 'stroke-width': 2.5, 'stroke-dasharray': '6 4' }));
+      for (const p of pts) {
+        const special = p.id === 'shipped' || p.id === 'round1';
+        const r = 4 + (p.alerts - 1.25) * 30;
+        const g = s('g', { style: 'cursor:pointer' });
+        g.append(s(special ? 'rect' : 'circle', special ? { x: X(p.strict) - 8, y: Y(p.precision) - 8, width: 16, height: 16, fill: p.id === 'shipped' ? '#e94fbf' : '#9c8f94', stroke: '#1f1b1d', 'stroke-width': 2 } : { cx: X(p.strict), cy: Y(p.precision), r: Math.max(3, r), fill: p.pareto ? '#1f1b1d' : '#fff', stroke: '#1f1b1d', 'stroke-width': 1.5 }));
+        if (special) g.append(s('text', { x: X(p.strict) + 12, y: Y(p.precision) + 4, 'font-size': 11, 'font-weight': 700 }, p.label));
+        g.append(s('title', null, `${p.label}\nstrict ${pct(p.strict, 1)} · precision ${pct(p.precision, 1)} · ${p.alerts.toFixed(2)} alerts/child/yr · over cap ${pct(p.overCap)}\nclick → draft this as a rule pack`));
+        g.addEventListener('click', () => { if (p.id !== 'round1') open('rulepack', { patch: p.patch, label: p.label }); });
+        svg.append(g);
+      }
+      return h('div.col', { style: { gap: '12px' } },
+        h('div.callout', null, h('b', null, 'There is no free lunch. '), `Each dot is a rule pack, averaged over ${TRADE.seeds.length} synthetic districts. Moving right catches more children before any Tracker listing; moving down costs precision (more home visits that turn out unnecessary). Dot size = alerts per child per year. The pink dashed line is the Pareto frontier. Click any dot to draft it as a rule pack for both ministries to sign.`),
+        h('div.card', null, svg),
+        h('table.grid', null, h('thead', null, h('tr', null, ['Operating point', 'Strict', 'Before SAM list', 'Precision', 'Alerts / child·yr', 'AWC-months over cap', ''].map((x) => h('th', null, x)))),
+          h('tbody', null, pts.filter((p) => p.pareto).sort((a, b) => b.strict - a.strict).map((p) => h('tr', { style: p.id === 'shipped' ? { background: '#fff0f8' } : null }, h('td', null, h('b', null, p.label)), h('td.num', null, pct(p.strict, 1)), h('td.num', null, pct(p.earlier)), h('td.num', null, h('span', { style: { color: p.precision < 0.55 ? 'var(--red-a)' : '' } }, pct(p.precision, 1))), h('td.num', null, p.alerts.toFixed(2)), h('td.num', null, pct(p.overCap)), h('td', null, p.id !== 'round1' ? h('button.btn.sm.ghost', { onclick: () => open('rulepack', { patch: p.patch, label: p.label }) }, 'draft ▸') : null))))));
+    }
+    function ablation() {
+      if (!TRADE?.ablation) return h('div.empty', null, 'Ablation not built — run npm run build:tradeoff');
+      const rows = TRADE.ablation;
+      const max = Math.max(...rows.map((r) => r.strict));
+      return h('div.col', { style: { gap: '12px' } },
+        h('div.callout', null, h('b', null, 'Every rule had to earn its place. '), 'Rules were switched on one at a time and kept only if they raised the strict metric without pushing precision below 55%. The MUAC-trend rule did not, so it ships switched off and goes to the Phase 1 real-data test.'),
+        h('table.grid', null, h('thead', null, h('tr', null, ['Step', 'Strict (before any listing)', '', 'Before SAM list', 'Precision', 'Alerts / child·yr', 'Lead vs true SAM'].map((x) => h('th', null, x)))),
+          h('tbody', null, rows.map((r, i) => h('tr', { style: /rejected/.test(r.label) ? { opacity: 0.55, textDecoration: 'line-through' } : /shipped/.test(r.label) ? { background: '#fff0f8' } : null },
+            h('td', null, h('b', null, r.label)), h('td.num', null, pct(r.strict, 1)),
+            h('td', null, h('div', { style: { width: (r.strict / max) * 160 + 'px', height: '10px', background: /shipped/.test(r.label) ? 'var(--hot)' : 'var(--ink)' } })),
+            h('td.num', null, pct(r.earlier)), h('td.num', null, pct(r.precision, 1)), h('td.num', null, r.alerts.toFixed(2)), h('td.num', null, `${Math.round(r.truthLead)} d`))))),
+        h('div.small.muted', null, `Seeds ${TRADE.seeds.join(', ')} · built ${TRADE.generatedAt.slice(0, 10)} · npm run build:tradeoff`));
+    }
     function render() {
+      if (view !== 'results') {
+        mount(ctx.body, toolbarTabs(), h('div', { style: { padding: '12px' } }, view === 'tradeoffs' ? tradeoffs() : ablation()));
+        return;
+      }
       const m = store.sim.metrics;
       const bins = [[0, 15], [15, 30], [30, 45], [45, 60], [60, 90], [90, 120], [120, 150], [150, 181]];
       const hist = bins.map(([a, b]) => ({ label: `${a}–${b === 181 ? '180' : b}`, value: m.leads.filter((x) => x >= a && x < b).length, color: a >= 30 ? '#e94fbf' : '#1f1b1d' }));
@@ -49,6 +101,7 @@ export default {
           h('div.row', { style: { gap: '8px', marginTop: '6px' } }, h('b', null, `${Math.round(ex.lead)} days of lead time.`), h('span.small', null, 'Reason at the first alert: '), h('span.small.mono', null, first.reasons.find((r) => r.tier === 'AMBER')?.text), h('div.grow'), h('button.btn.sm.ghost', { onclick: () => open('child', { childId: c.id }) }, 'Open record')));
       }
       mount(ctx.body,
+        toolbarTabs(),
         h('div.toolbar', null, h('b', null, 'Eight weeks of alerts logged, not shown.'), h('span.small', null, 'Lead time and false alerts are measured at no cost to staff (Table 5 indicators).'), h('div.grow'),
           h('button.btn.sm', { onclick: runSeeds }, seeds === 'running' ? 'running…' : 'Robustness: 5 more districts')),
         Array.isArray(seeds) ? h('div', { style: { padding: '10px 12px 0' } }, h('div.card', null, h('div.kicker', null, 'Same rules on 5 independently generated districts (different seeds) — not a cherry-picked run'),
@@ -90,6 +143,8 @@ export default {
       store.audit.append({ at: store.now, actor: store.actorName(), role: store.role, action: 'BACKTEST_SEEDS', subject: store.pack.version, detail: out.map((r) => Math.round(r.m.shareEarlier * 100) + '%').join(' ') });
       render();
     }
+    function toolbarTabs() { return h('div.toolbar', null, h('div.seg', null, [['results', 'Results'], ['tradeoffs', 'Trade-off curve'], ['ablation', 'Ablation — which rules earned their place']].map(([k, l]) => h('button', { class: view === k ? 'on' : '', onclick: () => { view = k; render(); } }, l)))); }
     render();
+    setTimeout(render, 400);
   },
 };

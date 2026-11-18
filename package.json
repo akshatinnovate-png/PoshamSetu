@@ -16,7 +16,8 @@
     "check": "node --test && node scripts/sim-check.mjs",
     "smoke": "node scripts/smoke.mjs",
     "service": "node server/index.mjs",
-    "bench": "node scripts/scale-bench.mjs 1 4 10"
+    "bench": "node scripts/scale-bench.mjs 1 4 10",
+    "build:tradeoff": "node scripts/build-tradeoff.mjs"
   },
   "license": "MIT",
   "devDependencies": {
