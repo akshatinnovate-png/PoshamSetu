@@ -4,6 +4,7 @@ import { ICONS } from '../icons.js';
 import { open } from '../wm.js';
 import { tierChip, nameOf, fmtDateTime, fmtDuration, closureDots, levelChip, dueChip, DAY, HOUR } from '../common.js';
 import { closureState } from '../../engine/tasks.js';
+import { promptTask, confirmKey, stop as stopAudio } from '../ivr.js';
 
 const LANGS = {
   hi: { label: 'हिन्दी', font: 'Noto Sans Devanagari', prompt: (awc, ref) => `नमस्ते सहिया दीदी। आंगनवाड़ी ${awc} के बच्चे ${ref} के घर जाना है। भेंट हो गई — 1 दबाएँ। रेफर किया — 2। परिवार ने मना किया — 3। परिवार बाहर चला गया — 4।` },
@@ -17,6 +18,7 @@ const OUT = { 1: 'VISITED', 2: 'REFERRED', 3: 'REFUSED', 4: 'MIGRATED' };
 export default {
   id: 'joint', title: 'Joint-visit desk — async closure', icon: ICONS.phone, dock: 'Joint visit', desk: 'Joint visit', size: [1020, 640], key: '2',
   mount(ctx, opts) {
+    let audioMode = '';
     let sel = opts.taskId || null, lang = 'hi', filter = opts.taskId ? 'OPEN' : 'PARTIAL', calling = false, lastKey = null;
     function tasks() {
       return store.scopedTasks().filter((t) => t.required.includes('ASHA'))
@@ -106,10 +108,11 @@ export default {
             : [h('div', null, `SMS from PoshanSetu`), h('div', { style: { marginTop: '4px' } }, `Ghar bhent: bachcha ${ref}, AWC ${awc.name}. ${Math.max(0, Math.round((t.dueAt - store.now) / DAY))} din baaki.`), h('div', { style: { marginTop: '6px' } }, '[CALL] to hear the task')]);
       const key = (k, sub) => h('button', { onclick: () => press(k), style: { height: '38px', border: '2px solid var(--ink)', background: k === 'call' ? '#7fd48a' : k === 'end' ? '#ff8b8b' : 'var(--white)', fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '14px', boxShadow: '2px 2px 0 var(--ink)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', lineHeight: 1 } }, k === 'call' ? '☎' : k === 'end' ? '✕' : k, sub ? h('span', { style: { fontSize: '8px', fontWeight: 400 } }, sub) : null);
       function press(k) {
-        if (k === 'call') { calling = true; lastKey = null; render(); return; }
-        if (k === 'end') { calling = false; render(); return; }
+        if (k === 'call') { calling = true; lastKey = null; const r = promptTask(lang, c.pseudoId.slice(-4)); audioMode = r.mode === 'os-voice' ? `OS voice: ${r.voice}` : (lang === 'hi' || lang === 'en' ? 'recorded clips' : 'recorded Hindi clips (Santali/Ho/Mundari recordings pending)'); render(); return; }
+        if (k === 'end') { calling = false; stopAudio(); render(); return; }
         if (!calling || !OUT[k] || asha) return;
         lastKey = k;
+        confirmKey(lang, Number(k));
         store.close(t, { by: 'ASHA', t: store.now, dtmf: Number(k), channel: 'IVR' });
       }
       return h('div', { style: { flex: '0 0 250px' } },
@@ -121,6 +124,7 @@ export default {
             key('call'), h('div'), key('end'),
             key('1', 'visited'), key('2', 'referred'), key('3', 'refused'), key('4', 'migrated'), key('5'), key('6'), key('7'), key('8'), key('9'), key('*'), key('0'), key('#'))),
         h('div.seg', { style: { marginTop: '10px', flexWrap: 'wrap' } }, Object.entries(LANGS).map(([k, v]) => h('button', { class: lang === k ? 'on' : '', style: { fontFamily: v.font }, onclick: () => { lang = k; render(); } }, v.label))),
+        calling && audioMode ? h('div.small.mono', { style: { marginTop: '6px' } }, `🔊 ${audioMode}`) : null,
         h('div.small.muted', { style: { marginTop: '6px' } }, 'Works on any feature phone. No app, no data pack, no new payment. Missed call-back if the line drops.'));
     }
 
@@ -135,6 +139,7 @@ export default {
     }
     render();
     ctx.setRefresh((o) => { if (o?.taskId) { sel = o.taskId; filter = 'ALL'; } render(); });
+    ctx.onCleanup(stopAudio);
     ctx.onCleanup(store.on('task', render));
     ctx.onCleanup(store.on('tick', render));
     ctx.onCleanup(store.on('role', () => { sel = null; render(); }));
