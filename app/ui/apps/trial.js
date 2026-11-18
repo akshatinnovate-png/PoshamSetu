@@ -16,8 +16,8 @@ const RULE_LABEL = { MAM_CONFIRMED: 'Confirmed MAM (Rule 1)', R2_CONFIRMED: 'WHZ
 
 export default {
   id: 'trial', title: 'Silent trial — does it flag earlier?', icon: ICONS.trial, dock: 'Trial', desk: 'Silent trial', size: [1060, 700], key: 't',
-  mount(ctx) {
-    let view = 'results';
+  mount(ctx, opts = {}) {
+    let view = opts.view || 'results';
     function exampleChild() {
       let best = null;
       for (const c of store.sim.district.children) {
@@ -39,15 +39,33 @@ export default {
       const W = 760, H = 420, pad = 56;
       const xMin = 0.1, xMax = 0.36, yMin = 0.44, yMax = 0.64;
       const X = (v) => pad + ((v - xMin) / (xMax - xMin)) * (W - pad - 20), Y = (v) => H - pad + 10 - ((v - yMin) / (yMax - yMin)) * (H - pad - 20);
-      const svg = s('svg', { viewBox: `0 0 ${W} ${H}`, width: '100%', style: 'display:block;max-width:900px;font-family:var(--font-mono)' });
+      const svg = s('svg', { viewBox: `0 0 ${W} ${H}`, width: '100%', style: 'display:block;font-family:var(--font-mono)' });
       svg.append(s('rect', { x: pad, y: 10, width: W - pad - 20, height: H - pad - 10, fill: '#fff', stroke: '#1f1b1d', 'stroke-width': 1.5 }));
-      svg.append(s('rect', { x: pad, y: Y(0.55), width: W - pad - 20, height: H - pad + 10 - Y(0.55), fill: '#ffd3da', opacity: 0.5 }));
+      svg.append(s('rect', { x: pad, y: Y(0.55), width: W - pad - 20, height: H - pad - Y(0.55), fill: '#ffd3da', opacity: 0.5 }));
       svg.append(s('text', { x: pad + 8, y: H - pad + 2, 'font-size': 10, fill: '#c8102e' }, 'below the 55% precision floor'));
       for (let v = 0.1; v <= 0.36; v += 0.05) { svg.append(s('line', { x1: X(v), x2: X(v), y1: 10, y2: H - pad + 10, stroke: '#1f1b1d', 'stroke-opacity': 0.08 }), s('text', { x: X(v), y: H - pad + 24, 'text-anchor': 'middle', 'font-size': 10 }, `${Math.round(v * 100)}%`)); }
       for (let v = 0.45; v <= 0.64; v += 0.05) { svg.append(s('line', { x1: pad, x2: W - 20, y1: Y(v), y2: Y(v), stroke: '#1f1b1d', 'stroke-opacity': 0.08 }), s('text', { x: pad - 6, y: Y(v) + 3, 'text-anchor': 'end', 'font-size': 10 }, `${Math.round(v * 100)}%`)); }
       svg.append(s('text', { x: (W + pad) / 2, y: H - 8, 'text-anchor': 'middle', 'font-size': 11 }, 'eventual SAM cases flagged before ANY Tracker listing (strict) →'));
       svg.append(s('text', { x: 14, y: H / 2, 'text-anchor': 'middle', 'font-size': 11, transform: `rotate(-90 14 ${H / 2})` }, 'alert precision →'));
       const fr = pts.filter((p) => p.pareto).sort((a, b) => a.strict - b.strict);
+      const ship = pts.find((p) => p.id === 'shipped') || pts[0];
+      const side = h('div.card', { style: { flex: '0 0 300px', display: 'flex', flexDirection: 'column', gap: '8px' } });
+      const delta = (v, base, digits = 1, good = 1) => { const d = (v - base) * 100; if (Math.abs(d) < 0.05) return h('span.muted', null, '='); return h('span', { style: { color: d * good > 0 ? '#1d7a3a' : 'var(--red-a)', fontWeight: 700 } }, `${d > 0 ? '+' : ''}${d.toFixed(digits)} pt`); };
+      const kv = (k, v, d) => h('div.row.between', { style: { borderBottom: '1px dashed #c9bfc3', padding: '4px 0', gap: '8px' } }, h('span.small', null, k), h('span.row', { style: { gap: '8px' } }, h('b.mono', null, v), d || null));
+      const showPoint = (p) => {
+        side.replaceChildren(
+          h('div.kicker', null, p.id === 'shipped' ? 'Shipped operating point' : p.pareto ? 'On the frontier' : 'Dominated — another pack is better on both axes'),
+          h('div', { style: { fontWeight: 800, fontSize: '22px', letterSpacing: '-0.03em', lineHeight: 1.05 } }, p.label),
+          kv('Flagged before any listing', pct(p.strict, 1), p.id !== 'shipped' ? delta(p.strict, ship.strict) : null),
+          kv('Flagged before SAM list', pct(p.earlier), p.id !== 'shipped' ? delta(p.earlier, ship.earlier, 0) : null),
+          kv('Alert precision', pct(p.precision, 1), p.id !== 'shipped' ? delta(p.precision, ship.precision) : null),
+          kv('Alerts / child · year', p.alerts.toFixed(2), p.id !== 'shipped' ? h('span', { style: { color: p.alerts > ship.alerts ? 'var(--red-a)' : '#1d7a3a', fontWeight: 700 } }, `${p.alerts > ship.alerts ? '+' : ''}${(p.alerts - ship.alerts).toFixed(2)}`) : null),
+          kv('AWC-months over visit cap', pct(p.overCap), p.id !== 'shipped' ? delta(p.overCap, ship.overCap, 0, -1) : null),
+          p.lead != null ? kv('Median lead vs true SAM', `${Math.round(p.lead)} d`) : null,
+          h('div.small', { style: { marginTop: '4px' } }, p.precision < 0.55 ? 'Below the 55% precision floor: more than 45 of every 100 home visits would find a child who was going to be fine. Not shippable without more AWW capacity.' : p.id === 'shipped' ? 'The highest strict detection that stays above the 55% precision floor.' : p.strict < ship.strict ? 'More conservative than the shipped pack: fewer visits, fewer early catches.' : 'Catches more children early, at a precision cost.'),
+          p.id !== 'round1' ? h('button.btn.sm', { style: { alignSelf: 'flex-start', marginTop: 'auto' }, onclick: () => open('rulepack', { patch: p.patch, label: p.label }) }, 'Draft as rule pack ▸') : null);
+      };
+      showPoint(ship);
       svg.append(s('path', { d: fr.map((p, i) => `${i ? 'L' : 'M'}${X(p.strict)},${Y(p.precision)}`).join(''), fill: 'none', stroke: '#e94fbf', 'stroke-width': 2.5, 'stroke-dasharray': '6 4' }));
       for (const p of pts) {
         const special = p.id === 'shipped' || p.id === 'round1';
@@ -56,12 +74,13 @@ export default {
         g.append(s(special ? 'rect' : 'circle', special ? { x: X(p.strict) - 8, y: Y(p.precision) - 8, width: 16, height: 16, fill: p.id === 'shipped' ? '#e94fbf' : '#9c8f94', stroke: '#1f1b1d', 'stroke-width': 2 } : { cx: X(p.strict), cy: Y(p.precision), r: Math.max(3, r), fill: p.pareto ? '#1f1b1d' : '#fff', stroke: '#1f1b1d', 'stroke-width': 1.5 }));
         if (special) g.append(s('text', { x: X(p.strict) + 12, y: Y(p.precision) + 4, 'font-size': 11, 'font-weight': 700 }, p.label));
         g.append(s('title', null, `${p.label}\nstrict ${pct(p.strict, 1)} · precision ${pct(p.precision, 1)} · ${p.alerts.toFixed(2)} alerts/child/yr · over cap ${pct(p.overCap)}\nclick → draft this as a rule pack`));
+        g.addEventListener('mouseenter', () => showPoint(p));
         g.addEventListener('click', () => { if (p.id !== 'round1') open('rulepack', { patch: p.patch, label: p.label }); });
         svg.append(g);
       }
       return h('div.col', { style: { gap: '12px' } },
-        h('div.callout', null, h('b', null, 'There is no free lunch. '), `Each dot is a rule pack, averaged over ${TRADE.seeds.length} synthetic districts. Moving right catches more children before any Tracker listing; moving down costs precision (more home visits that turn out unnecessary). Dot size = alerts per child per year. The pink dashed line is the Pareto frontier. Click any dot to draft it as a rule pack for both ministries to sign.`),
-        h('div.card', null, svg),
+        h('div.callout', null, h('b', null, 'There is no free lunch. '), `Each dot is a rule pack, averaged over ${TRADE.seeds.length} synthetic districts. Moving right catches more children before any Tracker listing; moving down costs precision (more home visits that turn out unnecessary). Dot size = alerts per child per year. The pink dashed line is the Pareto frontier. Hover a dot to compare it with the shipped pack; click to draft it as a rule pack for both ministries to sign.`),
+        h('div.row', { style: { gap: '12px', alignItems: 'stretch', flexWrap: 'wrap' } }, h('div.card', { style: { flex: '1 1 520px', minWidth: 0 } }, svg), side),
         h('table.grid', null, h('thead', null, h('tr', null, ['Operating point', 'Strict', 'Before SAM list', 'Precision', 'Alerts / child·yr', 'AWC-months over cap', ''].map((x) => h('th', null, x)))),
           h('tbody', null, pts.filter((p) => p.pareto).sort((a, b) => b.strict - a.strict).map((p) => h('tr', { style: p.id === 'shipped' ? { background: '#fff0f8' } : null }, h('td', null, h('b', null, p.label)), h('td.num', null, pct(p.strict, 1)), h('td.num', null, pct(p.earlier)), h('td.num', null, h('span', { style: { color: p.precision < 0.55 ? 'var(--red-a)' : '' } }, pct(p.precision, 1))), h('td.num', null, p.alerts.toFixed(2)), h('td.num', null, pct(p.overCap)), h('td', null, p.id !== 'round1' ? h('button.btn.sm.ghost', { onclick: () => open('rulepack', { patch: p.patch, label: p.label }) }, 'draft ▸') : null))))));
     }

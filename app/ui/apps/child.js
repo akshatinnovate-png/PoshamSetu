@@ -60,7 +60,7 @@ export default {
             h('div.kicker', null, 'Trajectory forecast (Kalman)'),
             h('div.row', { style: { gap: '8px', alignItems: 'baseline' } }, h('div', { style: { fontWeight: 800, fontSize: '26px', letterSpacing: '-0.03em', color: cur.forecast.prob >= 0.5 ? 'var(--red-a)' : 'inherit' } }, `${Math.round(cur.forecast.prob * 100)}%`), h('div.small', null, `chance of WHZ < −2 within ${store.pack.forecast.horizonDays} days`)),
             h('div.small.mono', null, `trend ${cur.forecast.slope >= 0 ? '+' : ''}${cur.forecast.slope.toFixed(2)} SD/month · level ${cur.forecast.level.toFixed(2)}`),
-            cur.forecast.crossInDays != null && cur.forecast.level > -2 ? h('div.small', null, `At this rate she/he crosses −2 SD around ${new Date(cur.t + cur.forecast.crossInDays * DAY).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}.`) : null) : null,
+            cur.forecast.crossInDays != null && cur.forecast.level > -2 ? (() => { const at = cur.t + cur.forecast.crossInDays * DAY; const d = new Date(at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }); return at < store.now ? h('div.small', { style: { color: 'var(--red-a)', fontWeight: 700 } }, `On this trend the child was projected to cross −2 SD around ${d} — already past, and no newer weight. Re-weigh now.`) : h('div.small', null, `At this rate the child crosses −2 SD around ${d} (${Math.round((at - store.now) / DAY)} days from now).`); })() : null) : null,
           cur.risk ? h('div', { style: { marginTop: '10px', borderTop: '1.5px dashed var(--ink)', paddingTop: '8px' } },
             h('div.row.between', null, h('div.kicker', null, 'Risk points (used to rank the visit queue)'), h('span.tag' + (cur.risk.score >= store.pack.risk.amberAt ? '.bad' : cur.risk.score >= 4 ? '.warn' : ''), null, `${cur.risk.score} pts`)),
             cur.risk.factors.length ? cur.risk.factors.map((f) => h('div.row', { style: { gap: '6px', fontSize: '11.5px', padding: '2px 0' } }, h('span.mono', { style: { width: '22px', textAlign: 'right', fontWeight: 700 } }, `+${f.points}`), h('span', null, f.text))) : h('div.small.muted', null, 'No risk factors at the last visit.')) : null)
@@ -113,6 +113,7 @@ export default {
         bands: [{ y0: -5, y1: -3, fill: '#ffd3da', label: 'SAM' }, { y0: -3, y1: -2, fill: '#ffeac2', label: 'MAM' }],
         vlines: [{ x: store.now, label: 'now', color: '#e94fbf' }, ...vs.filter((v) => v.biv.length).map((v, i) => ({ x: v.t, label: `✕ quarantined (${v.weightKg} kg)`, color: '#c8102e', dy: 14 + i * 12 }))],
         ylabel: 'WHZ',
+        polys: fc ? [{ points: [...cone.map(([t, m]) => [t, m + 1.96 * coneSd((t - lastRes.t) / DAY)]), ...cone.slice().reverse().map(([t, m]) => [t, m - 1.96 * coneSd((t - lastRes.t) / DAY)])], fill: '#e94fbf', opacity: 0.18 }] : [],
         series: [
           ...(fc ? [
             { points: cone.map(([t, m]) => [t, m + 1.96 * coneSd((t - lastRes.t) / DAY)]), color: '#e94fbf', width: 1, dash: '2 3' },

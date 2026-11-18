@@ -15,9 +15,9 @@ export function niceTicks(min, max, n = 5) {
 
 /**
  * series: [{ points:[[x,y,meta]], color, width, dash, dots, area, label, onDot }]
- * bands:  [{ y0, y1, fill, label }]   vlines: [{ x, label, color, dash }]
+ * bands:  [{ y0, y1, fill, label }]   polys: [{ points:[[x,y]], fill, opacity }] (e.g. forecast cones)   vlines: [{ x, label, color, dash }]
  */
-export function lineChart({ w = 560, h = 260, pad = [16, 14, 30, 44], x, y, series = [], bands = [], vlines = [], hlines = [], xfmt = String, yfmt = String, xlabel, ylabel, onHover }) {
+export function lineChart({ w = 560, h = 260, pad = [16, 14, 30, 44], x, y, series = [], bands = [], polys = [], vlines = [], hlines = [], xfmt = String, yfmt = String, xlabel, ylabel, onHover }) {
   const [pt, pr, pb, pl] = pad;
   const X = scale(x.min, x.max, pl, w - pr), Y = scale(y.min, y.max, h - pb, pt);
   const svg = s('svg', { viewBox: `0 0 ${w} ${h}`, width: '100%', class: 'chart', style: `display:block;font-family:var(--font-mono);overflow:visible;max-width:${Math.round(w * 1.15)}px` });
@@ -39,6 +39,7 @@ export function lineChart({ w = 560, h = 260, pad = [16, 14, 30, 44], x, y, seri
     svg.append(s('line', { x1: pl, x2: w - pr, y1: Y(l.y), y2: Y(l.y), stroke: l.color || INK, 'stroke-width': l.width || 1.2, 'stroke-dasharray': l.dash || '' }));
     if (l.label) svg.append(s('text', { x: pl + 4, y: Y(l.y) - 3, 'font-size': 9, fill: l.color || INK }, l.label));
   }
+  for (const pg of polys) if (pg.points.length > 2) svg.append(s('path', { d: 'M' + pg.points.map((p) => `${X(p[0])},${Y(Math.max(y.min, Math.min(y.max, p[1])))}`).join('L') + 'Z', fill: pg.fill, opacity: pg.opacity ?? 0.25, stroke: 'none' }));
   svg.append(s('rect', { x: pl, y: pt, width: w - pl - pr, height: h - pt - pb, fill: 'none', stroke: INK, 'stroke-width': 1.5 }));
   for (const v of vlines) {
     svg.append(s('line', { x1: X(v.x), x2: X(v.x), y1: pt, y2: h - pb, stroke: v.color || INK, 'stroke-width': v.width || 1.2, 'stroke-dasharray': v.dash || '3 3' }));

@@ -6,6 +6,18 @@ import { drawClouds } from '../bg.js';
 import { fmtDate, tierChip, showcaseChild } from '../common.js';
 import { trackerSingleReading } from '../../engine/triage.js';
 
+// Round 2 depth: what got smarter after the audit. Each card opens the window that proves it.
+const DEEPER = [
+  { k: 'FORECAST', t: 'It forecasts, not just thresholds', d: 'A Kalman local-trend filter on monthly WHZ gives P(WHZ < −2 within 60 days) with an uncertainty cone. Accepted into the pack only because it lifted the strict metric at ≥ 55% precision.', app: 'child', btn: 'See a forecast' },
+  { k: 'WHO 2009', t: 'Official velocity standards', d: 'Weight-gain alerts use the WHO 2009 weight-velocity LMS tables (1- and 2-month increments); 490 published centiles reproduced to within 1 g in the test suite. Z-scores match the SMART reference surveys.', app: 'trial', opts: { view: 'ablation' }, btn: 'Ablation table' },
+  { k: 'TRADE-OFF', t: 'Precision, lead time, workload — on one curve', d: 'Every rule threshold swept on 3 seeds. The shipped pack sits on the Pareto frontier; click any point to load its settings as a draft rule pack for both ministries to sign.', app: 'trial', opts: { view: 'tradeoffs' }, btn: 'Open the curve' },
+  { k: 'QUEUE', t: 'The visit queue ranks by risk', d: 'When an AWW has more AMBER tasks than days, explainable risk points (near-MAM, falling, under 2, lean season, back from a kiln…) decide the order — and every point is shown to the worker by name.', app: 'worklist', btn: 'Open the queue' },
+  { k: 'AWW APP', t: 'Hindi-first, offline phone app', d: 'An installable PWA with the same engine on the device: weigh, see the reason in Hindi, queue offline, sync idempotently. IVR prompts are real recorded Hindi audio.', pwa: true, btn: 'Open the AWW app' },
+  { k: 'ABDM HIE', t: 'Consent in real ABDM shapes', d: 'consent-requests/init → hip/notify → health-information/request → encrypted transfer (X25519 + HKDF + AES-GCM) → notify. Only consented flags reach the rules.', app: 'consent', opts: { view: 'hie' }, btn: 'Run the exchange' },
+  { k: 'REAL DATA', t: 'Tested on real survey data', d: 'Two public SMART anthropometric surveys run through the importer: plausibility, digit preference (SMART DPS) and SD of WHZ — the same checks a district would run on its first Tracker extract.', app: 'importer', btn: 'Run on a survey' },
+  { k: 'JOURNAL', t: 'Nothing lost on restart', d: 'Every action is an event in a journal. Restarting the app replays it deterministically — the audit hash-chain head comes out identical.', app: 'audit', btn: 'Audit chain' },
+];
+
 const FIXES = [
   { n: '01', app: 'bridge', t: 'Real-time data bridge', was: 'Round 1 read weekly dashboard exports — a 24-hour RED-A clock could not run on that.', now: 'Events arrive through the Poshan Tracker Open API (API Setu) plus an SMS flash path for RED signs. The clock starts at measurement time; a late event is a pipeline breach, escalated on arrival.' },
   { n: '02', app: 'joint', t: 'Asynchronous joint visit', was: 'AMBER demanded AWW and ASHA at the same door at the same time.', now: 'Either order within 7 days. The task closes only when the AWW app flag and the ASHA keypress (1) are both in. Half-closed tasks are visible and escalate.' },
@@ -65,7 +77,25 @@ export default {
       h('div.row', null, h('button.btn.hot', { onclick: () => enter('worklist') }, 'Open the console ▸')));
 
     ctx.body.style.background = 'var(--white)';
-    ctx.body.append(hero, manifesto, numbers, versus(), fixes, footer);
+    ctx.body.append(hero, manifesto, numbers, versus(), fixes, deeper(), footer);
+
+    function deeper() {
+      const go = (d) => {
+        if (d.pwa) return window.open('pwa/index.html', '_blank');
+        close('landing');
+        if (d.app === 'child') { const sc = store.sim.district.children.find((c) => { const r = c.eval?.results?.at(-1); return r?.forecast && r.forecast.prob >= 0.5 && r.forecast.level > -2; }) || showcaseChild()?.c; if (sc) { store.selectChild(sc.id); open('child', { childId: sc.id }); } return; }
+        open(d.app, d.opts);
+      };
+      return h('div', { style: { background: 'var(--white)', padding: '50px 26px 60px', borderTop: '2px solid var(--ink)' } },
+        h('div', { style: { fontWeight: 800, fontSize: '56px', letterSpacing: '-0.045em', lineHeight: 0.9, marginBottom: '8px' } }, 'Then we made it', h('br'), h('span', { style: { color: 'var(--hot)' } }, 'smarter.')),
+        h('div.p', { style: { maxWidth: '720px', marginBottom: '22px' } }, 'Each change below was kept only if it moved the measured result. The ones that did not — MUAC trend, a lower weak-signal threshold — are switched off, and the ablation table says why.'),
+        h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '0', border: '2px solid var(--ink)' } },
+          DEEPER.map((d, i) => h('div', { style: { padding: '16px', borderRight: '1.5px solid var(--ink)', borderBottom: '1.5px solid var(--ink)', display: 'flex', flexDirection: 'column', gap: '8px', background: ((i % 4) + Math.floor(i / 4)) % 2 ? 'var(--paper)' : 'var(--white)', marginRight: '-1.5px', marginBottom: '-1.5px' } },
+            h('div.mono', { style: { fontSize: '11px', letterSpacing: '0.14em', color: 'var(--hot)' } }, `0${i + 1} · ${d.k}`),
+            h('div', { style: { fontWeight: 800, fontSize: '22px', letterSpacing: '-0.025em', lineHeight: 1.05 } }, d.t),
+            h('div.small', { style: { flex: 1, lineHeight: 1.45 } }, d.d),
+            h('button.btn.sm', { style: { alignSelf: 'flex-start' }, onclick: () => go(d) }, `${d.btn} ▸`)))));
+    }
 
     // "Same child, two systems": readings appear month by month in both panels.
     function versus() {

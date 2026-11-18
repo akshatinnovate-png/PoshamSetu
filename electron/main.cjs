@@ -39,7 +39,12 @@ function createWindow() {
   win.loadURL('app://poshansetu/index.html' + (process.env.PS_HASH ? '#' + process.env.PS_HASH : ''));
   win.on('maximize', () => win.webContents.send('win:state', { maximized: true }));
   win.on('unmaximize', () => win.webContents.send('win:state', { maximized: false }));
-  win.webContents.setWindowOpenHandler(({ url }) => { if (/^https?:/.test(url)) shell.openExternal(url); return { action: 'deny' }; });
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    // The AWW phone app (PWA) opens in its own phone-sized window; web links go to the browser.
+    if (url.startsWith('app://poshansetu/pwa/')) return { action: 'allow', overrideBrowserWindowOptions: { width: 412, height: 860, autoHideMenuBar: true, title: 'PoshanSetu AWW', backgroundColor: '#f4d9e3' } };
+    if (/^https?:/.test(url)) shell.openExternal(url);
+    return { action: 'deny' };
+  });
 }
 
 app.whenReady().then(() => {
