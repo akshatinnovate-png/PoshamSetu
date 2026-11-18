@@ -1,0 +1,24 @@
+import landing from './landing.js';
+import worklist from './worklist.js';
+import child from './child.js';
+import capture from './capture.js';
+import district from './district.js';
+import escalation from './escalation.js';
+import bridge from './bridge.js';
+import joint from './joint.js';
+import migration from './migration.js';
+import reliability from './reliability.js';
+import budget from './budget.js';
+import consent from './consent.js';
+import rulepack from './rulepack.js';
+import trial from './trial.js';
+import audit from './auditlog.js';
+import arch from './architecture.js';
+import terminal from './terminal.js';
+import tour from './tour.js';
+import brief from './brief.js';
+import report from './report.js';
+import awwphone from './awwphone.js';
+import importer from './importer.js';
+
+export const APPS = [landing, brief, worklist, awwphone, child, capture, district, escalation, bridge, joint, migration, reliability, budget, consent, rulepack, trial, importer, audit, report, arch, terminal, tour];

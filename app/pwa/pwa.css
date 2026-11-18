@@ -1,0 +1,56 @@
+@font-face { font-family: 'Inter Tight'; font-weight: 400; src: url('../vendor/fonts/inter-tight-latin-400-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Inter Tight'; font-weight: 700; src: url('../vendor/fonts/inter-tight-latin-700-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Inter Tight'; font-weight: 800; src: url('../vendor/fonts/inter-tight-latin-800-normal.woff2') format('woff2'); }
+@font-face { font-family: 'JetBrains Mono'; src: url('../vendor/fonts/jetbrains-mono-latin-400-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Noto Sans Devanagari'; font-weight: 400; src: url('../vendor/fonts/noto-sans-devanagari-devanagari-400-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Noto Sans Devanagari'; font-weight: 700; src: url('../vendor/fonts/noto-sans-devanagari-devanagari-700-normal.woff2') format('woff2'); }
+:root { --ink: #1f1b1d; --pink: #f3879f; --pink2: #f6a3b7; --hot: #e94fbf; --paper: #f2efef; --muted: #6d6266; }
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--paper); color: var(--ink); font-family: 'Noto Sans Devanagari', 'Inter Tight', system-ui, sans-serif; font-size: 16px; -webkit-tap-highlight-color: transparent; }
+#app { max-width: 520px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; background: var(--paper); border-left: 2px solid var(--ink); border-right: 2px solid var(--ink); }
+.splash { min-height: 100vh; display: grid; place-content: center; text-align: center; gap: 10px; font-weight: 800; font-size: 32px; background: var(--pink); }
+.splash .mark { width: 40px; height: 40px; background: var(--hot); border: 3px solid var(--ink); box-shadow: 5px 5px 0 var(--ink); margin: 0 auto; }
+.splash .sub { font-size: 13px; font-weight: 400; font-family: 'JetBrains Mono', monospace; }
+header { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: var(--ink); color: #fff; }
+.brand { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 18px; flex: 1; }
+.mark { width: 14px; height: 14px; background: var(--hot); display: inline-block; box-shadow: 3px 3px 0 var(--pink); }
+.net { border: 2px solid #fff; background: transparent; color: #fff; font: 12px 'JetBrains Mono', monospace; padding: 3px 8px; }
+.net.off { background: #c8102e; border-color: #c8102e; }
+.pending { font: 11px 'JetBrains Mono', monospace; background: #f2a20c; color: var(--ink); padding: 3px 6px; }
+.ok { font: 11px 'JetBrains Mono', monospace; color: #9fe0b8; }
+main { flex: 1; padding: 14px 14px 90px; display: flex; flex-direction: column; gap: 10px; }
+h1 { font-family: 'Inter Tight', 'Noto Sans Devanagari', sans-serif; font-weight: 800; font-size: 28px; letter-spacing: -0.03em; margin: 4px 0; }
+h1 .sub { font-size: 15px; font-weight: 400; color: var(--muted); letter-spacing: 0; }
+h3 { margin: 0 0 4px; font-size: 14px; text-transform: uppercase; letter-spacing: 0.06em; font-family: 'JetBrains Mono', monospace; font-weight: 400; color: var(--muted); }
+.card { background: #fff; border: 2px solid var(--ink); border-left-width: 10px; box-shadow: 4px 4px 0 var(--ink); padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; cursor: pointer; }
+.card:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 var(--ink); }
+.row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.nm { font-size: 18px; flex: 1; }
+.age { font: 12px 'JetBrains Mono', monospace; color: var(--muted); }
+.act { font-weight: 700; font-size: 16px; }
+.why { font-size: 13px; color: var(--muted); }
+.chip { font: 11px 'JetBrains Mono', monospace; border: 1.5px solid var(--ink); padding: 1px 6px; background: var(--paper); }
+.chip.warn { background: #ffe1a6; }
+.tier { display: inline-block; padding: 6px 12px; font-weight: 700; border: 2px solid var(--ink); align-self: flex-start; }
+section { background: #fff; border: 2px solid var(--ink); padding: 10px 12px; }
+section p { margin: 4px 0; }
+.small { font-size: 12px; color: var(--muted); }
+.bad { color: #c8102e; font-weight: 700; }
+.meta { font: 12px 'JetBrains Mono', monospace; color: var(--muted); }
+.li { display: flex; align-items: center; gap: 10px; padding: 10px; background: #fff; border: 1.5px solid var(--ink); cursor: pointer; }
+.dot { width: 14px; height: 14px; border: 1.5px solid var(--ink); flex: none; }
+.empty { padding: 30px; text-align: center; color: var(--muted); }
+.search, label input, label select { width: 100%; font-size: 18px; padding: 10px; border: 2px solid var(--ink); background: #fff; font-family: inherit; }
+label { display: flex; flex-direction: column; gap: 4px; font-size: 14px; }
+label.chk { flex-direction: row; align-items: center; gap: 10px; font-size: 16px; padding: 6px 0; }
+label.chk input { width: 22px; height: 22px; }
+.dz { background: #fff4fa; border: 2px solid var(--ink); padding: 8px 10px; }
+.preview { background: #fff8fb; }
+.primary { margin-top: 6px; font-size: 20px; font-weight: 800; padding: 14px; background: var(--hot); border: 2px solid var(--ink); box-shadow: 4px 4px 0 var(--ink); font-family: inherit; }
+.primary:disabled { opacity: 0.4; }
+.back { align-self: flex-start; background: none; border: 0; font-size: 15px; padding: 4px 0; font-family: inherit; }
+nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 520px; display: grid; grid-template-columns: repeat(4, 1fr); background: #fff; border-top: 2px solid var(--ink); z-index: 5; }
+nav button { background: #fff; border: 0; border-right: 1px solid #ddd; padding: 8px 2px 10px; font-size: 12px; font-family: inherit; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+nav button .i { font-size: 18px; }
+nav button.on { background: var(--pink2); font-weight: 700; }
+.toast { position: fixed; bottom: 76px; left: 50%; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 10px 14px; border: 2px solid var(--hot); font-size: 14px; max-width: 90%; z-index: 9; }

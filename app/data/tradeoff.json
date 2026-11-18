@@ -1,0 +1,554 @@
+{
+ "generatedAt": "2026-11-18T05:45:25.114Z",
+ "seeds": [
+  71100,
+  2202,
+  3303
+ ],
+ "points": [
+  {
+   "id": "round1",
+   "label": "Round 1 rules",
+   "patch": {
+    "rules": {
+     "velocityOfficial": false,
+     "velocity2m": false,
+     "muacTrend": false,
+     "weakSignals": false,
+     "forecast": false
+    }
+   },
+   "strict": 0.17492091654288386,
+   "earlier": 0.6990371571733918,
+   "precision": 0.6056370702671938,
+   "alerts": 1.2983796296296297,
+   "overCap": 0.6971691273092259,
+   "lead": 89.47928240740741,
+   "strictLead": 67.06747685185185,
+   "pareto": true
+  },
+  {
+   "id": "r5-f0.35",
+   "label": "risk ≥ 5, forecast p ≥ 0.35",
+   "patch": {
+    "risk": {
+     "amberAt": 5
+    },
+    "forecast": {
+     "minProb": 0.35
+    }
+   },
+   "strict": 0.3291165448017402,
+   "earlier": 0.6206285995315751,
+   "precision": 0.47328739360656685,
+   "alerts": 1.4516203703703703,
+   "overCap": 0.7642337611077644,
+   "lead": 92.80729166666667,
+   "strictLead": 50.71898148148148,
+   "pareto": true
+  },
+  {
+   "id": "r5-f0.5",
+   "label": "risk ≥ 5, forecast p ≥ 0.5",
+   "patch": {
+    "risk": {
+     "amberAt": 5
+    },
+    "forecast": {
+     "minProb": 0.5
+    }
+   },
+   "strict": 0.313648853344122,
+   "earlier": 0.6233662128746502,
+   "precision": 0.4956203440570386,
+   "alerts": 1.5060185185185186,
+   "overCap": 0.7723368626211963,
+   "lead": 91.60092592592592,
+   "strictLead": 55.47453703703704,
+   "pareto": true
+  },
+  {
+   "id": "r5-f0.65",
+   "label": "risk ≥ 5, forecast p ≥ 0.65",
+   "patch": {
+    "risk": {
+     "amberAt": 5
+    },
+    "forecast": {
+     "minProb": 0.65
+    }
+   },
+   "strict": 0.30869939707149,
+   "earlier": 0.6416197727021958,
+   "precision": 0.5010908066016914,
+   "alerts": 1.4951388888888888,
+   "overCap": 0.7689275757094673,
+   "lead": 91.96157407407406,
+   "strictLead": 41.39074074074074,
+   "pareto": true
+  },
+  {
+   "id": "r5-f0.8",
+   "label": "risk ≥ 5, forecast p ≥ 0.8",
+   "patch": {
+    "risk": {
+     "amberAt": 5
+    },
+    "forecast": {
+     "minProb": 0.8
+    }
+   },
+   "strict": 0.29787316010415005,
+   "earlier": 0.694418738516624,
+   "precision": 0.5017976941371999,
+   "alerts": 1.530787037037037,
+   "overCap": 0.7810353337986738,
+   "lead": 89.27789351851852,
+   "strictLead": 49.672106481481485,
+   "pareto": false
+  },
+  {
+   "id": "r6-f0.35",
+   "label": "risk ≥ 6, forecast p ≥ 0.35",
+   "patch": {
+    "risk": {
+     "amberAt": 6
+    },
+    "forecast": {
+     "minProb": 0.35
+    }
+   },
+   "strict": 0.30178651956414587,
+   "earlier": 0.6918720893721177,
+   "precision": 0.516974515176849,
+   "alerts": 1.4046296296296295,
+   "overCap": 0.7568671587737761,
+   "lead": 90.78912037037037,
+   "strictLead": 38.75208333333333,
+   "pareto": true
+  },
+  {
+   "id": "r6-f0.5",
+   "label": "risk ≥ 6, forecast p ≥ 0.5",
+   "patch": {
+    "risk": {
+     "amberAt": 6
+    },
+    "forecast": {
+     "minProb": 0.5
+    }
+   },
+   "strict": 0.2926801838868591,
+   "earlier": 0.6819758636315045,
+   "precision": 0.5430243093893017,
+   "alerts": 1.4092592592592592,
+   "overCap": 0.7444803511400631,
+   "lead": 92.03865740740741,
+   "strictLead": 47.50671296296296,
+   "pareto": true
+  },
+  {
+   "id": "r6-f0.65",
+   "label": "risk ≥ 6, forecast p ≥ 0.65",
+   "patch": {
+    "risk": {
+     "amberAt": 6
+    },
+    "forecast": {
+     "minProb": 0.65
+    }
+   },
+   "strict": 0.21489409141583052,
+   "earlier": 0.6494443623346441,
+   "precision": 0.5402041211652694,
+   "alerts": 1.4069444444444443,
+   "overCap": 0.74940909221612,
+   "lead": 88.74525462962963,
+   "strictLead": 64.83032407407408,
+   "pareto": false
+  },
+  {
+   "id": "r6-f0.8",
+   "label": "risk ≥ 6, forecast p ≥ 0.8",
+   "patch": {
+    "risk": {
+     "amberAt": 6
+    },
+    "forecast": {
+     "minProb": 0.8
+    }
+   },
+   "strict": 0.18927437733095145,
+   "earlier": 0.6870252605546724,
+   "precision": 0.5546740884647631,
+   "alerts": 1.3937499999999998,
+   "overCap": 0.7363192381003678,
+   "lead": 88.34328703703704,
+   "strictLead": 58.650231481481484,
+   "pareto": false
+  },
+  {
+   "id": "r7-f0.35",
+   "label": "risk ≥ 7, forecast p ≥ 0.35",
+   "patch": {
+    "risk": {
+     "amberAt": 7
+    },
+    "forecast": {
+     "minProb": 0.35
+    }
+   },
+   "strict": 0.2365057826025259,
+   "earlier": 0.6303567176980748,
+   "precision": 0.539962557535851,
+   "alerts": 1.375925925925926,
+   "overCap": 0.7224356362648662,
+   "lead": 91.2837962962963,
+   "strictLead": 59.9474537037037,
+   "pareto": false
+  },
+  {
+   "id": "r7-f0.5",
+   "label": "risk ≥ 7, forecast p ≥ 0.5",
+   "patch": {
+    "risk": {
+     "amberAt": 7
+    },
+    "forecast": {
+     "minProb": 0.5
+    }
+   },
+   "strict": 0.2635458436032324,
+   "earlier": 0.6885843775414328,
+   "precision": 0.5640451193924176,
+   "alerts": 1.3590277777777777,
+   "overCap": 0.7242579337025253,
+   "lead": 82.48703703703704,
+   "strictLead": 57.93599537037037,
+   "pareto": true
+  },
+  {
+   "id": "r7-f0.65",
+   "label": "risk ≥ 7, forecast p ≥ 0.65",
+   "patch": {
+    "risk": {
+     "amberAt": 7
+    },
+    "forecast": {
+     "minProb": 0.65
+    }
+   },
+   "strict": 0.19345238095238093,
+   "earlier": 0.7067696150135063,
+   "precision": 0.5595412728824848,
+   "alerts": 1.3592592592592592,
+   "overCap": 0.740288167019784,
+   "lead": 82.44398148148149,
+   "strictLead": 60.450694444444444,
+   "pareto": false
+  },
+  {
+   "id": "r7-f0.8",
+   "label": "risk ≥ 7, forecast p ≥ 0.8",
+   "patch": {
+    "risk": {
+     "amberAt": 7
+    },
+    "forecast": {
+     "minProb": 0.8
+    }
+   },
+   "strict": 0.1821870286576169,
+   "earlier": 0.6869558368014888,
+   "precision": 0.5739356594091388,
+   "alerts": 1.3497685185185186,
+   "overCap": 0.7235562756981389,
+   "lead": 88.10162037037037,
+   "strictLead": 62.246180555555554,
+   "pareto": false
+  },
+  {
+   "id": "r8-f0.35",
+   "label": "risk ≥ 8, forecast p ≥ 0.35",
+   "patch": {
+    "risk": {
+     "amberAt": 8
+    },
+    "forecast": {
+     "minProb": 0.35
+    }
+   },
+   "strict": 0.283526810392482,
+   "earlier": 0.6782340208810798,
+   "precision": 0.5509341012089979,
+   "alerts": 1.3594907407407408,
+   "overCap": 0.7108709199483135,
+   "lead": 97.64201388888888,
+   "strictLead": 67.7150462962963,
+   "pareto": true
+  },
+  {
+   "id": "r8-f0.5",
+   "label": "risk ≥ 8, forecast p ≥ 0.5",
+   "patch": {
+    "risk": {
+     "amberAt": 8
+    },
+    "forecast": {
+     "minProb": 0.5
+    }
+   },
+   "strict": 0.1904311432175209,
+   "earlier": 0.6974358974358975,
+   "precision": 0.583229709206247,
+   "alerts": 1.3511574074074073,
+   "overCap": 0.7325578688287148,
+   "lead": 89.8619212962963,
+   "strictLead": 59.01111111111112,
+   "pareto": true
+  },
+  {
+   "id": "r8-f0.65",
+   "label": "risk ≥ 8, forecast p ≥ 0.65",
+   "patch": {
+    "risk": {
+     "amberAt": 8
+    },
+    "forecast": {
+     "minProb": 0.65
+    }
+   },
+   "strict": 0.1932733034137523,
+   "earlier": 0.6759186669961147,
+   "precision": 0.5775861025047391,
+   "alerts": 1.3273148148148148,
+   "overCap": 0.7084708639569609,
+   "lead": 90.53923611111111,
+   "strictLead": 39.478125,
+   "pareto": false
+  },
+  {
+   "id": "r8-f0.8",
+   "label": "risk ≥ 8, forecast p ≥ 0.8",
+   "patch": {
+    "risk": {
+     "amberAt": 8
+    },
+    "forecast": {
+     "minProb": 0.8
+    }
+   },
+   "strict": 0.1790527901639013,
+   "earlier": 0.7142711688993453,
+   "precision": 0.5955115469484712,
+   "alerts": 1.3233796296296296,
+   "overCap": 0.7088874729687983,
+   "lead": 98.65509259259261,
+   "strictLead": 66.86828703703704,
+   "pareto": true
+  },
+  {
+   "id": "r9-f0.35",
+   "label": "risk ≥ 9, forecast p ≥ 0.35",
+   "patch": {
+    "risk": {
+     "amberAt": 9
+    },
+    "forecast": {
+     "minProb": 0.35
+    }
+   },
+   "strict": 0.2141145407321308,
+   "earlier": 0.6513477341299732,
+   "precision": 0.5499954176430738,
+   "alerts": 1.344212962962963,
+   "overCap": 0.7241943371641183,
+   "lead": 88.96921296296296,
+   "strictLead": 73.72835648148148,
+   "pareto": false
+  },
+  {
+   "id": "r9-f0.5",
+   "label": "risk ≥ 9, forecast p ≥ 0.5",
+   "patch": {
+    "risk": {
+     "amberAt": 9
+    },
+    "forecast": {
+     "minProb": 0.5
+    }
+   },
+   "strict": 0.1933986519352373,
+   "earlier": 0.6766845739537374,
+   "precision": 0.5775284002643507,
+   "alerts": 1.3229166666666667,
+   "overCap": 0.7100550196675707,
+   "lead": 90.63240740740741,
+   "strictLead": 52.16284722222222,
+   "pareto": false
+  },
+  {
+   "id": "r9-f0.65",
+   "label": "risk ≥ 9, forecast p ≥ 0.65",
+   "patch": {
+    "risk": {
+     "amberAt": 9
+    },
+    "forecast": {
+     "minProb": 0.65
+    }
+   },
+   "strict": 0.13828443161776494,
+   "earlier": 0.6702448132007301,
+   "precision": 0.5919745008101328,
+   "alerts": 1.3141203703703705,
+   "overCap": 0.7228311094496619,
+   "lead": 91.00150462962962,
+   "strictLead": 74.78657407407407,
+   "pareto": false
+  },
+  {
+   "id": "r9-f0.8",
+   "label": "risk ≥ 9, forecast p ≥ 0.8",
+   "patch": {
+    "risk": {
+     "amberAt": 9
+    },
+    "forecast": {
+     "minProb": 0.8
+    }
+   },
+   "strict": 0.145242381132112,
+   "earlier": 0.711868846694796,
+   "precision": 0.6094544799093656,
+   "alerts": 1.3,
+   "overCap": 0.6985131339080751,
+   "lead": 88.8574074074074,
+   "strictLead": 59.74340277777778,
+   "pareto": true
+  },
+  {
+   "id": "r6-nof",
+   "label": "risk ≥ 6, no forecast",
+   "patch": {
+    "risk": {
+     "amberAt": 6
+    },
+    "rules": {
+     "forecast": false
+    }
+   },
+   "strict": 0.2007309941520468,
+   "earlier": 0.6688569113169941,
+   "precision": 0.552010412901904,
+   "alerts": 1.441898148148148,
+   "overCap": 0.7515085454013897,
+   "lead": 81.63668981481482,
+   "strictLead": 58.00138888888889,
+   "pareto": false
+  },
+  {
+   "id": "r7-nof",
+   "label": "risk ≥ 7, no forecast",
+   "patch": {
+    "risk": {
+     "amberAt": 7
+    },
+    "rules": {
+     "forecast": false
+    }
+   },
+   "strict": 0.19833178028359735,
+   "earlier": 0.7028136510895132,
+   "precision": 0.5824517070495502,
+   "alerts": 1.3608796296296297,
+   "overCap": 0.7300651530570469,
+   "lead": 91.9212962962963,
+   "strictLead": 53.738310185185185,
+   "pareto": true
+  },
+  {
+   "id": "r8-nof",
+   "label": "risk ≥ 8, no forecast",
+   "patch": {
+    "risk": {
+     "amberAt": 8
+    },
+    "rules": {
+     "forecast": false
+    }
+   },
+   "strict": 0.1322234156820623,
+   "earlier": 0.7101543855490805,
+   "precision": 0.5986458043399804,
+   "alerts": 1.3099537037037037,
+   "overCap": 0.7017871974516069,
+   "lead": 89.2412037037037,
+   "strictLead": 71.44502314814815,
+   "pareto": false
+  },
+  {
+   "id": "shipped",
+   "label": "Shipped pack 2.x",
+   "patch": {},
+   "strict": 0.2635458436032324,
+   "earlier": 0.6885843775414328,
+   "precision": 0.5640451193924176,
+   "alerts": 1.3590277777777777,
+   "overCap": 0.7242579337025253,
+   "lead": 82.48703703703704,
+   "strictLead": 57.93599537037037,
+   "pareto": true
+  }
+ ],
+ "ablation": [
+  {
+   "label": "Round 1 rules",
+   "strict": 0.17492091654288386,
+   "earlier": 0.6990371571733918,
+   "precision": 0.6056370702671938,
+   "alerts": 1.2983796296296297,
+   "truthLead": 112.44317129629628
+  },
+  {
+   "label": "+ official WHO velocity (1-month)",
+   "strict": 0.13811826252377932,
+   "earlier": 0.6668761379932647,
+   "precision": 0.6030743695617058,
+   "alerts": 1.307175925925926,
+   "truthLead": 112.24837962962961
+  },
+  {
+   "label": "+ 2-month velocity, 12-24 mo",
+   "strict": 0.160321015304218,
+   "earlier": 0.7077999051683261,
+   "precision": 0.6004597092069717,
+   "alerts": 1.3150462962962963,
+   "truthLead": 115.31828703703705
+  },
+  {
+   "label": "+ MUAC trend (rejected)",
+   "strict": 0.1690870786516854,
+   "earlier": 0.7235507566389919,
+   "precision": 0.5659219067931579,
+   "alerts": 1.3766203703703705,
+   "truthLead": 117.7726851851852
+  },
+  {
+   "label": "+ risk points (no MUAC trend)",
+   "strict": 0.19833178028359735,
+   "earlier": 0.7028136510895132,
+   "precision": 0.5824517070495502,
+   "alerts": 1.3608796296296297,
+   "truthLead": 128.49386574074074
+  },
+  {
+   "label": "+ Kalman forecast = shipped",
+   "strict": 0.2635458436032324,
+   "earlier": 0.6885843775414328,
+   "precision": 0.5640451193924176,
+   "alerts": 1.3590277777777777,
+   "truthLead": 122.63159722222223
+  }
+ ]
+}
