@@ -38,13 +38,25 @@ Added later in the night:
 - **Mode → Regenerate district:** a new random seed, to show nothing is hard-coded.
 - **Scale benchmark** (`npm run bench`, and `bench` in the Shell): about 28 µs per child for a full re-triage.
 
+## Round 2 depth (the "make it smarter" pass)
+
+- **Smarter rules, each accepted only on evidence:** WHO 2009 weight velocity (official tables) for infants and 12–24 months, a Kalman trajectory forecast, and combined weak signals (explainable risk points ≥ 7). MUAC trend was tested and **rejected** (it lowered precision for no strict gain). See Trial → Ablation.
+- **Trade-off curve:** every threshold swept on 3 seeds; Pareto frontier; hover to compare with the shipped pack; click to draft a rule pack.
+- **Risk-ranked visit queue:** when the visit cap binds, risk ranking captures 44–57% of eventual SAM children in the visits that fit, against 21–43% for age ranking.
+- **Validation:** 490 WHO velocity centiles to within 1 g; z-scores against five public SMART surveys; SMART digit-preference score in the R-score.
+- **Real data:** two public SMART surveys in the Import window, with a plausibility report.
+- **AWW app (PWA):** installable, offline, Hindi-first, same engine on the phone, idempotent sync. Recorded Hindi IVR prompts.
+- **ABDM HIE flow** in real v0.5 message shapes with real X25519 / HKDF / AES-GCM encryption.
+- **Persistence:** the session is an event journal replayed on restart (identical audit chain head).
+- **Engineering:** `simulate.js` split into `sim/*`; JSDoc types checked by `tsc` in CI; Chromium smoke test in CI; Windows build attached to tagged releases.
+
 ## Honest findings worth knowing before the finals
 
-- **Lead time:** about 69% of children who reached the Tracker's SAM list were flagged AMBER first, a median of about 87 days earlier. Across 5 more districts the range is 67–73% and 84–104 days.
-- **Stricter test:** only 12–21% were flagged before the Tracker listed them *at all* (MAM or SAM). Most of the early warning is a confirmed MAM that the Tracker would also list, but without an owner, deadline or escalation. I added a "sustained fall" rule (two monthly falls adding up to 0.5 SD), which raised the strict figure from 12% to 21%. Both numbers are in the Trial window and the Q&A. Say this before a judge finds it.
+- **Lead time:** about 66% of children who reached the Tracker's SAM list were flagged AMBER first, a median of about 66 days earlier (main run). Across 5 more districts the range is 61–75% and 66–98 days, at 54–57% precision.
+- **Stricter test:** 21–29% were flagged before the Tracker listed them *at all* (MAM or SAM), up from about 17% with the Round 1 rules (seed-averaged ablation). Most of the early warning is a confirmed MAM that the Tracker would also list, but without an owner, deadline or escalation. I added a "sustained fall" rule (two monthly falls adding up to 0.5 SD), which raised the strict figure from 12% to 21%. Both numbers are in the Trial window and the Q&A. Say this before a judge finds it.
 - **Workload:** at 30% wasting, the "2 new AMBER visits per AWC per month" cap binds in about two-thirds of AWC-months. The ranked queue handles it, but cap calibration is a real Phase 1 question.
 - **Nightly-delta fallback** (if no Tracker API): clock-safe for WATCH, borderline for AMBER (p95 about 17 h against a 16.8 h budget). RED stays safe through SMS.
-- **Everything is synthetic.** The infant velocity centiles are approximations, flagged in the rule pack.
+- **Everything is synthetic** apart from the two SMART surveys in the Import window (cross-sectional, not Tracker data). Velocity now uses the official WHO 2009 tables.
 
 ## How to use it
 

@@ -7,9 +7,10 @@ Start the app with `npm start` (or run the packaged build). Wait for the boot lo
 | 0:00 | The gap | Home is open. Scroll once to the giant "Do Not Wait…" headline. |
 | 0:40 | Who it is for | The Brief opens on Stakeholders. Point at the AWW and migrant-mother cards. |
 | 1:00 | Architecture | Click **Event bridge**, then **L3 Act**. Each shows its audit fix and code file. |
-| 2:00 | A child, explained | Point at the WHZ trajectory and the "Why this tier" panel (rule + pack version). |
+| 2:00 | A child, explained | Point at the WHZ trajectory, the pink forecast cone, and the "Why this tier" panel (rule + pack version + risk points). |
 | 2:40 | Same child, two systems | The comparison replays by itself. Pause on the row where PoshanSetu says AMBER and the Tracker says "not listed". |
 | 3:00 | Silent trial | Read both numbers: flagged before the SAM list, and before *any* listing. Optionally press **Robustness** (takes about 4 s). |
+| 3:30 | Trade-off curve | Hover the pink square (shipped pack), then a big dot at the bottom right: catches more, but precision falls below 55%. One line: *every rule had to earn its place.* |
 | 4:00 | Fix 01 bridge | Toggle **Round 1 → Fallback → Round 2**. Point at the clock-safety matrix. |
 | 4:40 | Fix 01 live | A RED-A event is sent automatically. The toast shows it arriving by SMS flash with a 24 h deadline from measurement. |
 | 5:00 | Fix 01 offline | On the AWW phone: **Offline** → tap a child → tick oedema → **Save** → **+6 h** (×5) → **Online**. Open the Worklist: the task shows *late arrival* at L1. |

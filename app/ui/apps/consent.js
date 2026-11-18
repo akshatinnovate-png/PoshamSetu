@@ -14,7 +14,7 @@ export function jsonView(obj) {
     .replace(/("(?:[^"\\]|\\.)*")(\s*:)/g, '<span style="color:#e94fbf">$1</span>$2')
     .replace(/: ("(?:[^"\\]|\\.)*")/g, ': <span style="color:#9fe0b8">$1</span>')
     .replace(/: (-?\d+\.?\d*|true|false|null)/g, ': <span style="color:#ffd27a">$1</span>');
-  return h('pre', { html, style: { margin: 0, padding: '10px', background: 'var(--ink)', color: '#f2eef0', fontFamily: 'var(--font-mono)', fontSize: '11px', lineHeight: 1.45, overflow: 'auto', maxHeight: '100%' } });
+  return h('pre', { html, style: { margin: 0, padding: '10px', background: 'var(--ink)', color: '#f2eef0', fontFamily: 'var(--font-mono)', fontSize: '11px', lineHeight: 1.45, overflow: 'auto', maxHeight: '100%', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' } });
 }
 
 const DPDP = [
@@ -91,17 +91,17 @@ export default {
         h('button.btn.sm.ghost', { disabled: hieBusy, onclick: () => runHie(c, false) }, 'Guardian denies'),
         h('span.small', null, 'v0.5 gateway shapes · X25519 ECDH + HKDF-SHA256 + AES-256-GCM (Fidelius-style) · simulated network, real crypto'));
       if (!hie || hie.childId !== c.id) return h('div', null, top, h('div.empty', null, 'Run the exchange to see every message between PoshanSetu, the consent manager, the guardian and U-WIN.'));
-      const W = 760, rowH = 26, H = 50 + hie.log.length * rowH;
-      const X = (l) => 90 + lanes.indexOf(l) * ((W - 140) / 3);
+      const W = 600, rowH = 26, H = 50 + hie.log.length * rowH;
+      const X = (l) => 66 + lanes.indexOf(l) * ((W - 132) / 3);
       const svg = s('svg', { viewBox: `0 0 ${W} ${H}`, width: '100%', style: 'display:block;max-width:900px;font-family:var(--font-mono)' });
       svg.append(s('defs', null, s('marker', { id: 'ha', viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: 6, markerHeight: 6, orient: 'auto' }, s('path', { d: 'M0,0 L10,5 L0,10 z', fill: '#1f1b1d' }))));
-      for (const l of lanes) { svg.append(s('rect', { x: X(l) - 70, y: 4, width: 140, height: 26, fill: l === 'HIU' ? '#e94fbf' : '#1f1b1d' }), s('text', { x: X(l), y: 21, 'text-anchor': 'middle', 'font-size': 10, fill: '#fff' }, laneName[l]), s('line', { x1: X(l), x2: X(l), y1: 30, y2: H, stroke: '#1f1b1d', 'stroke-dasharray': '3 3', 'stroke-opacity': 0.4 })); }
+      for (const l of lanes) { svg.append(s('rect', { x: X(l) - 62, y: 4, width: 124, height: 26, fill: l === 'HIU' ? '#e94fbf' : '#1f1b1d' }), s('text', { x: X(l), y: 21, 'text-anchor': 'middle', 'font-size': 9.5, fill: '#fff' }, laneName[l]), s('line', { x1: X(l), x2: X(l), y1: 30, y2: H, stroke: '#1f1b1d', 'stroke-dasharray': '3 3', 'stroke-opacity': 0.4 })); }
       hie.log.forEach((m, i) => {
         const y = 48 + i * rowH, x1 = X(m.from), x2 = X(m.to);
         const g = s('g', { style: 'cursor:pointer' });
         g.append(s('rect', { x: Math.min(x1, x2) - 4, y: y - 14, width: Math.abs(x2 - x1) + 8, height: 22, fill: i === hieSel ? '#d3e8fb' : 'transparent' }));
         g.append(s('line', { x1, x2: x2 + (x2 > x1 ? -4 : 4), y1: y, y2: y, stroke: m.api.includes('transfer') ? '#e94fbf' : '#1f1b1d', 'stroke-width': m.api.includes('transfer') ? 3 : 1.5, 'marker-end': 'url(#ha)' }));
-        g.append(s('text', { x: (x1 + x2) / 2, y: y - 4, 'text-anchor': 'middle', 'font-size': 9.5 }, `${m.seq}. ${m.api.replace('POST ', '')}`));
+        g.append(s('text', { x: Math.min(x1, x2) + 8, y: y - 4, 'text-anchor': 'start', 'font-size': 9.5, stroke: '#fff', 'stroke-width': 3, 'paint-order': 'stroke', 'stroke-linejoin': 'round' }, `${m.seq}. ${m.api.replace('POST ', '')}`));
         g.addEventListener('click', () => { hieSel = i; render(); });
         svg.append(g);
       });
