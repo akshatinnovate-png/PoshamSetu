@@ -103,7 +103,7 @@ export default {
     function runBio(c, mode) {
       const ekyc = { match: true, uidToken: c.uidToken, modality: mode === 'BIO_FP' ? 'fingerprint' : 'face' };
       const r = registry.lookupBiometric(ekyc, store.actorName());
-      store.audit.append({ at: store.now, actor: store.actorName(), role: store.role, action: 'EKYC_LOOKUP', subject: c.id, detail: ekyc.modality });
+      store.log({ at: store.now, actor: store.actorName(), role: store.role, action: 'EKYC_LOOKUP', subject: c.id, detail: ekyc.modality });
       bio = { ...r, modality: ekyc.modality };
       render();
     }

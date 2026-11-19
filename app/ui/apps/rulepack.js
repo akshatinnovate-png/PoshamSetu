@@ -79,12 +79,12 @@ export default {
       await new Promise((r) => setTimeout(r, 30));
       bt = generate({ pack: draft }).metrics;
       running = false;
-      store.audit.append({ at: store.now, actor: store.actorName(), role: store.role, action: 'BACKTEST', subject: draft.version, detail: `earlier ${Math.round(bt.shareEarlier * 100)}% · lead ${Math.round(bt.leadMedian)} d` });
+      store.log({ at: store.now, actor: store.actorName(), role: store.role, action: 'BACKTEST', subject: draft.version, detail: `earlier ${Math.round(bt.shareEarlier * 100)}% · lead ${Math.round(bt.leadMedian)} d` });
       render();
     }
     async function sign(who) {
       draftSigs.push(await signDoc(who, draft));
-      store.audit.append({ at: store.now, actor: who, role: 'MINISTRY', action: 'SIGN_PACK', subject: draft.version });
+      store.log({ at: store.now, actor: who, role: 'MINISTRY', action: 'SIGN_PACK', subject: draft.version });
       render();
     }
     render();

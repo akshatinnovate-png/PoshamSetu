@@ -5,6 +5,7 @@ import { ICONS } from '../icons.js';
 import { drawClouds } from '../bg.js';
 import { fmtDate, tierChip, showcaseChild } from '../common.js';
 import { trackerSingleReading } from '../../engine/triage.js';
+import { CAST, portraitSvg } from '../../engine/story.js';
 
 // Round 2 depth: what got smarter after the audit. Each card opens the window that proves it.
 const DEEPER = [
@@ -77,7 +78,36 @@ export default {
       h('div.row', null, h('button.btn.hot', { onclick: () => enter('worklist') }, 'Open the console ▸')));
 
     ctx.body.style.background = 'var(--white)';
-    ctx.body.append(hero, manifesto, numbers, versus(), fixes, deeper(), footer);
+    ctx.body.append(hero, manifesto, people(), versus(), numbers, fixes, deeper(), footer);
+
+    // The people: who PoshanSetu is for, and what changes for each of them.
+    function people() {
+      const st = store.story;
+      const riya = st && store.childById[st.childId];
+      const awc = st && store.awcById[st.awcId];
+      const card = (m) => h('div', { style: { border: '2px solid var(--ink)', background: 'var(--white)', boxShadow: '4px 4px 0 var(--ink)', display: 'flex', flexDirection: 'column' } },
+        h('div', { style: { display: 'flex', gap: '12px', alignItems: 'center', padding: '12px', borderBottom: '2px solid var(--ink)', background: m.key === 'riya' ? 'var(--pink)' : 'var(--paper)' } },
+          h('div', { html: portraitSvg(m, 64), style: { border: '2px solid var(--ink)', flex: '0 0 auto' } }),
+          h('div', null, h('div', { style: { fontWeight: 800, fontSize: '22px', letterSpacing: '-0.03em', lineHeight: 1 } }, m.name), h('div.mono', { style: { fontSize: '11px', marginTop: '4px' } }, m.role))),
+        h('div', { style: { padding: '12px', display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 } },
+          h('div', { style: { fontSize: '15px', fontWeight: 600, lineHeight: 1.3 } }, `“${m.line}”`),
+          h('div.small', { style: { lineHeight: 1.45 } }, h('b', null, 'What changes: '), m.changes),
+          h('button.btn.sm', { style: { alignSelf: 'flex-start', marginTop: 'auto' }, onclick: () => goPerson(m) }, m.key === 'riya' ? 'Open Riya’s record ▸' : `${m.first}’s view ▸`)));
+      const goPerson = (m) => {
+        close('landing');
+        const scopeRole = { kamla: 'AWW', phulmani: 'ASHA', basanti: 'MS', anita: 'CDPO', sunita: 'CDPO', riya: 'AWW' }[m.key];
+        store.setRole(scopeRole, store.defaultScope(scopeRole));
+        if (m.key === 'riya' && riya) { store.selectChild(riya.id); open('child', { childId: riya.id }); }
+        else open(m.app);
+      };
+      return h('div', { style: { background: 'var(--paper)', padding: '56px 26px 64px', borderTop: '2px solid var(--ink)' } },
+        h('div.row.between', { style: { alignItems: 'flex-end', marginBottom: '22px', flexWrap: 'wrap', gap: '14px' } },
+          h('div', null,
+            h('div', { style: { fontWeight: 800, fontSize: '56px', letterSpacing: '-0.045em', lineHeight: 0.9 } }, 'One child.', h('br'), h('span', { style: { color: 'var(--hot)' } }, 'Five people'), ' who can act.'),
+            h('p.p', { style: { maxWidth: '700px', marginTop: '14px', fontSize: '15px' } }, `Riya lives in ${awc?.village || 'a village'} in Paschimi Singhbhum. Her story is told by the people around her — each with a real constraint, and one thing PoshanSetu changes for them. Riya is a synthetic child the engine chose: one of the children it flagged before the Tracker listed her at all.`)),
+          h('button.btn.hot', { onclick: () => window.psLayout.storyLayout() }, 'Play Riya’s story ▸')),
+        h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '18px' } }, CAST.map(card)));
+    }
 
     function deeper() {
       const go = (d) => {
@@ -123,8 +153,8 @@ export default {
       const lead = Math.round((vs[samI].t - rs[pick.aI].t) / 86400000);
       const wrap = h('div', { style: { background: 'var(--sky)', padding: '50px 26px', borderTop: '2px solid var(--ink)' } },
         h('div.row.between', { style: { alignItems: 'flex-end', marginBottom: '18px', flexWrap: 'wrap', gap: '12px' } },
-          h('div', { style: { fontWeight: 800, fontSize: '56px', letterSpacing: '-0.045em', lineHeight: 0.9 } }, 'Same child.', h('br'), 'Two systems.'),
-          h('div.col', { style: { alignItems: 'flex-end', gap: '6px' } }, h('div.mono', null, `${c.sex === 'F' ? 'girl' : 'boy'} · AWC ${store.awcById[c.awcId].name} · synthetic`), h('div', { style: { fontWeight: 800, fontSize: '28px', letterSpacing: '-0.03em' } }, `${lead} days of warning`), h('button.btn.sm', { onclick: replay }, 'Replay ▸'))),
+          h('div', { style: { fontWeight: 800, fontSize: '56px', letterSpacing: '-0.045em', lineHeight: 0.9 } }, 'Riya.', h('br'), 'Two systems.'),
+          h('div.col', { style: { alignItems: 'flex-end', gap: '6px' } }, h('div.mono', null, `${c.name} · ${store.awcById[c.awcId].aww}’s register, ${store.awcById[c.awcId].name} · synthetic child`), h('div', { style: { fontWeight: 800, fontSize: '28px', letterSpacing: '-0.03em' } }, `${lead} days of warning`), h('button.btn.sm', { onclick: replay }, 'Replay ▸'))),
         h('div.row', { style: { gap: '18px', alignItems: 'stretch', flexWrap: 'wrap' } }, pane('Poshan Tracker today — one reading at a time', false, left), pane('PoshanSetu — direction, task, deadline', true, right)));
       return wrap;
     }

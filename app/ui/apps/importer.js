@@ -23,7 +23,7 @@ export default {
       name = n;
       const rows = parseCsv(text);
       out = isSmartSurvey(rows) ? smartReport(rows, store.pack) : analyseRows(rows, store.pack);
-      store.audit.append({ at: store.now, actor: store.actorName(), role: store.role, action: 'IMPORT_LOCAL', subject: n, detail: out.error || `${out.children} children, processed locally` });
+      store.log({ at: store.now, actor: store.actorName(), role: store.role, action: 'IMPORT_LOCAL', subject: n, detail: out.error || `${out.children} children, processed locally` });
       render();
     }
     async function loadReal(f) { const t = await (await fetch(new URL('../../data/real/' + f, import.meta.url))).text(); run(t, f + ' (real survey, nipnTK)'); }

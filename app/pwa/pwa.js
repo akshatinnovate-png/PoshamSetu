@@ -1,4 +1,5 @@
 // PoshanSetu AWW companion (PWA): offline-first, Hindi-first, same signed engine as the console.
+import { castStory } from '../engine/story.js';
 import { generate, NOW } from '../engine/simulate.js';
 import { DEFAULT_PACK } from '../engine/rulepack.js';
 import { evaluate } from '../engine/triage.js';
@@ -41,7 +42,8 @@ function h(tag, attrs, ...kids) {
 // ---------- data ----------
 function boot() {
   S.sim = generate({ pack: DEFAULT_PACK });
-  if (!S.awcId) S.awcId = S.sim.district.awcs[0].id;
+  S.story = castStory(S.sim, DEFAULT_PACK); // Kamla Devi's AWC, with Riya on the register
+  if (!S.awcId) S.awcId = S.story?.awcId || S.sim.district.awcs[0].id;
   // Replay the on-device journal: measurements taken on this phone survive restarts.
   for (const j of S.journal) applyMeasurement(j.childId, j.m, false);
   render();
@@ -133,7 +135,7 @@ function card(c) {
 }
 function viewToday() {
   const list = kids().filter((c) => c.current.tier !== 'GREEN').sort((a, b) => RANK[a.current.tier] - RANK[b.current.tier] || (b.current.risk?.score || 0) - (a.current.risk?.score || 0));
-  return h('main', null, h('h1', null, t().today, h('span.sub', null, ` · ${awc().name}`)), list.length ? list.map(card) : h('div.empty', null, t().allClear));
+  return h('main', null, h('div.greet', null, `${t().hello}, ${awc().aww.split(' ')[0]}${S.lang === 'hi' ? ' दीदी' : ''}`), h('h1', null, t().today, h('span.sub', null, ` · ${awc().name}`)), list.length ? list.map(card) : h('div.empty', null, t().allClear));
 }
 function viewChildren() {
   const list = kids().filter((c) => !S.q || name(c).toLowerCase().includes(S.q.toLowerCase())).sort((a, b) => name(a).localeCompare(name(b)));

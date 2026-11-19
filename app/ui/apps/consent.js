@@ -80,7 +80,7 @@ export default {
       const vaccines = store.sim.district.history.vaccines.filter((v) => v.childId === c.id);
       hie = { childId: c.id, ...(await runHieFlow({ child: c, fhirBundle: hipBundle(c, vaccines, c.signalsRaw), now: store.now, approve, allowedFlags: c.consent?.flags })) };
       hieSel = hie.log.length - 1; hieBusy = false;
-      store.audit.append({ at: store.now, actor: 'PoshanSetu HIU', role: 'HIU', action: 'ABDM_HIE', subject: c.id, detail: `${hie.status} · ${hie.flags.length} flags · checksum ${hie.checksumOk ? 'ok' : 'n/a'}` });
+      store.log({ at: store.now, actor: 'PoshanSetu HIU', role: 'HIU', action: 'ABDM_HIE', subject: c.id, detail: `${hie.status} · ${hie.flags.length} flags · checksum ${hie.checksumOk ? 'ok' : 'n/a'}` });
       render();
     }
     function hieView(c) {

@@ -1,6 +1,6 @@
 import { h, mount, svgFrom } from './dom.js';
 import { store } from './store.js';
-import { initWM, registerApp, getApps, open, toggle, isOpen, openIds, closeAll, place } from './wm.js';
+import { initWM, registerApp, getApps, open, close, toggle, isOpen, openIds, closeAll, place } from './wm.js';
 import { drawDesktop } from './bg.js';
 import { toast } from './modal.js';
 import { ROLES } from '../engine/access.js';
@@ -137,6 +137,7 @@ function shell() {
     ]),
     menu('Layout', () => [
       { label: 'Jury tour — presenter mode', k: 'J', fn: () => juryLayout() },
+      { label: 'Riya’s story — presenter mode', k: 's', fn: () => storyLayout() },
       { label: 'Tile the five audit fixes', fn: () => tileLayout() },
       { label: 'Field layout — AWW day view', fn: () => fieldLayout() },
       { label: 'Close all windows', fn: () => closeAll() },
@@ -191,11 +192,13 @@ function shell() {
     if (e.key === 'H') store.advance(HOUR);
     if (e.key === 'D') store.advance(DAY);
     if (e.key === 'W') store.advance(7 * DAY);
+    if (e.key === 's' && !e.ctrlKey && !e.metaKey) { storyLayout(); return; }
     const a = getApps().find((x) => x.key && x.key === e.key);
     if (a && !e.metaKey && !e.ctrlKey) open(a.id);
   });
 
-  function juryLayout() { open('tour'); }
+  function juryLayout() { if (isOpen('tour')) close('tour'); open('tour'); }
+  function storyLayout() { if (isOpen('tour')) close('tour'); open('tour', { script: 'story' }); }
   function tileLayout() {
     closeAll();
     const W = desktop.clientWidth, H = desktop.clientHeight;
@@ -234,18 +237,19 @@ function shell() {
     else { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([data], { type: 'application/json' })); a.download = name; a.click(); }
   }
   function showShortcuts() {
-    panel('Keyboard shortcuts', [['H / D / W', 'advance the clock 1 hour / 1 day / 7 days'], ['j', 'jury tour (← → to move)'], ['1 – 5', 'the five audit fixes'], ['b', 'brief'], ['m', 'map'], ['e', 'escalation ladder'], ['t', 'silent trial'], ['r', 'rule pack'], ['k', 'consent'], ['c', 'capture'], ['a', 'audit log'], ['p', 'convergence report'], ['A', 'architecture'], ['`', 'shell']]);
+    panel('Keyboard shortcuts', [['H / D / W', 'advance the clock 1 hour / 1 day / 7 days'], ['j', 'jury tour (← → to move)'], ['s', 'Riya’s story — the same demo told through the people'], ['1 – 5', 'the five audit fixes'], ['b', 'brief'], ['m', 'map'], ['e', 'escalation ladder'], ['t', 'silent trial'], ['r', 'rule pack'], ['k', 'consent'], ['c', 'capture'], ['a', 'audit log'], ['p', 'convergence report'], ['A', 'architecture'], ['`', 'shell']]);
   }
   async function showAbout() {
     const info = native ? await native.info() : null;
     panel('About PS.OS1', [['Build', 'PoshanSetu Round 2 prototype · Team 7, Gulmohur High School, Jamshedpur'], ['Rule pack', `${store.pack.id}@${store.pack.version} · ${store.packVerified?.ok ? 'dual signature verified' : 'unverified'}`], ['Data', `${store.sim.district.children.length.toLocaleString('en-IN')} synthetic children · ${store.sim.district.history.events.length.toLocaleString('en-IN')} events · seed ${store.seed}`], ['Growth standard', 'WHO Child Growth Standards 2006 (LMS)'], ['Audit head', store.audit.head.slice(0, 32) + '…'], ['Runtime', info ? `Electron ${info.electron} · Chromium ${info.chrome} · ${info.platform}` : 'web build'], ['Offline', 'Everything runs locally; no network calls']]);
   }
-  window.psLayout = { juryLayout, fieldLayout, tileLayout };
+  window.psLayout = { juryLayout, storyLayout, fieldLayout, tileLayout };
 
   // initial windows
   const hash = location.hash.replace('#', '');
   if (hash && getApps().some((a) => a.id === hash)) open(hash);
   else if (hash === 'jury') juryLayout();
+  else if (hash === 'story') storyLayout();
   else { open('landing'); }
 }
 

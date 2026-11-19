@@ -54,3 +54,5 @@ nav button { background: #fff; border: 0; border-right: 1px solid #ddd; padding:
 nav button .i { font-size: 18px; }
 nav button.on { background: var(--pink2); font-weight: 700; }
 .toast { position: fixed; bottom: 76px; left: 50%; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 10px 14px; border: 2px solid var(--hot); font-size: 14px; max-width: 90%; z-index: 9; }
+
+.greet { font-size: 14px; color: #6d6266; margin: 2px 0 -4px; font-weight: 600; }

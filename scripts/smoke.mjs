@@ -34,7 +34,7 @@ const res = await p.evaluate(async () => {
     }
   }
   // interactions
-  store.setRole('CDPO', 'KHU');
+  store.setRole('CDPO', store.defaultScope('CDPO'));
   wm.open('bridge'); await sleep(50); document.querySelector('[data-app="bridge"] .btn.hot').click(); await sleep(50);
   store.advance(3600000); store.advance(86400000); store.advance(7 * 86400000);
   wm.open('migration'); await sleep(800);
@@ -46,6 +46,11 @@ const res = await p.evaluate(async () => {
   store.regenerate(4242); await sleep(50); for (const id of ['trial', 'worklist', 'migration', 'district']) { wm.open(id); await sleep(80); } wm.closeAll(); store.regenerate(71100); await sleep(50);
   wm.open('tour'); await sleep(100);
   for (let i = 0; i < 12; i++) { window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight' })); await sleep(120); }
+  // Riya's story: every step runs, with Riya, Kamla and Phulmani on screen
+  window.psLayout.storyLayout(); await sleep(200);
+  for (let i = 0; i < 12; i++) { const cap = document.querySelector('.tourbar')?.textContent || ''; if (!cap) log.push(`story step ${i + 1}: no caption`); window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight' })); await sleep(250); }
+  if (!store.story || store.childById[store.story.childId].name !== 'Riya Hembrom') log.push('story child missing');
+  wm.closeAll();
   return { log, tasks: store.tasks.length, audit: store.audit.entries.length };
 });
 // persistence: the journal survives a reload and replays to the same audit-chain head
