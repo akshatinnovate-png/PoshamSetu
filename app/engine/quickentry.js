@@ -4,7 +4,7 @@
 //   - Groq (an LLM), via groqRequest()/fromGroq(), for messier notes.
 // Every row then goes through checkRow(), which never "fixes" a value silently: an impossible value
 // blocks saving and the worker is shown what is typical and, where a unit slip explains it, a one-click fix.
-import { lmsWfa, lmsLhfa, indices, bivFlags } from './growth.js';
+import { lmsWfa, lmsLhfa, lmsWfh, indices, bivFlags } from './growth.js';
 import { GIRL, BOY } from './sim/constants.js';
 
 const DPM = 30.4375;
@@ -72,9 +72,11 @@ function parseLine(raw) {
 }
 
 /** The request body for Groq's OpenAI-compatible chat API (the key is added by the caller, never here). */
-export function groqRequest(text, model = 'llama-3.3-70b-versatile') {
+export const GROQ_MODEL = 'openai/gpt-oss-120b';
+
+export function groqRequest(text, model = GROQ_MODEL) {
   return {
-    model, temperature: 0, response_format: { type: 'json_object' },
+    model, temperature: 0, response_format: { type: 'json_object' }, reasoning_effort: 'low',
     messages: [
       { role: 'system', content: 'You turn an Indian Anganwadi worker\'s notes (English, Hindi or Hinglish) into JSON. Return exactly {"children":[{"name":string|null,"sex":"M"|"F"|null,"ageMonths":number|null,"weightKg":number|null,"heightCm":number|null,"muacMm":number|null,"oedema":boolean,"danger":string[]}]}, one object per child in the order written. Convert units only: years to months (x12), grams to kg, metres to cm, inches to cm, MUAC in cm to mm. Never invent a value that is not written: use null. Never correct a value that looks impossible: copy it in the requested unit, a human will review it. sex: only if stated, or if the first name is clearly a boy\'s or girl\'s name. danger may contain VOMITING, LETHARGIC, UNABLE_TO_FEED when the note says so. oedema is true only for swelling of both feet.' },
       { role: 'user', content: String(text).slice(0, 4000) },
@@ -84,6 +86,7 @@ export function groqRequest(text, model = 'llama-3.3-70b-versatile') {
 
 /** Normalise Groq's JSON reply into rows; anything malformed is dropped, never trusted blindly. */
 export function fromGroq(json, text) {
+  if (typeof json === 'string') json = parseLooseJson(json);
   const lines = String(text || '').split(/\n|;/).map((s) => s.trim()).filter(Boolean);
   const list = Array.isArray(json?.children) ? json.children : [];
   const n = (v) => (v == null || v === '' || Number.isNaN(Number(v)) ? null : Number(v));
@@ -93,6 +96,15 @@ export function fromGroq(json, text) {
     oedema: c.oedema === true, danger: Array.isArray(c.danger) ? c.danger.filter((d) => ['VOMITING', 'LETHARGIC', 'UNABLE_TO_FEED'].includes(d)) : [],
     source: 'groq',
   }));
+}
+
+/** Parse a model reply that should be JSON but may arrive wrapped in prose or code fences. */
+export function parseLooseJson(text) {
+  const t = String(text || '');
+  try { return JSON.parse(t); } catch { /* fall through */ }
+  const a = t.indexOf('{'), b = t.lastIndexOf('}');
+  if (a >= 0 && b > a) { try { return JSON.parse(t.slice(a, b + 1)); } catch { /* fall through */ } }
+  return {};
 }
 
 /** Find the child a note refers to, among the children the user may see. */
@@ -138,9 +150,15 @@ export function checkRow(r) {
     block('muacMm', `MUAC ${fmt(r.muacMm)} mm is not possible (normal range about 110–170 mm).${fix ? ` Did you mean ${fix} mm (${r.muacMm} cm)?` : ''}`, fix ? { field: 'muacMm', value: fix } : undefined);
   }
   if (r.muacMm != null && r.ageMonths < 6) warn('muacMm', 'MUAC is not used under 6 months; it will be stored but not used by the rules.');
-  if (!issues.some((i) => i.level === 'block') && bivFlags(ix).includes('whz')) block('heightCm', 'Weight and height together are not possible. Check both, then save.');
+  if (!issues.some((i) => i.level === 'block') && ix.whz != null) {
+    if (ix.whz < -5 && ix.whz >= -8) {
+      // Extremely wasted, but possible: WHO calls it "probably a measuring error", so ask for a re-measure, then believe the worker.
+      issues.push({ level: 'confirm', field: 'confirm', text: `Extremely thin for this height: weight-for-height ${ix.whz} (a ${r.heightCm} cm child usually weighs about ${fmt(lmsWfhMedian(sex, days, r.heightCm, r.ageMonths < 24))} kg). Please weigh and measure again. If it is correct, tick “Re-measured, this is correct”: the child will be flagged for urgent care.` });
+    } else if (bivFlags(ix).includes('whz')) block('heightCm', 'Weight and height together are not possible. Check both, then save.');
+  }
   return issues;
 }
 
+const lmsWfhMedian = (sex, days, cm, lying) => lmsWfh(sex, days, cm, lying)?.M ?? null;
 const fmt = (v) => (v == null ? '—' : Math.round(v * 10) / 10);
 const ageText = (m) => (m < 24 ? `${Math.round(m)} months` : `${Math.round((m / 12) * 10) / 10} years`);

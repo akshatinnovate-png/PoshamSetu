@@ -81,7 +81,7 @@ Somari, girl, 3 saal, wajan 11.2, lambai 88, sujan both feet
 Press **Read notes**. Each line becomes a child (matched to the register, or added as new), with age, weight, height, MUAC and swelling, checked against WHO growth standards. Impossible values (300 cm at 14 months) are stopped in red and never saved; unit slips (92 kg) get a one-click fix ("Use 9.2 kg"). **Save** puts them straight on the worklist with a tier and a reason.
 
 - Works **offline** with a built-in reader (English, Hinglish and Hindi units: yrs/saal, months/mahine, kg/kilo/grams, cm/m/inches, MUAC in cm or mm).
-- With a **Groq** key it uses an LLM (`llama-3.3-70b-versatile`) for messier notes, and falls back to the offline reader if Groq is unreachable. The same checks decide what is saved either way.
+- With a **Groq** key it uses an LLM (`openai/gpt-oss-120b`) for messier notes, and falls back to the offline reader if Groq is unreachable. The same checks decide what is saved either way.
 - Desktop app: click **Groq key** in the window. The key is stored only on that computer (`groq.json` in the app's user-data folder) and sent only to Groq by the app's main process, never to the page. Or set `GROQ_API_KEY` before `npm start`.
 - Browser version: start the server with the key, e.g. `GROQ_API_KEY=gsk_... npm run serve` (Windows cmd: `set GROQ_API_KEY=gsk_...` then `npm run serve`).
 

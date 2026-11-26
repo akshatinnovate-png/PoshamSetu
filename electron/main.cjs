@@ -88,15 +88,17 @@ app.whenReady().then(() => {
   const groqPath = () => path.join(app.getPath('userData'), 'groq.json');
   const groqConf = () => { try { return JSON.parse(fs.readFileSync(groqPath(), 'utf8')); } catch { return {}; } };
   const groqKey = () => process.env.GROQ_API_KEY || groqConf().key || '';
-  ipcMain.handle('groq:status', () => ({ configured: !!groqKey(), fromEnv: !!process.env.GROQ_API_KEY, model: groqConf().model || 'llama-3.3-70b-versatile' }));
+  ipcMain.handle('groq:status', () => ({ configured: !!groqKey(), fromEnv: !!process.env.GROQ_API_KEY, model: groqConf().model || 'openai/gpt-oss-120b' }));
   ipcMain.handle('groq:setKey', (_e, { key }) => { try { const c = groqConf(); if (key) c.key = String(key).trim(); else delete c.key; fs.mkdirSync(path.dirname(groqPath()), { recursive: true }); fs.writeFileSync(groqPath(), JSON.stringify(c)); return { ok: true }; } catch (e) { return { ok: false, error: e.message }; } });
   ipcMain.handle('groq:chat', async (_e, body) => {
     const key = groqKey();
     if (!key) return { ok: false, error: 'No Groq key set' };
     const ctl = new AbortController(); const timer = setTimeout(() => ctl.abort(), 20000);
     try {
-      const r = await fetch('https://api.groq.com/openai/v1/chat/completions', { method: 'POST', signal: ctl.signal, headers: { 'content-type': 'application/json', authorization: `Bearer ${key}` }, body: JSON.stringify(body) });
-      const j = await r.json().catch(() => ({}));
+      const call = (b) => fetch('https://api.groq.com/openai/v1/chat/completions', { method: 'POST', signal: ctl.signal, headers: { 'content-type': 'application/json', authorization: `Bearer ${key}` }, body: JSON.stringify(b) });
+      let r = await call(body), j = await r.json().catch(() => ({}));
+      // If Groq rejects JSON mode or reasoning_effort for a model, retry once without them.
+      if (!r.ok && r.status === 400 && /response_format|json|reasoning/i.test(j?.error?.message || '')) { const { response_format, reasoning_effort, ...plain } = body; r = await call(plain); j = await r.json().catch(() => ({})); }
       if (!r.ok) return { ok: false, error: j?.error?.message || `Groq HTTP ${r.status}` };
       return { ok: true, content: j?.choices?.[0]?.message?.content || '' };
     } catch (e) { return { ok: false, error: e.name === 'AbortError' ? 'Groq did not answer in 20 s' : e.message }; } finally { clearTimeout(timer); }

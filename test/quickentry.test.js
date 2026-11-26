@@ -32,3 +32,19 @@ test('names match the register; Groq replies are normalised and never trusted bl
   assert.equal(req.response_format.type, 'json_object');
   assert.ok(!JSON.stringify(req).includes('Bearer'));
 });
+
+test('a gravely wasted child (WHZ below −5) is confirmable, then flagged RED — never quarantined after a re-measure', async () => {
+  const { evaluate } = await import('../app/engine/triage.js');
+  const { DEFAULT_PACK } = await import('../app/engine/rulepack.js');
+  const [r] = parseNotes('rohan, male, 6 kgs,78.7 cm cm sam, 1.2 yrs.. muac 130');
+  assert.deepEqual([r.name, r.sex, r.ageMonths, r.weightKg, r.heightCm, r.muacMm], ['Rohan', 'M', 14.4, 6, 78.7, 130]);
+  const issues = checkRow(r);
+  assert.ok(!issues.some((i) => i.level === 'block'), 'not blocked outright');
+  assert.ok(issues.some((i) => i.level === 'confirm'), 'asks for a re-measure');
+  const now = Date.UTC(2026, 10, 17);
+  const child = { id: 'N1', sex: 'M', dob: now - 14.4 * 30.4375 * 864e5, lbw: false, awcId: 'X' };
+  const ev = (confirmed) => evaluate(child, [{ id: 'e', t: now, weightKg: 6, heightCm: 78.7, muacMm: 130, lying: true, confirmed }], [], DEFAULT_PACK, { feedR: 100 }).current;
+  assert.equal(ev(false).tier, 'WATCH', 'unconfirmed: quarantined, re-measure');
+  assert.match(ev(true).tier, /^RED/, 'confirmed: urgent care');
+  assert.equal(checkRow({ sex: 'M', ageMonths: 27, weightKg: 92, heightCm: 84 }).find((i) => i.field === 'weightKg').level, 'block', 'typos still blocked');
+});

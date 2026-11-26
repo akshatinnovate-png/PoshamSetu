@@ -38,6 +38,7 @@ export function buildVisits(child, events, pack) {
       danger: [...new Set(evs.flatMap((e) => e.danger || []))],
       appetite: evs.map((e) => e.appetite).filter(Boolean).pop() || null,
       remeasure: evs.some((e) => e.remeasure),
+      confirmed: evs.some((e) => e.confirmed),
       receivedAt: Math.max(...evs.map((e) => e.receivedAt ?? e.t)),
       dq,
     };
@@ -45,6 +46,8 @@ export function buildVisits(child, events, pack) {
     v.ageMonths = v.ageDays / DAYS_PER_MONTH;
     v.ix = indices(child.sex, v.ageDays, v);
     v.biv = bivFlags(v.ix);
+    // A worker who re-measured and confirmed an extreme weight-for-height is believed: a gravely wasted child must not be quarantined.
+    if (v.confirmed) v.biv = v.biv.filter((k) => k !== 'whz');
     if (v.biv.length) v.dq.push({ code: 'BIV', text: `Biologically implausible ${v.biv.map((k) => k.toUpperCase()).join(', ')} (WHO limits) — reading quarantined` });
     visits.push(v);
   }

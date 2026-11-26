@@ -64,7 +64,7 @@ export default {
       return issues;
     }
     function mObj(row) {
-      return { weightKg: row.weightKg, heightCm: row.heightCm, muacMm: row.ageMonths >= 6 ? row.muacMm : null, lying: row.ageMonths < 24, oedema: !!row.oedema, danger: row.danger || [], appetite: '' };
+      return { confirmed: !!row.confirmed, weightKg: row.weightKg, heightCm: row.heightCm, muacMm: row.ageMonths >= 6 ? row.muacMm : null, lying: row.ageMonths < 24, oedema: !!row.oedema, danger: row.danger || [], appetite: '' };
     }
     function preview(row) {
       const base = row.isNew ? { id: 'preview', sex: row.sex || 'F', dob: store.now - row.ageMonths * 30.4375 * DAY, lbw: false, awcId, events: [], signals: [] } : store.childById[row.childId];
@@ -75,8 +75,9 @@ export default {
       return { res, ix };
     }
 
+    const isBlocked = (r, issues = check(r)) => issues.some((i) => i.level === 'block' || (i.level === 'confirm' && !r.confirmed));
     function saveAll() {
-      const ok = rows.filter((r) => !check(r).some((i) => i.level === 'block'));
+      const ok = rows.filter((r) => !isBlocked(r));
       const out = [];
       for (const r of ok) {
         let id = r.childId;
@@ -93,9 +94,9 @@ export default {
       pickAwc();
       const awc = store.awcById[awcId];
       const checked = rows.map((r) => ({ r, issues: check(r), pv: preview(r) }));
-      const blocked = checked.filter((x) => x.issues.some((i) => i.level === 'block')).length;
+      const blocked = checked.filter((x) => isBlocked(x.r, x.issues)).length;
       const ready = checked.length - blocked;
-      const engine = groq.configured ? h('span.tag.ok', { title: groq.fromEnv ? 'Key from GROQ_API_KEY' : 'Key saved on this computer' }, `Groq · ${groq.model || 'llama-3.3-70b'}`) : h('span.tag', { title: 'Works with no internet' }, 'Offline reader');
+      const engine = groq.configured ? h('span.tag.ok', { title: groq.fromEnv ? 'Key from GROQ_API_KEY' : 'Key saved on this computer' }, `Groq · ${(groq.model || 'openai/gpt-oss-120b').replace('openai/', '')}`) : h('span.tag', { title: 'Works with no internet' }, 'Offline reader');
       const ta = h('textarea.input', { rows: 6, value: text, placeholder: 'One child per line, the way you would say it:\nRohan, boy, 1.2 yrs, 8 kg, 74 cm\nPriya 18 months 7.9kg 76cm muac 11.8 cm', style: { width: '100%', fontFamily: 'var(--font-mono)', fontSize: '14px', lineHeight: 1.5, resize: 'vertical' },
         oninput: (e) => { text = e.target.value; }, onkeydown: (e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); read(true); } } });
       ta.value = text;
@@ -128,8 +129,8 @@ export default {
         h('div.row', { style: { gap: '4px', alignItems: 'center' } }, h('input.input', { type: 'number', step, value: r[k] ?? '', style: { width: '90px', borderColor: bad(k) ? 'var(--red-a)' : '', background: bad(k) ? '#ffe9ee' : '' }, disabled: k === 'ageMonths' && !r.isNew,
           onchange: (e) => { r[k] = e.target.value === '' ? null : Number(e.target.value); render(); } }), h('span.small', null, unit)));
       const c = r.childId ? store.childById[r.childId] : null;
-      const blockedRow = issues.some((x) => x.level === 'block');
-      return h('div.card', { style: { borderColor: issues.some((x) => x.level === 'block') ? 'var(--red-a)' : '', borderWidth: '2px' } },
+      const blockedRow = isBlocked(r, issues);
+      return h('div.card', { style: { borderColor: blockedRow ? 'var(--red-a)' : '', borderWidth: '2px' } },
         h('div.row.between', { style: { alignItems: 'flex-start', gap: '10px' } },
           h('div.col', { style: { gap: '4px' } },
             r.isNew ? h('input.input', { value: r.name || '', placeholder: 'Name', style: { fontWeight: 800, fontSize: '16px', width: '220px', borderColor: bad('name') ? 'var(--red-a)' : '' }, onchange: (e) => { r.name = e.target.value.trim(); render(); } })
@@ -148,8 +149,9 @@ export default {
           h('label.field', null, h('span', null, 'Boy / girl'), h('div.seg', null, [['M', 'Boy'], ['F', 'Girl']].map(([k, l]) => h('button', { class: r.sex === k ? 'on' : '', disabled: !r.isNew, style: bad('sex') ? { outline: '2px solid var(--red-a)' } : null, onclick: () => { r.sex = k; render(); } }, l)))),
           field('ageMonths', 'Age', 'months', '0.1'), field('weightKg', 'Weight', 'kg', '0.1'), field('heightCm', 'Height', 'cm', '0.1'), field('muacMm', 'MUAC', 'mm', '1'),
           h('label.row', { style: { gap: '6px', fontSize: '12px', cursor: 'pointer', paddingBottom: '8px' } }, h('input', { type: 'checkbox', checked: !!r.oedema, onchange: (e) => { r.oedema = e.target.checked; render(); } }), 'Swelling of both feet')),
-        issues.map((x) => h('div.row', { style: { gap: '8px', alignItems: 'center', marginTop: '6px', padding: '6px 8px', background: x.level === 'block' ? '#ffe9ee' : '#fff6e0', borderLeft: `4px solid ${x.level === 'block' ? 'var(--red-a)' : 'var(--amber)'}` } },
+        issues.map((x) => h('div.row', { style: { gap: '8px', alignItems: 'center', marginTop: '6px', padding: '6px 8px', background: x.level === 'warn' ? '#fff6e0' : '#ffe9ee', borderLeft: `4px solid ${x.level === 'warn' ? 'var(--amber)' : 'var(--red-a)'}` } },
           h('span.small', { style: { flex: 1 } }, x.text),
+          x.level === 'confirm' ? h('label.row', { style: { gap: '6px', fontSize: '12px', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' } }, h('input', { type: 'checkbox', checked: !!r.confirmed, onchange: (e) => { r.confirmed = e.target.checked; render(); } }), 'Re-measured, this is correct') : null,
           x.fix ? h('button.btn.sm', { onclick: () => { r[x.fix.field] = x.fix.value; render(); } }, `Use ${x.fix.value} ▸`) : null)),
         !blockedRow && pv?.res && pv.res.tier !== 'GREEN' ? h('div.small', { style: { marginTop: '6px' } }, h('b', null, 'Why: '), pv.res.reasons.filter((x) => x.tier === pv.res.tier).map((x) => x.text).join('; ')) : null);
     }

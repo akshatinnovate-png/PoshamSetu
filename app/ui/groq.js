@@ -21,5 +21,6 @@ export async function groqRead(text) {
     res = native() ? await native().groqChat(body) : await (await fetch('/api/groq/chat', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) })).json();
   } catch (e) { return { ok: false, error: e.message }; }
   if (!res?.ok) return { ok: false, error: res?.error || 'Groq failed' };
-  try { return { ok: true, rows: fromGroq(JSON.parse(res.content), text) }; } catch { return { ok: false, error: 'Groq replied with something that is not JSON' }; }
+  const rows = fromGroq(res.content, text);
+  return rows.length ? { ok: true, rows } : { ok: false, error: 'Groq replied with no children it could read' };
 }
