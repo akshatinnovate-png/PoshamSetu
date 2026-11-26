@@ -1,6 +1,7 @@
 import { h, mount, svgFrom } from './dom.js';
 import { store } from './store.js';
-import { initWM, registerApp, getApps, open, close, toggle, isOpen, openIds, closeAll, place } from './wm.js';
+import { initWM, registerApp, getApps, open, close, toggle, isOpen, openIds, closeAll, place, setSimpleMode, isSimple } from './wm.js';
+import { allWords } from './plain.js';
 import { drawDesktop } from './bg.js';
 import { toast } from './modal.js';
 import { ROLES } from '../engine/access.js';
@@ -127,6 +128,9 @@ function shell() {
       { label: 'Reset to 17 Nov 2026 09:00', fn: () => store.resetClock() },
     ]),
     menu('Mode', () => [
+      { head: 'Explanations' },
+      { label: 'Simple words in every window', on: isSimple(), fn: () => setSimpleMode(!isSimple()) },
+      '-',
       { head: 'Pilot phase' },
       { label: 'Live alerts (since 1 Oct 2026)', on: !store.silentMode, fn: () => { store.silentMode = false; store.emit('mode'); } },
       { label: 'Silent trial (alerts logged, not shown)', on: store.silentMode, fn: () => { store.silentMode = true; store.emit('mode'); } },
@@ -148,6 +152,8 @@ function shell() {
       ...[1, 1.15, 1.3].map((z) => ({ label: `${Math.round(z * 100)}%`, on: (parseFloat(document.documentElement.style.zoom) || 1) === z, fn: () => { document.documentElement.style.zoom = z; try { localStorage.setItem('ps-zoom', z); } catch {} dispatchEvent(new Event('resize')); } })),
     ]),
     menu('Help', () => [
+      { label: 'Start here', fn: () => showStart() },
+      { label: 'What do the words mean? (word list)', fn: () => panel('Word list — what the terms mean', allWords()) },
       { label: 'Keyboard shortcuts', fn: () => showShortcuts() },
       { label: 'About PS.OS1', fn: () => showAbout() },
       { label: 'Export evidence pack (.json)', fn: () => exportEvidence() },

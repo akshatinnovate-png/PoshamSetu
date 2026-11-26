@@ -68,6 +68,10 @@ Deep links: `#story` for Riya's story, `#worklist`, `#bridge`, `#joint`, `#migra
 
 The app opens with a **Start here** screen: four big buttons in plain words (show me everything · add children's weights · who needs a visit today · Riya's story). Press **h** to bring it back any time.
 
+## Simple words in every window
+
+Every window opens with a yellow **In simple words** strip: what the window is in one line, how to read it, and **Try** buttons that press the main controls for you. **What do these words mean?** explains the jargon on that screen (WHZ, MUAC, SAM, MAM, AWC…); **Help → What do the words mean?** lists them all. Experts can turn the strips off in **Mode → Simple words in every window**.
+
 ## Guided demo (easiest way to present)
 
 Press **`g`** (or **Layout → Guided demo**, or the **Start the guided demo** button on Home). It has 63 steps in 14 chapters covering every window and every chart, written in simple words to read aloud. Each step opens the right window, sets the right role, clicks what needs clicking and draws a pink ring around what the words describe. Use **→ / ←** to move between steps.

@@ -1,6 +1,7 @@
 // Window manager for PS.OS1: drag, resize, focus/z-order, minimise to dock, maximise.
 import { h } from './dom.js';
 import { HELP } from './help.js';
+import { plainStrip, isSimple, setSimple } from './plain.js';
 
 const apps = new Map();     // id -> app definition
 const wins = new Map();     // id -> { el, body, app, cleanup }
@@ -8,6 +9,12 @@ let z = 10;
 let desktop, onChange = () => {};
 
 export function registerApp(app) { apps.set(app.id, app); }
+/** Simple mode on/off: add or remove the plain-words strip on every open window. */
+export function setSimpleMode(on) {
+  setSimple(on);
+  for (const [id, w] of wins) { w.el.querySelector(':scope > .plain')?.remove(); const s = plainStrip(id, w.el); if (s) w.el.insertBefore(s, w.body); }
+}
+export { isSimple };
 export function getApps() { return [...apps.values()]; }
 export function isOpen(id) { return wins.has(id); }
 export function initWM(el, changed) { desktop = el; onChange = changed || onChange; }
@@ -38,6 +45,8 @@ export function open(id, opts = {}) {
       h('button', { title: 'Close', onclick: (e) => { e.stopPropagation(); close(id); } }, '×')),
     body,
     h('div.rs'));
+  const strip = plainStrip(id, el);
+  if (strip) el.insertBefore(strip, body);
   desktop.appendChild(el);
   const w = { el, body, app, title, cleanup: [] };
   wins.set(id, w);
