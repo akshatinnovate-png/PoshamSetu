@@ -3,7 +3,6 @@
 const { app, BrowserWindow, protocol, net, ipcMain, shell, dialog } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
-const { pathToFileURL } = require('node:url');
 
 const ROOT = path.join(__dirname, '..');
 const APP_DIR = path.join(ROOT, 'app');
@@ -15,6 +14,13 @@ if (process.platform === 'linux' && process.getuid?.() === 0) app.commandLine.ap
 protocol.registerSchemesAsPrivileged([
   { scheme: 'app', privileges: { standard: true, secure: true, supportFetchAPI: true, corsEnabled: true, stream: true } },
 ]);
+
+const MIME = {
+  '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8',
+  '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8', '.webmanifest': 'application/manifest+json',
+  '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.ico': 'image/x-icon',
+  '.woff2': 'font/woff2', '.woff': 'font/woff', '.ttf': 'font/ttf', '.ogg': 'audio/ogg', '.csv': 'text/csv; charset=utf-8', '.txt': 'text/plain; charset=utf-8',
+};
 
 function resolveAppPath(urlPath) {
   // /vendor/fontsource/... maps into node_modules/@fontsource for fonts.
@@ -51,8 +57,11 @@ app.whenReady().then(() => {
   protocol.handle('app', (req) => {
     const u = new URL(req.url);
     const p = resolveAppPath(u.pathname);
-    if (!p || !fs.existsSync(p)) return new Response('not found', { status: 404 });
-    return net.fetch(pathToFileURL(p).toString());
+    if (!p || !fs.existsSync(p) || fs.statSync(p).isDirectory()) return new Response('not found', { status: 404 });
+    // Always send an explicit type: on Windows, file:// types come from the registry, and some PCs map
+    // .js to text/plain, which makes Chromium refuse ES modules (the app then shows only its pink desktop).
+    const type = MIME[path.extname(p).toLowerCase()] || 'application/octet-stream';
+    return new Response(fs.readFileSync(p), { status: 200, headers: { 'content-type': type, 'cache-control': 'no-store' } });
   });
   ipcMain.on('win:minimize', () => win?.minimize());
   ipcMain.on('win:maximize', () => (win?.isMaximized() ? win.unmaximize() : win?.maximize()));
