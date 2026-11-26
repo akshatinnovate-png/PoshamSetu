@@ -29,7 +29,7 @@ const PLAIN = {
 const ageWords = (m) => (m == null ? 'age ?' : m < 24 ? `${Math.round(m)} months` : `${Math.floor(m / 12)} yr ${Math.round(m % 12)} mo`);
 
 export default {
-  id: 'assist', title: 'Quick entry — write it, check it, save it', icon: ICONS.capture, dock: 'Quick entry', desk: 'Quick entry', size: [980, 740], key: 'q',
+  id: 'assist', title: 'Type notes', icon: ICONS.capture, size: [980, 740],
   mount(ctx) {
     let text = '', rows = [], busy = false, note = '', saved = null, groq = { configured: false }, showSettings = false, timer = null;
     const visibleAwcs = () => store.sim.district.awcs.filter((a) => store.inScope({ awcId: a.id }));

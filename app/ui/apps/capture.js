@@ -5,11 +5,25 @@ import { open } from '../wm.js';
 import { tierChip, nameOf, ageLabel, ageAt, fmtDuration } from '../common.js';
 import { evaluate } from '../../engine/triage.js';
 import { indices, bivFlags } from '../../engine/growth.js';
+import notes from './assist.js';
 
 export default {
-  id: 'capture', title: 'Capture — growth day entry', icon: ICONS.capture, dock: 'Capture', size: [620, 700], key: 'c',
+  id: 'capture', title: 'Add measurements', icon: ICONS.capture, dock: 'Add data', desk: 'Add data', size: [980, 760], key: 'c',
   mount(ctx, opts) {
     let childId = opts.childId || null;
+    // One window, two ways in: type notes for many children, or fill a form for one child.
+    let mode = opts.mode || (opts.childId ? 'form' : 'notes');
+    const notesPane = h('div'), formPane = h('div');
+    const modeBar = h('div.toolbar');
+    const setMode = (m) => { mode = m; notesPane.style.display = m === 'notes' ? '' : 'none'; formPane.style.display = m === 'form' ? '' : 'none'; drawModes(); };
+    function drawModes() {
+      mount(modeBar, h('div.seg', null,
+        h('button', { class: mode === 'notes' ? 'on' : '', onclick: () => setMode('notes') }, 'Type notes · many children'),
+        h('button', { class: mode === 'form' ? 'on' : '', onclick: () => setMode('form') }, 'Fill a form · one child')),
+        h('span.small.muted', null, mode === 'notes' ? 'Write it the way you would say it. It reads as you type.' : 'Every field, plus danger signs and the appetite test.'));
+    }
+    mount(ctx.body, modeBar, notesPane, formPane);
+    notes.mount({ body: notesPane, win: ctx.win, onCleanup: ctx.onCleanup, setRefresh: () => {}, onResize: () => {}, setTitle: () => {} });
     const f = { weightKg: '', heightCm: '', muacMm: '', oedema: false, danger: [], appetite: '', lying: null };
     let sent = null;
     function prefill() {
@@ -27,13 +41,15 @@ export default {
       const num = (k, label, step, unit) => h('label.field', null, h('span', null, label), h('div.row', { style: { gap: '4px' } }, h('input.input', { type: 'number', step, value: f[k], style: { width: '110px' }, oninput: (e) => { f[k] = e.target.value; preview(); } }), h('span.mono.small', null, unit)));
       const chk = (label, on, fn) => h('label.row', { style: { gap: '6px', fontSize: '12px', cursor: 'pointer' } }, h('input', { type: 'checkbox', checked: on, onchange: (e) => { fn(e.target.checked); preview(); } }), label);
       const prev = h('div');
-      mount(ctx.body,
-        h('div.toolbar', null, h('b', null, 'AWW device'), h('span.small', null, 'Measurements are dated events — syncing never overwrites a record.')),
+      mount(formPane,
         h('div.col', { style: { padding: '12px', gap: '12px' } },
           h('label.field', null, h('span', null, 'Child'), h('select.input', { onchange: (e) => { childId = e.target.value; prefill(); sent = null; render(); } }, kids.map((k) => h('option', { value: k.id, selected: k.id === childId }, `${nameOf(k)} · ${ageLabel(ageAt(k, store.now))} · ${k.current?.tier || '—'}`)))),
           c ? h('div.card', null,
             h('div.row', { style: { gap: '14px', flexWrap: 'wrap' } },
               num('weightKg', 'Weight', '0.1', 'kg'), num('heightCm', 'Length/height', '0.1', 'cm'), num('muacMm', 'MUAC (6–59 mo)', '1', 'mm')),
+            h('div.row', { style: { gap: '6px', alignItems: 'center', marginTop: '6px', flexWrap: 'wrap' } }, h('span.small', null, 'Arm band colour:'),
+              [['green', 'Green', 135, '#1f9d6b', '#fff'], ['yellow', 'Yellow', 120, '#f2c80c', '#1f1b1d'], ['red', 'Red', 110, '#c8102e', '#fff']].map(([k, l, v, bg, fg]) => h('button.btn.sm', { style: { background: bg, color: fg, borderColor: '#1f1b1d' }, onclick: () => { f.muacMm = String(v); render(); } }, l))),
+            h('div.small', { style: { color: 'var(--muted)', marginTop: '6px', lineHeight: 1.45 } }, 'Why: weight shows whether the child is growing · weight for height shows whether the child is thin · the arm band (MUAC) catches severe thinness fast: red = severe.'),
             h('div.row', { style: { gap: '14px', marginTop: '10px', flexWrap: 'wrap' } },
               chk('Bilateral pitting oedema', f.oedema, (v) => (f.oedema = v)),
               chk('Vomits everything', f.danger.includes('VOMITING'), (v) => toggleD('VOMITING', v)),
@@ -76,7 +92,8 @@ export default {
     function submit() { sent = store.capture(childId, mObj()); render(); }
 
     render();
-    ctx.setRefresh((o) => { if (o?.childId) { childId = o.childId; prefill(); sent = null; } render(); });
+    ctx.setRefresh((o) => { if (o?.childId) { childId = o.childId; prefill(); sent = null; setMode('form'); } else if (o?.mode) setMode(o.mode); render(); });
+    setMode(mode);
     ctx.onCleanup(store.on('role', () => { childId = null; render(); }));
     ctx.onCleanup(store.on('tick', () => { if (sent) render(); }));
   },

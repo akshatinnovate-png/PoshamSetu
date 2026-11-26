@@ -203,12 +203,13 @@ function shell() {
     if (e.key === 'W') store.advance(7 * DAY);
     if (e.key === 's' && !e.ctrlKey && !e.metaKey) { storyLayout(); return; }
     if (e.key === 'g' && !e.ctrlKey && !e.metaKey) { demoLayout(); return; }
+    if (e.key === 'q' && !e.ctrlKey && !e.metaKey) { open('capture', { mode: 'notes' }); return; }
     const a = getApps().find((x) => x.key && x.key === e.key);
     if (a && !e.metaKey && !e.ctrlKey) open(a.id);
   });
 
   function juryLayout() { if (isOpen('tour')) close('tour'); open('tour'); }
-  function showStart() { open('start'); const d = document.querySelector('.desktop'); if (d) place('start', Math.max(20, (d.clientWidth - 780) / 2), Math.max(20, (d.clientHeight - 690) / 2), 780, 690); }
+  function showStart() { open('start'); const d = document.querySelector('.desktop'); if (d) place('start', Math.max(20, (d.clientWidth - 860) / 2), Math.max(20, (d.clientHeight - 690) / 2), 860, 690); }
   function demoLayout() { if (isOpen('tour')) close('tour'); open('tour', { script: 'demo' }); }
   function storyLayout() { if (isOpen('tour')) close('tour'); open('tour', { script: 'story' }); }
   function tileLayout() {

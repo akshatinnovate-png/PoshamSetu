@@ -48,7 +48,7 @@ export const WORDS = {
 const P = {
   worklist: { what: 'Your to-do list: every child who needs something, most urgent first.', read: ['Colour = how urgent (see the words below).', 'The clock shows time left. It started when the child was weighed.', '“AWW ✓ / ASHA ✓” show who has already visited.'], tryIt: [['Only the most urgent', /^RED-A$/], ['Only late ones', /^Overdue$/], ['Everything', /^Every$/]], words: ['RED-A', 'RED-B', 'AMBER', 'WATCH', 'AWW', 'ASHA'] },
   child: { what: 'One child’s full record: how they are growing, and why they got their colour.', read: ['Chart 1: weight as they grow. Coloured lines are WHO healthy and danger lines; dots are weighings.', 'Chart 2 going down = getting thinner. The pink cone is where they are heading.', 'Right side: the reason in words, the forecast, and risk points.'], tryIt: [['Story in order', /^Timeline$/], ['Every weighing', /^Visits/], ['Add a weight', /^\+ Measurement/]], words: ['WHZ', 'MUAC', 'SD / z-score', 'Forecast', 'Risk points', 'Tier'] },
-  capture: { what: 'The form an Anganwadi worker fills on weighing day.', read: ['Type weight, height and arm size; tick any danger signs.', 'The box below shows the child’s colour before you save.', 'A red warning means a number is probably mistyped.'], tryIt: [['Show a typing mistake', /^Demo: decimal slip/], ['Save', /^Save & sync/]], words: ['MUAC', 'Oedema', 'Appetite test', 'Quarantined'] },
+  capture: { what: 'Add this month’s measurements: type notes for many children, or fill a form for one.', read: ['Type notes: one child per line, the way you would say it (“Rohan, boy, 1 year, 8 kg, 74 cm”). Each child shows what to do.', 'Fill a form: every field, danger signs and the appetite test; the arm band can be picked by colour.', 'A red line means a number is probably wrong: fix it or measure again. Nothing wrong is saved.'], tryIt: [['Type notes', /^Type notes/], ['Fill a form', /^Fill a form/], ['Try an example', /^Try an example/]], words: ['MUAC', 'Oedema', 'Appetite test', 'Quarantined', 'RED-A', 'AMBER'] },
   awwphone: { what: 'The worker’s phone, working with or without mobile signal.', read: ['Tap a child, enter the weight, Save.', 'With no signal, records wait on the phone and send later.', 'Deadlines count from the weighing, so a bad network never hides an emergency.'], tryIt: [['Turn signal off', /^Offline$/], ['Turn signal on', /^Online$/], ['Wait 6 hours', /^\+6 h$/]], words: ['AWW', 'Oedema'] },
   district: { what: 'A map of the district. Each small square is one Anganwadi.', read: ['Square colour = its most urgent open task.', '“!” = something is overdue. A white dot = its weights may be unreliable.', 'Senior officers see totals only, never children’s names.'], tryIt: [], words: ['AWC', 'R-score', 'DPO'] },
   escalation: { what: 'What happens when a task is not done in time.', read: ['Four lanes, from the Anganwadi up to the district.', 'A task moves one lane right each time its deadline passes.', 'Each card shows who has not done their part yet.'], tryIt: [['Move time 1 day', /^\+1 day$/], ['Move time 7 days', /^\+7 days$/]], words: ['Escalation', 'Mukhya Sevika', 'CDPO', 'DPO'] },
@@ -72,7 +72,7 @@ const P = {
 export function plainStrip(id, el) {
   const p = P[id];
   if (!p || !isSimple()) return null;
-  let showWords = false;
+  let showWords = false, open = false;
   const strip = h('div.plain');
   const pressIn = (re) => { const b = [...el.querySelectorAll('.body button')].find((x) => re.test((x.textContent || '').trim()) && !x.disabled); b?.click(); };
   const draw = () => {
@@ -81,10 +81,11 @@ export function plainStrip(id, el) {
         h('span.plain-kicker', null, 'In simple words'),
         h('span.plain-what', null, p.what),
         h('span', { style: { flex: 1 } }),
-        p.words.length ? h('button.plain-btn', { onclick: () => { showWords = !showWords; draw(); } }, showWords ? 'Hide word meanings' : 'What do these words mean?') : null,
+        h('button.plain-btn', { onclick: () => { open = !open; draw(); } }, open ? 'Less ▴' : 'How to read ▾'),
+        p.words.length ? h('button.plain-btn', { onclick: () => { showWords = !showWords; draw(); } }, showWords ? 'Hide word meanings' : 'Word meanings') : null,
         h('button.plain-btn', { title: 'Hide this strip in this window', onclick: () => strip.remove() }, '×')),
-      h('ul.plain-read', null, p.read.map((r) => h('li', null, r))),
-      p.tryIt.length ? h('div.plain-row', null, h('span.plain-kicker', null, 'Try'), p.tryIt.map(([label, re]) => h('button.plain-try', { onclick: () => pressIn(re) }, `${label} ▸`))) : null,
+      open ? h('ul.plain-read', null, p.read.map((r) => h('li', null, r))) : null,
+      open && p.tryIt.length ? h('div.plain-row', null, h('span.plain-kicker', null, 'Try'), p.tryIt.map(([label, re]) => h('button.plain-try', { onclick: () => pressIn(re) }, `${label} ▸`))) : null,
       showWords ? h('div.plain-words', null, p.words.map((w) => h('div', null, h('b', null, w), ` — ${WORDS[w]}`))) : null].filter(Boolean));
   };
   draw();

@@ -64,31 +64,32 @@ On Windows, after `npm run dist:win`, double-click `dist\PoshanSetu-win32-x64\Po
 
 Deep links: `#story` for Riya's story, `#worklist`, `#bridge`, `#joint`, `#migration`, `#reliability`, `#budget`, `#trial`, `#arch`, or `#jury` for presenter mode.
 
-## Didi screen (for Anganwadi workers who read little)
+## Start here: one app for everyone
 
-Press **d**, or the first button on **Start here**. Hindi first (one tap for English), big pictures and colours, one question per screen, a big number keypad, and a 🔊 button on every screen that reads it aloud (uses the computer's voice; Hindi if a Hindi voice is installed).
+The app opens with **Who is using PoshanSetu?** Pick a role and it opens what that person needs, side by side, in the same app:
 
-- **आज किससे मिलना है (who to visit today):** coloured cards, most urgent first, days left in big numbers, and a big green **मिल आई ✓ (I visited)** button.
-- **वज़न लिखें (write a weight):** pick the child (or + new child) → weight on a keypad (with last month's weight beside it) → height → arm band by **colour** (green / yellow / red, like the real tape) → four danger-sign pictures → a full-colour answer with a picture (hospital today · treat at the Anganwadi · visit in 7 days · weigh again · growing well) and the reason in simple Hindi → **सेव करें**.
-- **मेरे सारे बच्चे (all my children):** each child's colour; tap for a monthly weight bar chart (green = went up, yellow = no change, red = went down).
-- **Every number says why it matters** (a yellow "क्यों / Why" line), e.g. "वज़न से पता चलता है कि बच्चा बढ़ रहा है या नहीं".
-- The same safety checks as everywhere: an impossible number asks to measure again (with "क्या 9.2?" when it is a slip), and an extremely thin child asks for a re-measure, then is saved and flagged.
+| You are | It opens |
+|---|---|
+| Anganwadi worker | To-do list + Add measurements (type notes) |
+| ASHA (Sahiya) | Joint-visit desk + to-do list |
+| Supervisor (Mukhya Sevika) | Escalation ladder + to-do list |
+| Block officer (CDPO) | Block to-do list + district map |
+| District officer | District map + monthly report |
+| Presenting | Guided tour · Riya's story · jury tour |
 
-## Start here
-
-The app opens with a **Start here** screen: four big buttons in plain words (show me everything · add children's weights · who needs a visit today · Riya's story). Press **h** to bring it back any time.
+Press **h** to come back to it. The **Role** menu switches at any time.
 
 ## Simple words in every window
 
-Every window opens with a yellow **In simple words** strip: what the window is in one line, how to read it, and **Try** buttons that press the main controls for you. **What do these words mean?** explains the jargon on that screen (WHZ, MUAC, SAM, MAM, AWC…); **Help → What do the words mean?** lists them all. Experts can turn the strips off in **Mode → Simple words in every window**.
+Every window opens with a one-line yellow **In simple words** strip saying what the window is; **How to read ▾** opens the details and **Try** buttons that press the main controls for you. **What do these words mean?** explains the jargon on that screen (WHZ, MUAC, SAM, MAM, AWC…); **Help → What do the words mean?** lists them all. Experts can turn the strips off in **Mode → Simple words in every window**.
 
 ## Guided demo (easiest way to present)
 
 Press **`g`** (or **Layout → Guided demo**, or the **Start the guided demo** button on Home). It has 63 steps in 14 chapters covering every window and every chart, written in simple words to read aloud. Each step opens the right window, sets the right role, clicks what needs clicking and draws a pink ring around what the words describe. Use **→ / ←** to move between steps.
 
-## Quick entry (type notes, not forms)
+## Add measurements (type notes, or a form)
 
-Press **`q`** (or open **Quick entry** from the dock). Type notes the way you would say them, one child per line:
+One window, two ways in. Press **`q`** for **Type notes** (many children at once) or **`c`** for **Fill a form** (one child: every field, danger signs, appetite test, arm band by colour). Type notes the way you would say them, one child per line:
 
 ```
 Rohan, boy, 1.2 yrs, 8 kg, 74 cm
