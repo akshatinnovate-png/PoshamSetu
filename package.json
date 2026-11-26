@@ -1,7 +1,7 @@
 {
   "name": "poshansetu",
   "productName": "PoshanSetu",
-  "version": "0.1.0",
+  "version": "1.0.1",
   "description": "PoshanSetu — early-warning, consent and continuity layer for the Poshan Tracker (Round 2 prototype)",
   "main": "electron/main.cjs",
   "type": "module",
