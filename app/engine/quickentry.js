@@ -153,7 +153,7 @@ export function checkRow(r) {
   if (!issues.some((i) => i.level === 'block') && ix.whz != null) {
     if (ix.whz < -5 && ix.whz >= -8) {
       // Extremely wasted, but possible: WHO calls it "probably a measuring error", so ask for a re-measure, then believe the worker.
-      issues.push({ level: 'confirm', field: 'confirm', text: `Extremely thin for this height: weight-for-height ${ix.whz} (a ${r.heightCm} cm child usually weighs about ${fmt(lmsWfhMedian(sex, days, r.heightCm, r.ageMonths < 24))} kg). Please weigh and measure again. If it is correct, tick “Re-measured, this is correct”: the child will be flagged for urgent care.` });
+      issues.push({ level: 'confirm', field: 'confirm', text: `Extremely thin for this height: weight-for-height ${ix.whz} (a ${r.heightCm} cm child usually weighs about ${fmt(lmsWfhMedian(sex, days, r.heightCm, r.ageMonths < 24))} kg). Please weigh and measure again. If it is still the same, confirm it: the child will be flagged for urgent care.` });
     } else if (bivFlags(ix).includes('whz')) block('heightCm', 'Weight and height together are not possible. Check both, then save.');
   }
   return issues;

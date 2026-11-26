@@ -136,6 +136,7 @@ function shell() {
       { label: 'Back to the reference district (seed 71100)', fn: () => { closeAll(); store.regenerate(71100); open('trial'); } },
     ]),
     menu('Layout', () => [
+      { label: 'Start here', k: 'H', fn: () => showStart() },
       { label: 'Guided demo — every feature, simple words', k: 'G', fn: () => demoLayout() },
       { label: 'Jury tour — presenter mode', k: 'J', fn: () => juryLayout() },
       { label: 'Riya’s story — presenter mode', k: 's', fn: () => storyLayout() },
@@ -184,6 +185,7 @@ function shell() {
     toast(toasts, { title: `ESCALATED → L${esc.level}`, kind: task.tier.startsWith('RED') ? 'red' : 'amber', body: `${TIER_LABEL[task.tier]} ${task.id} at AWC ${store.awcById[task.awcId].name} passed its ${['', 'Mukhya Sevika', 'CDPO', 'DPO'][esc.level]} threshold.`, onClick: () => open('child', { childId: task.childId }) });
   });
   store.on('ingested', ({ rec, child, task }) => {
+    if (rec.direct) return; // typed in Quick entry: that window already says what happened, in plain words
     toast(toasts, { title: `INGEST · ${rec.adapter.replace('_', ' ')}`, kind: task && task.tier.startsWith('RED') ? 'red' : '', body: `${child.pseudoId}: ${child.current?.tier} after ${Math.round((rec.receivedAt - rec.event.t) / 60000)} min in the bridge.${task ? ` Task ${task.id} due ${fmtDateTime(task.dueAt)} (clock from measurement time).` : ''}`, onClick: () => open('child', { childId: child.id }) });
   });
 
@@ -200,6 +202,7 @@ function shell() {
   });
 
   function juryLayout() { if (isOpen('tour')) close('tour'); open('tour'); }
+  function showStart() { open('start'); const d = document.querySelector('.desktop'); if (d) place('start', Math.max(20, (d.clientWidth - 780) / 2), Math.max(20, (d.clientHeight - 600) / 2), 780, 600); }
   function demoLayout() { if (isOpen('tour')) close('tour'); open('tour', { script: 'demo' }); }
   function storyLayout() { if (isOpen('tour')) close('tour'); open('tour', { script: 'story' }); }
   function tileLayout() {
@@ -254,7 +257,7 @@ function shell() {
   else if (hash === 'jury') juryLayout();
   else if (hash === 'story') storyLayout();
   else if (hash === 'demo') demoLayout();
-  else { open('landing'); }
+  else { open('landing'); showStart(); }
 }
 
 (async () => {
