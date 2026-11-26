@@ -40,7 +40,7 @@ export default {
         btn ? h('button', { onclick: fn, style: { marginTop: '12px', background: 'var(--ink)', color: '#fff', border: 0, fontFamily: 'var(--font-pixel)', fontSize: '22px', padding: '8px 22px' } }, btn) : null));
     const hero = h('div', { style: { position: 'relative', minHeight: '640px', overflow: 'hidden', borderBottom: '2px solid var(--ink)' } }, canvas,
       h('div', { style: { position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '28px', paddingTop: '90px' } },
-        news(fmtDate(store.now), 'ROUND 2 BUILD · WORKING PROTOTYPE', 'Five stress-tests from Round 1, answered in code', 'Start the jury tour ▸', () => enter('jury')),
+        news(fmtDate(store.now), 'ROUND 2 BUILD · WORKING PROTOTYPE', 'Five stress-tests from Round 1, answered in code', 'Start the guided demo ▸', () => enter('demo')),
         news(fmtDate(store.consts.LIVE_FROM), `Silent trial (synthetic): ${share}% of SAM cases`, `flagged a median ${lead} days earlier`, null),
         h('div', { style: { marginTop: '30px', fontSize: '22px', fontWeight: 600, letterSpacing: '-0.01em' } }, 'Introducing PoshanSetu ', h('span', { style: { letterSpacing: '0.2em' } }, '......................'), ' early warning beyond the line')));
     let raf, t = 0, last = 0;
@@ -161,6 +161,7 @@ export default {
 
     function enter(target) {
       if (target === 'jury') return window.psLayout.juryLayout();
+      if (target === 'demo') return window.psLayout.demoLayout();
       close('landing');
       if (target === 'tile') window.psLayout.tileLayout();
       else open(target);

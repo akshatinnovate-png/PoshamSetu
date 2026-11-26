@@ -12,4 +12,7 @@ contextBridge.exposeInMainWorld('psNative', {
   loadState: () => ipcRenderer.invoke('state:load'),
   saveState: (ops) => ipcRenderer.invoke('state:save', ops),
   printPDF: (name) => ipcRenderer.invoke('print:pdf', { name }),
+  groqStatus: () => ipcRenderer.invoke('groq:status'),
+  groqSetKey: (key) => ipcRenderer.invoke('groq:setKey', { key }),
+  groqChat: (body) => ipcRenderer.invoke('groq:chat', body),
 });

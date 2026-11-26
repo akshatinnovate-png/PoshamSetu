@@ -73,6 +73,7 @@ export const store = {
         else if (o.op === 'pack') await this.activatePack(o.signed);
         else if (o.op === 'regenerate') this.regenerate(o.seed);
         else if (o.op === 'log') this.audit.append(o.e);
+        else if (o.op === 'addChild') this.addChild(o);
       } catch (e) { console.warn('replay skipped', o.op, e.message); }
     }
     this.journal = ops.slice();
@@ -132,6 +133,7 @@ export const store = {
     this.seed = seed;
     this.sim = generate({ pack: this.pack, seed });
     this.story = castStory(this.sim, this.pack);
+    this.newChildSeq = 0;
     this.childById = Object.fromEntries(this.sim.district.children.map((c) => [c.id, c]));
     this.awcById = this.sim.awcById;
     this.sectorById = Object.fromEntries(this.sim.district.sectors.map((s) => [s.id, s]));
@@ -213,14 +215,33 @@ export const store = {
   resetClock() { this.record({ op: 'reset' }); this.now = this.startNow; this.emit('tick', this.now); },
 
   /** Capture a new measurement in the app (AWW device) and send it through the bridge. */
+  /** Register a child that is not in the Tracker list yet (quick entry). Journaled, so a restart replays it. */
+  addChild({ name, sex, ageMonths, awcId, at }) {
+    const t = at ?? this.now;
+    this.record({ op: 'addChild', name, sex, ageMonths, awcId, at: t });
+    const awc = this.awcById[awcId];
+    const n = (this.newChildSeq = (this.newChildSeq || 0) + 1);
+    const c = {
+      id: `N${String(n).padStart(4, '0')}`, pseudoId: `PT2041${String(900000 + n)}`, name, sex, dob: t - Math.round(ageMonths * 30.4375 * DAY),
+      lbw: false, awcId, awcCode: awc.code, mother: '', phone: null, abha: false, st: true, isNew: true,
+      events: [], signals: [], signalsRaw: [], signalsWithheld: [], consent: null, migration: null,
+    };
+    c.eval = evaluate(c, [], [], this.pack, { feedR: this.sim.feeds[awcId]?.R ?? 100 });
+    c.current = c.eval.current; c.lastMeasuredAt = null;
+    this.sim.district.children.push(c);
+    this.childById[c.id] = c;
+    this.audit.append({ at: t, actor: this.actorName(), role: this.role, action: 'ADD_CHILD', subject: c.id, detail: `${awc.name} · ${sex} · ${Math.round(ageMonths)} mo` });
+    this.emit('child', c.id);
+    return c;
+  },
   capture(childId, m, mode = 'ROUND2') {
     m = { ...m, t: m.t ?? this.now };
     this.record({ op: 'capture', childId, m, mode });
     const c = this.childById[childId];
     const e = { id: `L${++this.liveSeq}`, childId, awcId: c.awcId, t: m.t ?? this.now, by: 'AWW', ...m };
     const routes = routeFor(e, mode);
-    let best = null;
-    for (const r of routes) {
+    let best = mode === 'DIRECT' ? { adapter: 'API_SETU', lag: 0 } : null; // typed on a connected device: arrives now
+    for (const r of mode === 'DIRECT' ? [] : routes) {
       const lag = sampleLagMs(r, this.rnd) * (mode === 'ROUND2' && this.awcById[c.awcId].connectivity === 'poor' && r === 'API_SETU' ? 2 : 1);
       if (!best || lag < best.lag) best = { adapter: r, lag };
     }

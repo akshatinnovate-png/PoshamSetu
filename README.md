@@ -64,6 +64,27 @@ On Windows, after `npm run dist:win`, double-click `dist\PoshanSetu-win32-x64\Po
 
 Deep links: `#story` for Riya's story, `#worklist`, `#bridge`, `#joint`, `#migration`, `#reliability`, `#budget`, `#trial`, `#arch`, or `#jury` for presenter mode.
 
+## Guided demo (easiest way to present)
+
+Press **`g`** (or **Layout → Guided demo**, or the **Start the guided demo** button on Home). It has 63 steps in 14 chapters covering every window and every chart, written in simple words to read aloud. Each step opens the right window, sets the right role, clicks what needs clicking and draws a pink ring around what the words describe. Use **→ / ←** to move between steps.
+
+## Quick entry (type notes, not forms)
+
+Press **`q`** (or open **Quick entry** from the dock). Type notes the way you would say them, one child per line:
+
+```
+Rohan, boy, 1.2 yrs, 8 kg, 74 cm
+Priya 18 months 7.9kg 76cm muac 11.8 cm
+Somari, girl, 3 saal, wajan 11.2, lambai 88, sujan both feet
+```
+
+Press **Read notes**. Each line becomes a child (matched to the register, or added as new), with age, weight, height, MUAC and swelling, checked against WHO growth standards. Impossible values (300 cm at 14 months) are stopped in red and never saved; unit slips (92 kg) get a one-click fix ("Use 9.2 kg"). **Save** puts them straight on the worklist with a tier and a reason.
+
+- Works **offline** with a built-in reader (English, Hinglish and Hindi units: yrs/saal, months/mahine, kg/kilo/grams, cm/m/inches, MUAC in cm or mm).
+- With a **Groq** key it uses an LLM (`llama-3.3-70b-versatile`) for messier notes, and falls back to the offline reader if Groq is unreachable. The same checks decide what is saved either way.
+- Desktop app: click **Groq key** in the window. The key is stored only on that computer (`groq.json` in the app's user-data folder) and sent only to Groq by the app's main process, never to the page. Or set `GROQ_API_KEY` before `npm start`.
+- Browser version: start the server with the key, e.g. `GROQ_API_KEY=gsk_... npm run serve` (Windows cmd: `set GROQ_API_KEY=gsk_...` then `npm run serve`).
+
 ## Riya's story
 
 Press **`s`** (or **Layout → Riya's story**) for the same demo told through people: Riya, a synthetic girl the engine chose because it flagged her 125 days before the Tracker's SAM list; her mother Sunita; Kamla Devi, the Anganwadi Worker; Phulmani Hansda, the Sahiya; Smt. Basanti Tiu, the supervisor; and Smt. Anita Purty, the CDPO. Each of the 12 steps shows who is speaking. The cast runs through every window and the AWW phone app. Script, Riya's month-by-month record and the questions it invites: [`docs/STORY.md`](docs/STORY.md).

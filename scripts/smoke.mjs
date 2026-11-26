@@ -50,6 +50,12 @@ const res = await p.evaluate(async () => {
   window.psLayout.storyLayout(); await sleep(200);
   for (let i = 0; i < 12; i++) { const cap = document.querySelector('.tourbar')?.textContent || ''; if (!cap) log.push(`story step ${i + 1}: no caption`); window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight' })); await sleep(250); }
   if (!store.story || store.childById[store.story.childId].name !== 'Riya Hembrom') log.push('story child missing');
+  // Guided demo: every one of its steps runs without an error
+  window.psLayout.demoLayout(); await sleep(300);
+  const demoN = Number((document.querySelector('.tourbar')?.textContent.match(/of (\d+)/) || [])[1] || 0);
+  if (demoN < 50) log.push(`guided demo has ${demoN} steps`);
+  for (let i = 0; i < demoN; i++) { window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight' })); await sleep(350); }
+  wm.closeAll();
   wm.closeAll();
   return { log, tasks: store.tasks.length, audit: store.audit.entries.length };
 });

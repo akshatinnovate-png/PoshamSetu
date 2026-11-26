@@ -20,5 +20,6 @@ import brief from './brief.js';
 import report from './report.js';
 import awwphone from './awwphone.js';
 import importer from './importer.js';
+import assist from './assist.js';
 
-export const APPS = [landing, brief, worklist, awwphone, child, capture, district, escalation, bridge, joint, migration, reliability, budget, consent, rulepack, trial, importer, audit, report, arch, terminal, tour];
+export const APPS = [landing, brief, worklist, assist, awwphone, child, capture, district, escalation, bridge, joint, migration, reliability, budget, consent, rulepack, trial, importer, audit, report, arch, terminal, tour];

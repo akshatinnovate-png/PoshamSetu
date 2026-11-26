@@ -83,6 +83,24 @@ app.whenReady().then(() => {
   ipcMain.handle('state:load', () => { try { return JSON.parse(fs.readFileSync(statePath(), 'utf8')); } catch { return []; } });
   ipcMain.handle('state:save', (_e, ops) => { try { fs.mkdirSync(path.dirname(statePath()), { recursive: true }); fs.writeFileSync(statePath(), JSON.stringify(ops)); return true; } catch { return false; } });
   ipcMain.handle('app:info', () => ({ electron: process.versions.electron, chrome: process.versions.chrome, node: process.versions.node, platform: process.platform }));
+  // Groq assistant (quick entry). The key lives only on this computer (GROQ_API_KEY or userData/groq.json)
+  // and only this main process sends it; the page never sees it.
+  const groqPath = () => path.join(app.getPath('userData'), 'groq.json');
+  const groqConf = () => { try { return JSON.parse(fs.readFileSync(groqPath(), 'utf8')); } catch { return {}; } };
+  const groqKey = () => process.env.GROQ_API_KEY || groqConf().key || '';
+  ipcMain.handle('groq:status', () => ({ configured: !!groqKey(), fromEnv: !!process.env.GROQ_API_KEY, model: groqConf().model || 'llama-3.3-70b-versatile' }));
+  ipcMain.handle('groq:setKey', (_e, { key }) => { try { const c = groqConf(); if (key) c.key = String(key).trim(); else delete c.key; fs.mkdirSync(path.dirname(groqPath()), { recursive: true }); fs.writeFileSync(groqPath(), JSON.stringify(c)); return { ok: true }; } catch (e) { return { ok: false, error: e.message }; } });
+  ipcMain.handle('groq:chat', async (_e, body) => {
+    const key = groqKey();
+    if (!key) return { ok: false, error: 'No Groq key set' };
+    const ctl = new AbortController(); const timer = setTimeout(() => ctl.abort(), 20000);
+    try {
+      const r = await fetch('https://api.groq.com/openai/v1/chat/completions', { method: 'POST', signal: ctl.signal, headers: { 'content-type': 'application/json', authorization: `Bearer ${key}` }, body: JSON.stringify(body) });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) return { ok: false, error: j?.error?.message || `Groq HTTP ${r.status}` };
+      return { ok: true, content: j?.choices?.[0]?.message?.content || '' };
+    } catch (e) { return { ok: false, error: e.name === 'AbortError' ? 'Groq did not answer in 20 s' : e.message }; } finally { clearTimeout(timer); }
+  });
   createWindow();
   app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
 });

@@ -6,6 +6,34 @@ import { ICONS } from '../icons.js';
 import { open, closeAll, place, isOpen } from '../wm.js';
 import { DAY, HOUR, showcaseChild, fmtDate } from '../common.js';
 import { CAST_BY_KEY, portraitSvg } from '../../engine/story.js';
+import { demoSteps } from '../demo.js';
+
+// Helpers the guided demo uses to drive and point at the UI.
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+function findIn(spot) {
+  if (!spot) return null;
+  if (spot.sel) return document.querySelector(spot.sel);
+  const root = spot.root ? document.querySelector(spot.root) : spot.app ? document.querySelector(`[data-app="${spot.app}"]`) : document.body;
+  if (!root) return null;
+  if (!spot.text) return root;
+  let best = null, area = Infinity;
+  for (const el of root.querySelectorAll('*')) {
+    if (!(el.textContent || '').includes(spot.text)) continue;
+    const r = el.getBoundingClientRect();
+    if (r.width < 4 || r.height < 4) continue;
+    if (r.width * r.height < area) { best = el; area = r.width * r.height; }
+  }
+  for (let k = 0; best && k < (spot.up || 0); k++) best = best.parentElement || best;
+  return best;
+}
+function clickIn(app, re) {
+  const root = document.querySelector(`[data-app="${app}"]`);
+  const b = root && [...root.querySelectorAll('button')].find((x) => re.test((x.textContent || '').trim()) && !x.disabled);
+  b?.click();
+  return !!b;
+}
+function scrollIn(app, text) { const el = findIn({ app, text }); el?.scrollIntoView({ block: 'center' }); }
+const demoApi = { store, open, closeAll, full: (id, o) => full(id, o), place, desk: () => desk(), click: clickIn, scrollTo: scrollIn, sleep };
 
 const desk = () => document.querySelector('.desktop');
 const full = (id, opts) => { open(id, opts); const d = desk(); const top = (document.querySelector('.tourbar')?.offsetHeight || 60) + 22; place(id, 24, top, d.clientWidth - 48, d.clientHeight - top - 14); };
@@ -67,28 +95,49 @@ export default {
   id: 'tour', persistent: true, title: 'Presenter', icon: ICONS.tour, dock: 'Jury tour', desk: 'Jury tour', size: [560, 200], key: 'j',
   mount(ctx, opts = {}) {
     let i = 0, auto = null;
-    const story = opts.script === 'story';
+    const story = opts.script === 'story', demo = opts.script === 'demo';
     const started = Date.now();
     const clk = h('span', { style: { fontSize: '16px' } });
     const tickClock = setInterval(() => { const el = Math.floor((Date.now() - started) / 1000); const behind = S[i + 1] && el > secs(S[i + 1].min); clk.textContent = `${Math.floor(el / 60)}:${String(el % 60).padStart(2, '0')}`; clk.style.color = behind ? '#fff' : ''; clk.style.background = behind ? 'var(--red-a)' : ''; }, 500);
     ctx.onCleanup(() => clearInterval(tickClock));
     const secs = (m) => { const [a, b] = m.split(':').map(Number); return a * 60 + b; };
-    const S = story ? storySteps() : steps();
+    const S = demo ? demoSteps(demoApi) : story ? storySteps() : steps();
     const bar = h('div.tourbar', { style: { position: 'absolute', left: '24px', right: '24px', top: '10px', zIndex: 8800, background: 'var(--ink)', color: 'var(--white)', border: '2px solid var(--ink)', boxShadow: '4px 4px 0 var(--hot)', display: 'flex', alignItems: 'stretch' } });
     desk().appendChild(bar);
     ctx.onCleanup(() => bar.remove());
     ctx.win.el.classList.add('min');
+    // Spotlight: a pink ring (and a soft dim) around whatever the current step talks about.
+    const ring = h('div', { style: { position: 'fixed', zIndex: 8700, pointerEvents: 'none', border: '4px solid var(--hot)', boxShadow: '0 0 0 4px var(--ink), 0 0 0 9999px rgba(31,27,29,.22)', display: 'none', transition: 'all .25s ease' } });
+    document.body.appendChild(ring);
+    let target = null;
+    const placeRing = () => {
+      if (target && !target.isConnected) target = findIn(S[i]?.spot);
+      if (!target) { ring.style.display = 'none'; return; }
+      const r = target.getBoundingClientRect();
+      if (r.width < 2) { ring.style.display = 'none'; return; }
+      Object.assign(ring.style, { display: 'block', left: `${r.left - 8}px`, top: `${r.top - 8}px`, width: `${r.width + 16}px`, height: `${r.height + 16}px` });
+    };
+    const ringTimer = setInterval(placeRing, 400);
+    ctx.onCleanup(() => { clearInterval(ringTimer); ring.remove(); });
     async function go(n) {
       i = Math.max(0, Math.min(S.length - 1, n));
+      target = null; placeRing();
       await S[i].go();
       render();
+      if (S[i].spot) { await sleep(450); target = findIn(S[i].spot); if (target && !S[i].spot.sel && !S[i].spot.root) target.scrollIntoView({ block: 'nearest' }); placeRing(); }
     }
     function render() {
       const st = S[i];
       mount(bar,
         h('div', { style: { background: 'var(--hot)', color: 'var(--ink)', padding: '6px 12px', fontFamily: 'var(--font-pixel)', fontSize: '22px', display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap' } }, `${i + 1}/${S.length}`, h('span', { style: { fontSize: '16px' } }, st.min), clk),
         st.who ? speaker(CAST_BY_KEY[st.who]) : null,
-        h('div', { style: { padding: '6px 12px', flex: 1 } }, h('div', { style: { fontWeight: 800, fontSize: '15px', letterSpacing: '-0.01em' } }, st.t), h('div', { style: { fontSize: '12.5px', lineHeight: 1.4, color: '#f2dce4' } }, st.say)),
+        demo
+          ? h('div', { style: { padding: '8px 14px', flex: 1, minHeight: '104px', boxSizing: 'border-box' } },
+              h('div', { style: { fontFamily: 'var(--font-mono)', fontSize: '11px', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--pink-2)' } }, `${st.sec} · step ${i + 1} of ${S.length}`),
+              h('div', { style: { fontWeight: 800, fontSize: '20px', letterSpacing: '-0.02em', margin: '2px 0 4px' } }, st.t),
+              h('div', { style: { fontSize: '16px', lineHeight: 1.45, color: '#f7e6ec', maxWidth: '1100px' } }, st.say),
+              h('div', { style: { height: '4px', background: '#3a3236', marginTop: '8px' } }, h('div', { style: { height: '4px', width: `${((i + 1) / S.length) * 100}%`, background: 'var(--hot)' } })))
+          : h('div', { style: { padding: '6px 12px', flex: 1 } }, h('div', { style: { fontWeight: 800, fontSize: '15px', letterSpacing: '-0.01em' } }, st.t), h('div', { style: { fontSize: '12.5px', lineHeight: 1.4, color: '#f2dce4' } }, st.say)),
         h('div.row', { style: { padding: '6px', gap: '6px' } },
           h('button.btn.ghost.sm', { onclick: toggleAuto, title: 'Rehearsal: advance on the slot timings' }, auto ? '❚❚ auto' : '▶ auto'),
           h('button.btn.ghost.sm', { onclick: () => go(i - 1) }, '◂ prev'),
