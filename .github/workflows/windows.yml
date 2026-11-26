@@ -3,6 +3,11 @@ on:
   push:
     tags: ['v*']
   workflow_dispatch:
+    inputs:
+      release:
+        description: 'Publish as a GitHub release with this version (e.g. 1.0.1); leave empty for a build only'
+        required: false
+        default: ''
 permissions:
   contents: write
 jobs:
@@ -24,7 +29,16 @@ jobs:
           name: PoshanSetu-win32-x64
           path: PoshanSetu-win32-x64.zip
       - name: Attach to release
-        if: startsWith(github.ref, 'refs/tags/')
+        if: startsWith(github.ref, 'refs/tags/') || inputs.release != ''
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ inputs.release != '' && format('v{0}', inputs.release) || github.ref_name }}
+          name: ${{ inputs.release != '' && format('PoshanSetu {0}', inputs.release) || github.ref_name }}
+          target_commitish: ${{ github.sha }}
+          body: |
+            Windows build of the PoshanSetu Round 2 prototype. All child data is synthetic.
+            1. Download PoshanSetu-win32-x64.zip below.
+            2. Right-click it, Extract All, then open the folder.
+            3. Double-click PoshanSetu.exe. If Windows shows "Windows protected your PC", click More info, then Run anyway.
+            4. Press S for Riya's story or J for the jury tour; use the arrow keys to move between steps.
           files: PoshanSetu-win32-x64.zip
