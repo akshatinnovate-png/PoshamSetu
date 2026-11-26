@@ -208,7 +208,7 @@ function shell() {
   });
 
   function juryLayout() { if (isOpen('tour')) close('tour'); open('tour'); }
-  function showStart() { open('start'); const d = document.querySelector('.desktop'); if (d) place('start', Math.max(20, (d.clientWidth - 780) / 2), Math.max(20, (d.clientHeight - 600) / 2), 780, 600); }
+  function showStart() { open('start'); const d = document.querySelector('.desktop'); if (d) place('start', Math.max(20, (d.clientWidth - 780) / 2), Math.max(20, (d.clientHeight - 690) / 2), 780, 690); }
   function demoLayout() { if (isOpen('tour')) close('tour'); open('tour', { script: 'demo' }); }
   function storyLayout() { if (isOpen('tour')) close('tour'); open('tour', { script: 'story' }); }
   function tileLayout() {

@@ -5,7 +5,7 @@ import { ICONS } from '../icons.js';
 import { open, close } from '../wm.js';
 
 export default {
-  id: 'start', title: 'Start here', icon: ICONS.tour, dock: 'Start here', size: [780, 600], key: 'h',
+  id: 'start', title: 'Start here', icon: ICONS.tour, dock: 'Start here', size: [780, 690], key: 'h',
   mount(ctx) {
     const go = (fn) => () => { close('start'); fn(); };
     const big = (icon, title, sub, fn, hot) => h('button', {
@@ -21,6 +21,7 @@ export default {
       h('div', null,
         h('div', { style: { fontWeight: 800, fontSize: '30px', letterSpacing: '-0.035em', lineHeight: 1 } }, 'What would you like to do?'),
         h('div', { style: { fontSize: '14px', color: 'var(--ink-2)', marginTop: '6px' } }, 'PoshanSetu warns Anganwadi workers months before a child becomes severely malnourished. Pick one:')),
+      big('☺', 'दीदी स्क्रीन · Anganwadi worker’s screen', 'Hindi first, big pictures, one question at a time, reads aloud. Made for workers who read little.', go(() => open('didi'))),
       big('▶', 'Show me everything', 'A guided tour of every feature. Read the words on top, press → for the next step.', go(() => window.psLayout.demoLayout()), true),
       big('✎', 'Add children’s weights', 'Type notes like “Rohan, boy, 1 year, 8 kg, 74 cm”. It tells you what to do for each child.', go(() => { store.setRole('AWW', store.defaultScope('AWW')); open('assist'); })),
       big('☰', 'Who needs a visit today?', 'The Anganwadi worker’s to-do list, most urgent first.', go(() => { store.setRole('AWW', store.defaultScope('AWW')); open('worklist'); })),
@@ -29,6 +30,6 @@ export default {
         h('button.btn.sm.ghost', { onclick: go(() => window.psLayout.juryLayout()) }, 'Short jury tour'),
         h('button.btn.sm.ghost', { onclick: go(() => {}) }, 'I’ll explore on my own'),
         h('div.grow'),
-        h('span.small.mono', { style: { color: 'var(--muted)' } }, 'Keys: g tour · q add weights · s story · j jury · h this screen'))));
+        h('span.small.mono', { style: { color: 'var(--muted)' } }, 'Keys: d didi screen · g tour · q add weights · s story · j jury · h this screen'))));
   },
 };

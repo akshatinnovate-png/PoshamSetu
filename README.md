@@ -64,6 +64,16 @@ On Windows, after `npm run dist:win`, double-click `dist\PoshanSetu-win32-x64\Po
 
 Deep links: `#story` for Riya's story, `#worklist`, `#bridge`, `#joint`, `#migration`, `#reliability`, `#budget`, `#trial`, `#arch`, or `#jury` for presenter mode.
 
+## Didi screen (for Anganwadi workers who read little)
+
+Press **d**, or the first button on **Start here**. Hindi first (one tap for English), big pictures and colours, one question per screen, a big number keypad, and a 🔊 button on every screen that reads it aloud (uses the computer's voice; Hindi if a Hindi voice is installed).
+
+- **आज किससे मिलना है (who to visit today):** coloured cards, most urgent first, days left in big numbers, and a big green **मिल आई ✓ (I visited)** button.
+- **वज़न लिखें (write a weight):** pick the child (or + new child) → weight on a keypad (with last month's weight beside it) → height → arm band by **colour** (green / yellow / red, like the real tape) → four danger-sign pictures → a full-colour answer with a picture (hospital today · treat at the Anganwadi · visit in 7 days · weigh again · growing well) and the reason in simple Hindi → **सेव करें**.
+- **मेरे सारे बच्चे (all my children):** each child's colour; tap for a monthly weight bar chart (green = went up, yellow = no change, red = went down).
+- **Every number says why it matters** (a yellow "क्यों / Why" line), e.g. "वज़न से पता चलता है कि बच्चा बढ़ रहा है या नहीं".
+- The same safety checks as everywhere: an impossible number asks to measure again (with "क्या 9.2?" when it is a slip), and an extremely thin child asks for a re-measure, then is saved and flagged.
+
 ## Start here
 
 The app opens with a **Start here** screen: four big buttons in plain words (show me everything · add children's weights · who needs a visit today · Riya's story). Press **h** to bring it back any time.

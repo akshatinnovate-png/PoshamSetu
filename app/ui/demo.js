@@ -65,6 +65,9 @@ export function demoSteps(api) {
   step('Entering data', 'The full form', 'The full form has every field: weight, height, arm size, swelling and danger signs. Before saving, it shows what the colour will be.', () => { closeAll(); as('AWW'); full('capture'); }, { app: 'capture', text: 'Before you save', up: 1 });
   step('Entering data', 'Catching typing mistakes', 'If a weight is typed ten times too big, it warns before saving.', () => click('capture', /^Demo: decimal slip/), { app: 'capture', text: 'Implausible', up: 1 });
 
+  step('Entering data', 'The Didi screen', 'For workers who read little: the Didi screen. Hindi first, big pictures, one question at a time, and a speaker button that reads every screen aloud. The arm band is chosen by its colour, just like the real tape.', () => { closeAll(); open('didi'); }, { app: 'didi', text: 'वज़न लिखें', up: 1 });
+  step('Entering data', 'Every number says why', 'Each question says why it matters — for example, “weight shows whether the child is growing”. The answer is a full-colour screen with a picture: hospital today, treat at the Anganwadi, visit in 7 days, weigh again, or growing well.', async () => { click('didi', /वज़न लिखें/); await sleep(250); const b = [...document.querySelectorAll('[data-app="didi"] button')].find((x) => /Riya/.test(x.textContent)); b?.click(); }, { app: 'didi', text: 'क्यों:', up: 1 });
+
   // 6 — No signal
   step('No signal', 'The worker’s phone', 'This is the worker’s phone. In forest villages there is often no signal.', () => { closeAll(); as('AWW'); phone(); }, { app: 'awwphone' });
   step('No signal', 'Offline is normal', 'With no signal, records wait safely on the phone and send later. The deadline still counts from the weighing, so a bad network never hides an emergency — and the worker is not blamed for it. There is also a Hindi phone app that installs on any Android phone.', () => {}, { app: 'awwphone' });
