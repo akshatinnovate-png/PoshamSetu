@@ -147,10 +147,12 @@ export default {
 
     function savedBox() {
       return h('div', { style: { background: '#e6f6ee', border: '2px solid #1f9d6b', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '8px' } },
-        h('div', { style: { fontWeight: 800, fontSize: '17px' } }, `✓ Saved ${saved.length} ${saved.length === 1 ? 'child' : 'children'}. They are now on the to-do list.`),
+        h('div', { style: { fontWeight: 800, fontSize: '17px' } }, `✓ Saved ${saved.length} ${saved.length === 1 ? 'child' : 'children'}.`),
+        h('div', { style: { fontSize: '13px' } }, 'Children who need something are on the to-do list. Every child, including healthy ones, is in Child record → “Choose a child” → Added by you. Click a name below to open it.'),
         h('div.row', { style: { gap: '8px', flexWrap: 'wrap' } },
           saved.map((s) => h('button.btn.sm.ghost', { onclick: () => { store.selectChild(s.id); open('child', { childId: s.id }); } }, `${s.name}: ${PLAIN[s.tier]?.label || 'saved'} ▸`)),
-          h('button.btn.sm', { onclick: () => open('worklist') }, 'Open the to-do list ▸')));
+          h('button.btn.sm', { onclick: () => open('worklist') }, 'Open the to-do list ▸'),
+          h('button.btn.sm.ghost', { onclick: () => open('child', { childId: saved[saved.length - 1]?.id }) }, 'Open in Child record ▸')));
     }
 
     function card(r, issues, pv, i) {

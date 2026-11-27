@@ -17,12 +17,35 @@ export default {
   mount(ctx, opts) {
     let childId = opts.childId || store.selectedChildId || store.children().find((c) => c.current && c.current.tier === 'AMBER')?.id;
     let tab = 'growth';
+    // Child picker: every child you can see, newly added ones first, then those needing action.
+    const TIER_WORD = { RED_A: 'RED-A', RED_B: 'RED-B', AMBER: 'AMBER', WATCH: 'WATCH', GREEN: 'on track' };
+    const TIER_ORDER = ['RED_A', 'RED_B', 'AMBER', 'WATCH', 'GREEN'];
+    const label = (k) => `${nameOf(k)} · ${TIER_WORD[k.current?.tier] || 'no weighing yet'} · AWC ${store.awcById[k.awcId]?.name} · ${k.pseudoId}`;
+    function picker() {
+      const kids = store.children();
+      const added = kids.filter((k) => k.isNew).reverse();
+      const rest = kids.filter((k) => !k.isNew).sort((a, b) => TIER_ORDER.indexOf(a.current?.tier || 'GREEN') - TIER_ORDER.indexOf(b.current?.tier || 'GREEN') || a.name.localeCompare(b.name));
+      const needs = rest.filter((k) => k.current && k.current.tier !== 'GREEN'), well = rest.filter((k) => !k.current || k.current.tier === 'GREEN');
+      const opt = (k) => h('option', { value: k.id, selected: k.id === childId }, label(k));
+      const group = (title, list) => (list.length ? h('optgroup', { label: `${title} (${list.length})` }, list.map(opt)) : null);
+      const listId = 'child-search-list';
+      const choose = (id) => { if (id && store.childById[id]) { childId = id; store.selectChild(id); render(); } };
+      return h('div.toolbar', { style: { gap: '8px', flexWrap: 'wrap' } },
+        h('b', null, 'Choose a child'),
+        h('select.input', { style: { minWidth: '360px', maxWidth: '520px' }, onchange: (e) => choose(e.target.value) },
+          !store.childById[childId] ? h('option', { value: '', selected: true }, `— ${kids.length} children —`) : null,
+          group('Added by you', added), group('Needs action', needs), group('Growing well', well)),
+        h('input.input', { list: listId, placeholder: canSeeNames(kids[0] || {}) ? 'or type a name…' : 'or type an ID…', style: { width: '200px' },
+          onchange: (e) => { const v = e.target.value.trim().toLowerCase(); const hit = kids.find((k) => label(k).toLowerCase() === v) || kids.find((k) => label(k).toLowerCase().includes(v)); if (hit) choose(hit.id); } }),
+        h('datalist', { id: listId }, kids.map((k) => h('option', { value: label(k) }))),
+        added.length ? h('span.small', { style: { color: 'var(--muted)' } }, `${added.length} added by you`) : null);
+    }
     function render() {
       const c = store.childById[childId];
-      if (!c) { mount(ctx.body, h('div.empty', null, 'Pick a child from the Worklist or District map.')); return; }
-      if (!store.inScope(c)) { mount(ctx.body, h('div.empty', null, `Outside your scope (${store.scopeLabel()}). Decision rights: Table 3.`)); return; }
+      if (!c) { mount(ctx.body, picker(), h('div.empty', null, 'Choose a child above, or open one from the to-do list or the map.')); return; }
+      if (!store.inScope(c)) { mount(ctx.body, picker(), h('div.empty', null, `Outside your scope (${store.scopeLabel()}). Decision rights: Table 3.`)); return; }
       if (store.role === 'DPO' && !store.breakGlass.has(c.id)) {
-        mount(ctx.body, h('div.empty', null, h('div.h2', null, 'District officers see aggregates, not child records.'), h('p.p', { style: { margin: '8px auto', maxWidth: '460px' } }, 'Table 3: the DPO (ICDS) and CMO act on block breach counts. A child-level record opens only through break-glass, with a reason that is written to the audit chain and reviewed.'),
+        mount(ctx.body, picker(), h('div.empty', null, h('div.h2', null, 'District officers see aggregates, not child records.'), h('p.p', { style: { margin: '8px auto', maxWidth: '460px' } }, 'Table 3: the DPO (ICDS) and CMO act on block breach counts. A child-level record opens only through break-glass, with a reason that is written to the audit chain and reviewed.'),
           h('button.btn.hot', { onclick: async () => { const r = await ask({ title: 'Break-glass access', label: 'Reason for opening a child-level record at district level (logged):', value: 'RED-A escalated to L3 — verifying referral', ok: 'Open & log' }); if (r) store.grantBreakGlass(c.id, r); } }, 'Break-glass (logged)')));
         return;
       }
@@ -34,7 +57,7 @@ export default {
 
       const head = h('div.row', { style: { padding: '12px 14px', background: 'var(--white)', borderBottom: '2px solid var(--ink)', gap: '16px', alignItems: 'flex-start' } },
         h('div.col.grow', { style: { gap: '4px' } },
-          h('div.row', { style: { gap: '10px' } }, h('h1.h1', null, nameOf(c)), cur ? tierChip(cur.tier) : null, cur && cur.kind !== 'NONE' ? h('span.tag', null, cur.kind.toLowerCase()) : null),
+          h('div.row', { style: { gap: '10px' } }, h('h1.h1', null, nameOf(c)), c.isNew ? h('span.tag.sky', null, 'added by you') : null, cur ? tierChip(cur.tier) : h('span.tag', null, 'no weighing yet'), cur && cur.kind !== 'NONE' ? h('span.tag', null, cur.kind.toLowerCase()) : null),
           h('div.row.wrap', { style: { gap: '6px' } },
             h('span.tag.dark', null, c.pseudoId), h('span.tag', null, c.sex === 'F' ? 'girl' : 'boy'), h('span.tag', null, ageLabel(ageNow)),
             h('span.tag', null, `AWC ${awc.name} · ${awc.code}`), c.st ? h('span.tag.pink', null, 'ST household') : null,
@@ -74,7 +97,7 @@ export default {
       else if (tab === 'signals') pane = signalsPane(c);
       else pane = tasksPane(c, tasks);
 
-      mount(ctx.body, head, h('div.row', { style: { padding: '12px 14px', gap: '12px', alignItems: 'flex-start' } },
+      mount(ctx.body, picker(), head, h('div.row', { style: { padding: '12px 14px', gap: '12px', alignItems: 'flex-start' } },
         h('div.col.grow', { style: { gap: '10px' } }, tabs, pane), why));
     }
 
