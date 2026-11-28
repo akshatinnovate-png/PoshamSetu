@@ -40,10 +40,11 @@ export default {
       h('div', { style: { borderTop: '2px solid var(--ink)', paddingTop: '12px', display: 'flex', flexDirection: 'column', gap: '10px' } },
         h('div', { style: { fontWeight: 800, fontSize: '19px' } }, 'Presenting PoshanSetu?'),
         h('div.row', { style: { gap: '10px', flexWrap: 'wrap' } },
-          h('button.btn.hot', { onclick: present(() => window.psLayout.demoLayout()) }, '▶ Guided tour of every feature'),
+          h('button.btn.hot', { onclick: present(() => { const d = document.querySelector('.desktop'); open('why'); place('why', 14, 14, d.clientWidth - 28, d.clientHeight - 28); }) }, '◆ The missing piece (start here)'),
+          h('button.btn', { onclick: present(() => window.psLayout.demoLayout()) }, '▶ Guided tour of every feature'),
           h('button.btn', { onclick: present(() => window.psLayout.storyLayout()) }, '★ Riya’s story'),
           h('button.btn.ghost', { onclick: present(() => window.psLayout.juryLayout()) }, 'Short jury tour'),
           h('button.btn.ghost', { onclick: () => close('start') }, 'Just explore'))),
-      h('div.small.mono', { style: { color: 'var(--muted)' } }, 'Keys: h this screen · g tour · s story · j jury · q type notes · c form · ← → move in tours')));
+      h('div.small.mono', { style: { color: 'var(--muted)' } }, 'Keys: w missing piece · h this screen · g tour · s story · j jury · q type notes · c form · ← → move in tours')));
   },
 };

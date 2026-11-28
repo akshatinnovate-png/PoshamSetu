@@ -64,6 +64,10 @@ On Windows, after `npm run dist:win`, double-click `dist\PoshanSetu-win32-x64\Po
 
 Deep links: `#story` for Riya's story, `#worklist`, `#bridge`, `#joint`, `#migration`, `#reliability`, `#budget`, `#trial`, `#arch`, or `#jury` for presenter mode.
 
+## The missing piece (press w)
+
+One screen that shows why PoshanSetu exists. India already weighs the child (Poshan Tracker) and already treats the child (CMAM, NRC, doctors); the links in between are missing: spotting danger early, a named person with a deadline, follow-up, and safe data sharing. **Fill the gaps with PoshanSetu** fills them one by one, each opening its proof, and this district's numbers flip from "today" to "with PoshanSetu". It is the first step of the guided tour and the jury tour.
+
 ## Start here: one app for everyone
 
 The app opens with **Who is using PoshanSetu?** Pick a role and it opens what that person needs, side by side, in the same app:

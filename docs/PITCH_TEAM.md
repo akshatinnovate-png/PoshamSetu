@@ -6,7 +6,7 @@
 | 2. Live demo | Akshat | 2:00–8:30 | Detailed solution, every feature |
 | 3. Plan + close | Soumya | 8:30–10:00 | Roadmap, feasibility, scale, impact |
 
-Before you start: app open on Start here, Layout → Presenter zoom 115%.
+Before you start: app open on Start here, Layout → Presenter zoom 115%. Click **◆ The missing piece** so it fills the screen while Soumya speaks (or press **w**).
 
 ## Part 1 — Soumya: problem and solution (2:00)
 
@@ -16,11 +16,11 @@ This is Riya, a two-year-old in Paschimi Singhbhum, Jharkhand. From February to 
 
 Riya is from our test data, but her pattern is common. Research in Nature found that 29% of children have a wasting episode by age two, but only about 6% look wasted at any single moment. One reading at a time misses most of them. And this district has India's highest stunting: 60.6%.
 
-India already has the pieces: the Poshan Tracker records weights for 7 crore children, U-WIN has vaccines, ABDM handles consent, and SSBSK funds home visits. What's missing is the link between data and action: a list made from one reading, with no owner, no deadline and no follow-up.
+*(Screen: The missing piece.)* Our name means it: Poshan Setu — the nutrition bridge. India already weighs every child — the Poshan Tracker, 7 crore children. India already treats severe malnutrition — CMAM, nutrition centres, doctors. But look at what's in between. *(Point at the red boxes.)* Nobody spots the danger early. Nobody gets a task with a deadline. Nobody makes sure it happens. Health data sits in another ministry. That's where Riya fell through.
 
-PoshanSetu is that link. It sits on top of the Tracker and does three things. One — it reads the direction of a child's growth, not just one number, and warns months earlier. Two — it turns every warning into a task: a named worker, a reason in plain words, and a deadline. Three — it makes sure the task gets done: the Anganwadi worker and the ASHA both report, late tasks move up to supervisors, and health data is shared only with the mother's consent.
+*(Click **Fill the gaps with PoshanSetu**.)* PoshanSetu is that bridge. It sits on top of the Tracker and does three things. One — it reads the direction of a child's growth, not just one number, and warns months earlier. Two — it turns every warning into a task: a named worker, a reason in plain words, and a deadline. Three — it makes sure the task gets done: the Anganwadi worker and the ASHA both report, late tasks move up to supervisors, and health data is shared only with the mother's consent.
 
-For Riya, PoshanSetu raised the alarm in April — 125 days before the SAM list. Akshat will now show you every part of it, live.
+*(Point at the table.)* In our test district, 93 of 140 children who became severely malnourished got a task first — a median of 66 days earlier. Riya: 125 days. Akshat will now show you every part of it, live.
 
 ## Part 2 — Akshat: live demo (6:30)
 

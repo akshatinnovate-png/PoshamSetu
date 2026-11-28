@@ -21,5 +21,6 @@ import report from './report.js';
 import awwphone from './awwphone.js';
 import importer from './importer.js';
 import start from './start.js';
+import why from './why.js';
 
-export const APPS = [landing, start, brief, worklist, awwphone, child, capture, district, escalation, bridge, joint, migration, reliability, budget, consent, rulepack, trial, importer, audit, report, arch, terminal, tour];
+export const APPS = [landing, start, why, brief, worklist, awwphone, child, capture, district, escalation, bridge, joint, migration, reliability, budget, consent, rulepack, trial, importer, audit, report, arch, terminal, tour];

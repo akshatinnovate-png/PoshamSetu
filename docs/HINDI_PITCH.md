@@ -17,6 +17,8 @@ Plan: start with Riya's numbers and the question "kya yeh bachchi theek hai?". S
 > Lekin in chhe mahino mein Riya 3 centimetre lambi hui — aur **ek gram bhi wazan nahi badha.** *(She grew taller but not one gram heavier.)*
 > August mein woh gambhir kuposhan mein pahunch gayi. *(In August she became severely malnourished.)*
 >
+> **Poshan Setu matlab — poshan ka pul.** Sarkar bachche ka wazan pehle se karti hai, aur gambhir hone par ilaaj bhi karti hai. Beech ka pul gayab hai — koi pehle se nahi dekhta, koi kaam nahi deta, koi yaad nahi dilata. Hum wahi pul hain. *(Bridge between weighing and treatment is missing; we are that bridge.)*
+>
 > Aaj ka system har baar **sirf ek wazan** dekhta hai — jaise ek photo.
 > PoshanSetu **poori film** dekhta hai — bachcha kis taraf ja raha hai.
 > Usne Riya ke liye **April mein hi chetavani de di — 125 din pehle.**
